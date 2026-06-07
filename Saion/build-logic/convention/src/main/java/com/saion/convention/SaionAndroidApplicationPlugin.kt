@@ -6,11 +6,10 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 class SaionAndroidApplicationPlugin : Plugin<Project> {
-    override fun apply(target: Project) =
-        with(target) {
-            pluginManager.apply("com.android.application")
+    override fun apply(target: Project) = with(target) {
+        pluginManager.apply("com.android.application")
 
-            configureAndroidApplication()
-            configureKotlinAndroid()
-        }
+        configureAndroidApplication()
+        configureKotlinAndroid()
+    }
 }
