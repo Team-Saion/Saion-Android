@@ -15,12 +15,13 @@ import com.saion.core.ui.snackbar.LocalGlobalSnackbarState
 import com.saion.ds.theme.SaionTheme
 
 @Composable
-fun SaionApp() {
+fun SaionApp(modifier: Modifier = Modifier) {
     val snackbarState = remember { SnackbarHostState() }
 
     SaionTheme {
         CompositionLocalProvider(LocalGlobalSnackbarState provides snackbarState) {
             SaionScaffold(
+                modifier = modifier,
                 systemBarInset = SystemBarInset.None,
                 snackbarHost = { SnackbarHost(hostState = LocalGlobalSnackbarState.current) },
             ) {
