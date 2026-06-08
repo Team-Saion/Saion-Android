@@ -8,6 +8,13 @@ android {
     namespace = "com.saion.core.ui"
 }
 
+ktlint {
+    additionalEditorconfig.put(
+        "ktlint_compose_compositionlocal-allowlist",
+        "disabled",
+    )
+}
+
 dependencies {
     implementation(libs.saion.design.system)
 }
