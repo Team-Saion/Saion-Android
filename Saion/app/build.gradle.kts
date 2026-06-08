@@ -21,5 +21,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(projects.core.data)
     implementation(projects.core.domain)
+    implementation(projects.core.ui)
     implementation(libs.saion.design.system)
 }
