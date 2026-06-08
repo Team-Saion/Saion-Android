@@ -4,9 +4,7 @@ import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.network.auth.AuthTokenStore
 import javax.inject.Inject
 
-class AuthTokenStoreImpl @Inject constructor(
-    private val authLocalDataSource: AuthLocalDataSource,
-) : AuthTokenStore {
+class AuthTokenStoreImpl @Inject constructor(private val authLocalDataSource: AuthLocalDataSource) : AuthTokenStore {
     override suspend fun getAccessToken(): String? = authLocalDataSource.getAccessToken()
 
     override suspend fun getRefreshToken(): String? = authLocalDataSource.getRefreshToken()

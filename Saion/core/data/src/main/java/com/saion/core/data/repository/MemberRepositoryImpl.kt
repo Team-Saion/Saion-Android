@@ -1,8 +1,8 @@
 package com.saion.core.data.repository
 
 import com.saion.core.data.util.safeRequest
-import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.result.AppResult
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import javax.inject.Inject

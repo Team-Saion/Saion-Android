@@ -12,4 +12,5 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.model)
     implementation(projects.core.network)
+    testImplementation(libs.junit)
 }
