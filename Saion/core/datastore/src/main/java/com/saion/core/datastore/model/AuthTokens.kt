@@ -1,3 +1,9 @@
 package com.saion.core.datastore.model
 
-data class AuthTokens()
+import kotlinx.serialization.Serializable
+
+@Serializable
+internal data class AuthTokens(
+    val accessToken: String,
+    val refreshToken: String,
+)

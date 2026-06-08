@@ -35,7 +35,7 @@ rootProject.name = "Saion"
 include(":app")
 include(":core:data")
 include(":core:domain")
-include(":core:local")
+include(":core:datastore")
 include(":core:model")
 include(":core:network")
 include(":core:ui")
