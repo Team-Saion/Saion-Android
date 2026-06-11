@@ -7,11 +7,11 @@ import com.saion.core.model.result.AppResult
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import javax.inject.Inject
 
-class MemberRepositoryImpl @Inject constructor(
+internal class MemberRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
-    override suspend fun logout(): AppResult<Unit> = safeRequest<Unit>(
+    override suspend fun logout(): AppResult<Unit> = safeRequest(
         request = { memberRemoteDataSource.logout() },
     ) {
         authLocalDataSource.clearTokens()
