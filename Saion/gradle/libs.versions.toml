@@ -29,6 +29,10 @@ espressoCore = "3.7.0"
 # Linting
 composeRules = "0.5.9"
 
+# Logging
+timber = "5.0.1"
+logger = "2.2.0"
+
 [libraries]
 # Build tooling
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -80,6 +84,10 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 
 # Linting
 compose-rules-ktlint = { module = "io.nlopez.compose.rules:ktlint", version.ref = "composeRules" }
+
+# Logging
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+logger = { module = "com.orhanobut:logger", version.ref = "logger" }
 
 [plugins]
 # Android and Kotlin
