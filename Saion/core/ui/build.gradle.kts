@@ -17,4 +17,8 @@ ktlint {
 
 dependencies {
     implementation(libs.saion.design.system)
+    implementation(libs.timber)
+    implementation(projects.core.model)
+
+    testImplementation(libs.kotlinx.coroutines.test)
 }
