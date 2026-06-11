@@ -2,6 +2,7 @@ package com.saion.core.network.client
 
 import io.ktor.client.plugins.logging.Logger
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 internal object KtorPrettyLogger : Logger {
     private const val TAG = "NETWORK"
@@ -21,11 +22,11 @@ internal object KtorPrettyLogger : Logger {
     }
 
     override fun log(message: String) {
-//        Timber.tag(TAG).d(
-//            message
-//                .prettifyBodyJson()
-//                .formatSections(),
-//        )
+        Timber.tag(TAG).d(
+            message
+                .prettifyBodyJson()
+                .formatSections(),
+        )
     }
 
     private fun String.prettifyBodyJson(): String {

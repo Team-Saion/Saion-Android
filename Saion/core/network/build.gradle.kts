@@ -22,6 +22,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.timber)
 }
 
 androidComponents {
