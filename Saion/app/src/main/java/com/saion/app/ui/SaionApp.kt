@@ -18,7 +18,7 @@ fun SaionApp(modifier: Modifier = Modifier) {
         LaunchedEffect(Unit) {
             GlobalUiEventBus.events.collect { event ->
                 when (event) {
-                    GlobalUiEvent.SessionExpired -> Unit
+                    GlobalUiEvent.SessionExpired -> { /* todo: 세션 종료 스낵바, 첫화면으로 이동 처리 */ }
                 }
             }
         }
