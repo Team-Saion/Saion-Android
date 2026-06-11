@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         google {
             content {
@@ -11,9 +13,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -31,3 +33,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "Saion"
 include(":app")
+include(":core:data")
+include(":core:domain")
+include(":core:datastore")
+include(":core:logging")
+include(":core:model")
+include(":core:network")
+include(":core:ui")

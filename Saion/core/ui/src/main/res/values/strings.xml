@@ -1,0 +1,7 @@
+<resources>
+    <string name="error_network_unavailable">네트워크 연결을 확인한 뒤 다시 시도해주세요.</string>
+    <string name="error_timeout">요청 시간이 초과되었습니다. 다시 시도해주세요.</string>
+    <string name="error_server_unavailable">현재 서비스가 원활하지 않습니다. 잠시 후 다시 시도해주세요.</string>
+    <string name="error_unknown">오류가 발생했습니다. 잠시 후 다시 시도해주세요.</string>
+    <string name="error_unauthorized">로그인이 만료되었습니다. 다시 로그인해주세요.</string>
+</resources>
