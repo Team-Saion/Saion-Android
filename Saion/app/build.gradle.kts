@@ -8,6 +8,10 @@ plugins {
 android {
     namespace = "com.saion.app"
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.saion.app"
         versionCode = 1
@@ -21,6 +25,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(projects.core.data)
     implementation(projects.core.domain)
+    implementation(projects.core.logging)
     implementation(projects.core.ui)
     implementation(libs.saion.design.system)
 }
