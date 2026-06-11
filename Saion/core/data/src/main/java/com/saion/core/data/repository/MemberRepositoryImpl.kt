@@ -11,7 +11,7 @@ class MemberRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
-    override suspend fun logout(): AppResult<Unit> = safeRequest(
+    override suspend fun logout(): AppResult<Unit> = safeRequest<Unit>(
         request = { memberRemoteDataSource.logout() },
     ) {
         authLocalDataSource.clearTokens()

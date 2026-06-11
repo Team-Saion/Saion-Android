@@ -1,20 +1,25 @@
 package com.saion.core.model.result
 
 sealed interface AppError {
-    // 인증 필요
-    data object Unauthorized : AppError
+    val cause: Throwable?
 
-    // 잘못된 입력
-    data object InvalidInput : AppError
+    data class NetworkUnavailable(override val cause: Throwable? = null) : AppError
 
-    data object Network : AppError
+    data class Timeout(override val cause: Throwable? = null) : AppError
 
-    // status code가 503인 경우
-    data object Maintenance : AppError
+    data class Unauthorized(override val cause: Throwable? = null) : AppError
 
-    // 메시지 처리만 하면 되는 에러
-    data class ServerMessage(
-        val code: String?,
+    data class ServerUnavailable(override val cause: Throwable? = null) : AppError
+
+    data class Business(
+        override val cause: Throwable? = null,
+        val businessType: BusinessErrorType,
+        val rawCode: String,
         val message: String?,
+    ) : AppError
+
+    data class Unknown(
+        override val cause: Throwable? = null,
+        val message: String? = null,
     ) : AppError
 }

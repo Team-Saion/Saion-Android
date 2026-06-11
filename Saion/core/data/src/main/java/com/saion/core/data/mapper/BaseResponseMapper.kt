@@ -1,21 +1,22 @@
 package com.saion.core.data.mapper
 
 import com.saion.core.model.result.AppError
+import com.saion.core.model.result.BusinessErrorType
 import com.saion.core.network.model.common.ApiResponse
 
-fun ApiResponse<*>.toAppError(): AppError {
-    if (statusCode == 401) return AppError.Unauthorized
-    if (statusCode == 503) return AppError.Maintenance
-
-    return errorCode.toAppError(fallbackMessage = message)
+fun ApiResponse<*>.toAppError(): AppError = when (statusCode) {
+    401 -> AppError.Unauthorized()
+    in 400..499 -> errorCode?.toBusinessAppError(fallbackMessage = message) ?: AppError.Unknown(message = message)
+    in 500..599 -> AppError.ServerUnavailable()
+    else -> AppError.Unknown(message = message)
 }
 
-private fun String?.toAppError(fallbackMessage: String?): AppError = when (this) {
-    "G400" -> AppError.InvalidInput
+private fun String.toBusinessAppError(fallbackMessage: String?): AppError = when (val type = BusinessErrorType.from(this)) {
+    null -> AppError.Unknown(message = fallbackMessage)
 
-    "G401",
-    "M401_1",
-    -> AppError.Unauthorized
-
-    else -> AppError.ServerMessage(code = this, message = fallbackMessage)
+    else -> AppError.Business(
+        businessType = type,
+        rawCode = this,
+        message = fallbackMessage,
+    )
 }

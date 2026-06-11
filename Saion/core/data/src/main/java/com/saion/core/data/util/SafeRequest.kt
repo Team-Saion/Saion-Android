@@ -21,8 +21,26 @@ internal suspend fun <T, R> safeRequest(
     }
 } catch (exception: CancellationException) {
     throw exception
-} catch (_: IOException) {
-    AppResult.Failure(AppError.Network)
-} catch (_: SocketTimeoutException) {
-    AppResult.Failure(AppError.Network)
+} catch (exception: SocketTimeoutException) {
+    AppResult.Failure(AppError.Timeout(cause = exception))
+} catch (exception: IOException) {
+    AppResult.Failure(AppError.NetworkUnavailable(cause = exception))
+}
+
+internal suspend fun <R> safeRequest(
+    request: suspend () -> ApiResponse<Unit>,
+    onSuccess: suspend () -> AppResult<R>,
+): AppResult<R> = try {
+    val response = request()
+    if (!response.isSuccess) {
+        AppResult.Failure(response.toAppError())
+    } else {
+        onSuccess()
+    }
+} catch (exception: CancellationException) {
+    throw exception
+} catch (exception: SocketTimeoutException) {
+    AppResult.Failure(AppError.Timeout(cause = exception))
+} catch (exception: IOException) {
+    AppResult.Failure(AppError.NetworkUnavailable(cause = exception))
 }
