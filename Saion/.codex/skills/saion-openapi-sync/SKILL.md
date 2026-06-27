@@ -31,7 +31,7 @@ Prefer `https://dev.saion.app/api/api-specs`. Do not use `swagger-ui/index.html`
    - `core/data/repository`
    - `core/data/di`
    - `core/domain/usecase`
-6. Add or update tests for repository and use case behavior.
+6. Add or update tests for use case behavior only. Do not add DataSource or Repository tests, and remove any related tests introduced as part of the sync work.
 7. Run targeted Gradle validation for affected modules.
 
 ## Project Rules
@@ -72,6 +72,11 @@ Current examples worth mirroring:
 - If the backend returns a richer transport model than the app currently needs, keep the full wire model in `core/network/model` and map only the needed fields into the domain layer.
 - If the endpoint is auth-free, verify that the existing `HttpClientFactory.isAuthRequest()` behavior does not accidentally force bearer auth. Update it only when the spec requires it.
 - For multipart endpoints, keep binary or form-data specifics in `network`; do not leak them into `domain`.
+- Write tests only for `core/domain/usecase`.
+- Do not create `core/data` repository tests or `core/network/datasource` tests for this sync workflow.
+- If this sync work previously added repository or data source tests, remove them as part of the change.
+- Name test functions in Korean using backticks.
+- If a test function contains multiple assertions, wrap them with `assertAll`, `softly`, or an equivalent grouped-assertion style instead of leaving standalone repeated assertions.
 
 ## Suggested Commands
 
@@ -82,13 +87,14 @@ Current examples worth mirroring:
   - `rg -n "operationName|path segment|Repository|UseCase|RemoteDataSource" core`
 - Validate:
   - `./gradlew :core:network:compileDebugKotlin :core:data:compileDebugKotlin :core:domain:compileKotlin`
-  - add targeted test tasks for touched modules
+  - run targeted `core:domain:test` tasks for touched use cases
 
 ## Acceptance Checklist
 
 - OpenAPI source was `api-specs`, not Swagger UI HTML.
 - Every changed endpoint is reflected through `UseCase`.
 - Hilt providers and binds are updated if a new service, data source, or repository type was introduced.
-- Repository tests cover mapping and error behavior.
+- No DataSource or Repository tests were added or left behind by this sync work.
 - Use case tests cover delegation for the new or changed action.
+- Use case test names are written in Korean, and multi-assert tests use grouped assertions.
 - Gradle validation completed for affected modules.
