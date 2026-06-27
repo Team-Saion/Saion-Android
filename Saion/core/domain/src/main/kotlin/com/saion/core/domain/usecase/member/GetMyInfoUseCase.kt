@@ -5,8 +5,6 @@ import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.result.AppResult
 import javax.inject.Inject
 
-class GetMyInfoUseCase @Inject constructor(
-    private val memberRepository: MemberRepository,
-) {
+class GetMyInfoUseCase @Inject constructor(private val memberRepository: MemberRepository) {
     suspend operator fun invoke(): AppResult<MemberInfo> = memberRepository.getMyInfo()
 }

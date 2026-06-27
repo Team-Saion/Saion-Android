@@ -25,7 +25,7 @@ class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
             entry<AuthNavKey> { key ->
                 AuthRoute(
                     startStep = key.startStep,
-                    onAuthCompleted = { navigator.replaceAll(MainNavKey) },
+                    onAuthComplete = { navigator.replaceAll(MainNavKey) },
                 )
             }
         }
@@ -35,14 +35,14 @@ class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
 @Composable
 private fun AuthRoute(
     startStep: AuthStartStep,
-    onAuthCompleted: () -> Unit,
+    onAuthComplete: () -> Unit,
 ) {
     val startKey = when (startStep) {
         AuthStartStep.LOGIN -> LoginNavKey
         AuthStartStep.TERMS -> TermsNavKey
     }
     val navigationState = rememberNavigationState(startKey)
-    val entryBuilders = remember(onAuthCompleted) {
+    val entryBuilders = remember(onAuthComplete) {
         setOf(
             NavEntryBuilder { builderScope, flowNavigator ->
                 with(builderScope) {
@@ -58,7 +58,7 @@ private fun AuthRoute(
                     }
                     entry<NicknameNavKey> {
                         NicknameScreen(
-                            onComplete = { onAuthCompleted() },
+                            onComplete = { onAuthComplete() },
                         )
                     }
                 }

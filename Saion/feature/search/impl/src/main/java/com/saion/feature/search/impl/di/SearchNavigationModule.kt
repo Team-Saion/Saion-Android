@@ -17,7 +17,10 @@ import dagger.multibindings.IntoSet
 object SearchNavigationModule {
     @Provides
     @IntoSet
-    fun provideSearchEntryBuilder(): NavEntryBuilder<MainTabNavKey> = NavEntryBuilder { scope: EntryProviderScope<MainTabNavKey>, _: AppNavigator<MainTabNavKey> ->
+    fun provideSearchEntryBuilder(): NavEntryBuilder<MainTabNavKey> = NavEntryBuilder {
+            scope: EntryProviderScope<MainTabNavKey>,
+            _: AppNavigator<MainTabNavKey>,
+        ->
         with(scope) {
             entry<SearchNavKey> {
                 SearchScreen()

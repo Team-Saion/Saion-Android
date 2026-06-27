@@ -17,7 +17,10 @@ import dagger.multibindings.IntoSet
 object NotificationNavigationModule {
     @Provides
     @IntoSet
-    fun provideNotificationEntryBuilder(): NavEntryBuilder<MainTabNavKey> = NavEntryBuilder { scope: EntryProviderScope<MainTabNavKey>, _: AppNavigator<MainTabNavKey> ->
+    fun provideNotificationEntryBuilder(): NavEntryBuilder<MainTabNavKey> = NavEntryBuilder {
+            scope: EntryProviderScope<MainTabNavKey>,
+            _: AppNavigator<MainTabNavKey>,
+        ->
         with(scope) {
             entry<NotificationNavKey> {
                 NotificationScreen()

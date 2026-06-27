@@ -6,9 +6,7 @@ import com.saion.core.navigation.key.AppNavKey
 import com.saion.core.navigation.state.NavigationState
 import com.saion.core.navigation.state.rememberNavigationState
 
-class SaionAppState(
-    val navigationState: NavigationState<AppNavKey>,
-)
+class SaionAppState(val navigationState: NavigationState<AppNavKey>)
 
 @Composable
 fun rememberSaionAppState(): SaionAppState {

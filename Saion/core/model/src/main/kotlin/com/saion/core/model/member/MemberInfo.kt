@@ -1,5 +1,3 @@
 package com.saion.core.model.member
 
-data class MemberInfo(
-    val role: MemberRole,
-)
+data class MemberInfo(val role: MemberRole)

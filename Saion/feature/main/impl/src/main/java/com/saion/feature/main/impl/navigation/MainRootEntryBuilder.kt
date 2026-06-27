@@ -23,9 +23,8 @@ import com.saion.feature.search.api.key.SearchNavKey
 import javax.inject.Inject
 import kotlin.jvm.JvmSuppressWildcards
 
-class MainRootEntryBuilder @Inject constructor(
-    private val tabEntryBuilders: Set<@JvmSuppressWildcards NavEntryBuilder<MainTabNavKey>>,
-) : NavEntryBuilder<AppNavKey> {
+class MainRootEntryBuilder @Inject constructor(private val tabEntryBuilders: Set<@JvmSuppressWildcards NavEntryBuilder<MainTabNavKey>>) :
+    NavEntryBuilder<AppNavKey> {
     override fun build(
         scope: EntryProviderScope<AppNavKey>,
         navigator: AppNavigator<AppNavKey>,
