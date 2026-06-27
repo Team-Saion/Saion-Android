@@ -2,6 +2,7 @@ package com.saion.core.network.di
 
 import com.saion.core.network.api.AuthService
 import com.saion.core.network.api.MemberService
+import com.saion.core.network.api.TermService
 import com.saion.core.network.client.HttpClientFactory
 import dagger.Module
 import dagger.Provides
@@ -25,4 +26,8 @@ object NetworkModule {
     @Provides
     @Singleton
     internal fun provideMemberService(httpClient: HttpClient): MemberService = MemberService(client = httpClient)
+
+    @Provides
+    @Singleton
+    internal fun provideTermService(httpClient: HttpClient): TermService = TermService(client = httpClient)
 }

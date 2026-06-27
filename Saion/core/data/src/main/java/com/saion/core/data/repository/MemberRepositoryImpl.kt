@@ -4,6 +4,7 @@ import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
+import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppResult
 import com.saion.core.network.datasource.MemberRemoteDataSource
@@ -23,14 +24,20 @@ internal class MemberRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun completeTerms(): AppResult<Unit> = safeRequest(
-        request = { memberRemoteDataSource.completeTerms() },
+    override suspend fun updateProfile(nickname: String): AppResult<Unit> = safeRequest(
+        request = { memberRemoteDataSource.updateProfile(nickname = nickname) },
     ) {
         AppResult.Success(Unit)
     }
 
-    override suspend fun completeNickname(nickname: String): AppResult<Unit> = safeRequest(
-        request = { memberRemoteDataSource.completeNickname(nickname = nickname) },
+    override suspend fun uploadProfileImage(image: ProfileImageUpload): AppResult<Unit> = safeRequest(
+        request = {
+            memberRemoteDataSource.uploadProfileImage(
+                imageBytes = image.bytes,
+                fileName = image.fileName,
+                mimeType = image.mimeType,
+            )
+        },
     ) {
         AppResult.Success(Unit)
     }
@@ -41,9 +48,17 @@ internal class MemberRepositoryImpl @Inject constructor(
         authLocalDataSource.clearTokens()
         AppResult.Success(Unit)
     }
+
+    override suspend fun withdraw(): AppResult<Unit> = safeRequest(
+        request = { memberRemoteDataSource.withdraw() },
+    ) {
+        authLocalDataSource.clearTokens()
+        AppResult.Success(Unit)
+    }
 }
 
 private fun String.toMemberRole(): MemberRole = when (uppercase()) {
     MemberRole.MEMBER.name -> MemberRole.MEMBER
+    MemberRole.ADMIN.name -> MemberRole.ADMIN
     else -> MemberRole.PENDING
 }

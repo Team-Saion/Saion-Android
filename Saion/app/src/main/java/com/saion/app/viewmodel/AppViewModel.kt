@@ -54,7 +54,10 @@ class AppViewModel @Inject constructor(
         return when (val result = getMyInfoUseCase()) {
             is AppResult.Success -> when (result.data.role) {
                 MemberRole.PENDING -> RootNavigationTarget.Auth(startStep = AuthStartStep.TERMS)
-                MemberRole.MEMBER -> RootNavigationTarget.Main
+
+                MemberRole.MEMBER,
+                MemberRole.ADMIN,
+                -> RootNavigationTarget.Main
             }
 
             is AppResult.Failure -> RootNavigationTarget.Auth(startStep = AuthStartStep.LOGIN)

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NicknameRequest(
+data class UpdateProfileRequest(
     @SerialName("nickname")
     val nickname: String,
 )

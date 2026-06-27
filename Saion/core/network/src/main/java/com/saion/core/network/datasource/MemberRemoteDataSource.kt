@@ -6,9 +6,15 @@ import com.saion.core.network.model.member.MemberInfoResponse
 interface MemberRemoteDataSource {
     suspend fun getMyInfo(): ApiResponse<MemberInfoResponse>
 
-    suspend fun completeTerms(): ApiResponse<Unit>
+    suspend fun updateProfile(nickname: String): ApiResponse<MemberInfoResponse>
 
-    suspend fun completeNickname(nickname: String): ApiResponse<Unit>
+    suspend fun uploadProfileImage(
+        imageBytes: ByteArray,
+        fileName: String,
+        mimeType: String,
+    ): ApiResponse<MemberInfoResponse>
 
     suspend fun logout(): ApiResponse<Unit>
+
+    suspend fun withdraw(): ApiResponse<Unit>
 }
