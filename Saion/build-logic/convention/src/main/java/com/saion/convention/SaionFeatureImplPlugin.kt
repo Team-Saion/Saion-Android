@@ -1,5 +1,6 @@
 package com.saion.convention
 
+import com.saion.convention.internal.requirePairedFeatureApiProjectPath
 import com.saion.convention.internal.library
 import com.saion.convention.internal.libs
 import org.gradle.api.Plugin
@@ -12,10 +13,14 @@ class SaionFeatureImplPlugin : Plugin<Project> {
             pluginManager.apply("com.saion.android.library")
             pluginManager.apply("com.saion.android.compose")
             pluginManager.apply("com.saion.android.testing")
+            pluginManager.apply("com.saion.android.hilt")
 
             dependencies {
+                add("implementation", project(":core:navigation"))
                 add("implementation", project(":core:ui"))
                 add("implementation", libs.library("saion-design-system"))
+                add("implementation", libs.library("androidx-navigation3-runtime"))
+                add("implementation", project(requirePairedFeatureApiProjectPath()))
             }
         }
 }

@@ -15,6 +15,7 @@ class SaionAndroidHiltPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", libs.library("hilt-android"))
                 add("ksp", libs.library("hilt-compiler"))
+                add("compileOnly", libs.library("google-errorprone-annotations"))
             }
         }
 }
