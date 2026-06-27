@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.saion.design.system)
     implementation(libs.timber)
     implementation(projects.core.model)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     testImplementation(libs.kotlinx.coroutines.test)
 }
