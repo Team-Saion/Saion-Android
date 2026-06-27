@@ -1,0 +1,7 @@
+interface:
+  display_name: "Saion OpenAPI Sync"
+  short_description: "Sync Saion APIs from OpenAPI into app layers"
+  default_prompt: "Use $saion-openapi-sync to compare Saion OpenAPI with the current Android project and add or update APIs through UseCase."
+
+policy:
+  allow_implicit_invocation: true
