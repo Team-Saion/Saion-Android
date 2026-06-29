@@ -20,6 +20,7 @@ ktor = "3.5.1"
 
 # Internal dependencies
 designSystemAndroid = "0.2.2"
+kakao = "2.24.0"
 
 # Test dependencies
 junit = "4.13.2"
@@ -52,6 +53,7 @@ saion-design-system = { module = "com.saion.designsystem:design-system-android",
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 
 # Compose
@@ -68,6 +70,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
+kakao-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao" }
 
 # Kotlin
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }

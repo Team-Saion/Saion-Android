@@ -8,9 +8,7 @@ import com.saion.core.network.datasource.TermRemoteDataSource
 import com.saion.core.network.model.term.TermResponse
 import javax.inject.Inject
 
-internal class TermRepositoryImpl @Inject constructor(
-    private val termRemoteDataSource: TermRemoteDataSource,
-) : TermRepository {
+internal class TermRepositoryImpl @Inject constructor(private val termRemoteDataSource: TermRemoteDataSource) : TermRepository {
     override suspend fun getActiveTerms(): AppResult<List<Term>> = safeRequest(
         request = { termRemoteDataSource.getActiveTerms() },
     ) { response ->

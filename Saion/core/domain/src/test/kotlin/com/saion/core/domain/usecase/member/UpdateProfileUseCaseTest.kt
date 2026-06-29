@@ -2,12 +2,12 @@ package com.saion.core.domain.usecase.member
 
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
-import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.member.MemberRole
+import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppResult
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlinx.coroutines.runBlocking
 
 class UpdateProfileUseCaseTest {
     @Test

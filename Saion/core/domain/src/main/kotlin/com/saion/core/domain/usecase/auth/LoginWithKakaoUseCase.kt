@@ -5,5 +5,12 @@ import com.saion.core.model.result.AppResult
 import javax.inject.Inject
 
 class LoginWithKakaoUseCase @Inject constructor(private val authRepository: AuthRepository) {
-    suspend operator fun invoke(idToken: String): AppResult<Unit> = authRepository.loginWithKakao(idToken)
+    suspend operator fun invoke(idToken: String): AppResult<Unit> = authRepository.loginWithKakao(idToken).also { result ->
+        println(
+            """
+            idToken: $idToken
+            result: $result
+            """.trimIndent(),
+        )
+    }
 }

@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.core.logging)
     implementation(projects.core.model)
     implementation(projects.core.ui)
+    implementation(projects.core.auth)
     implementation(libs.saion.design.system)
 
     implementation(libs.androidx.activity.compose)

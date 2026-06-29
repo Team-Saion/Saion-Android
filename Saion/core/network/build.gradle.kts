@@ -4,6 +4,7 @@ import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 plugins {
     id("com.saion.android.library")
     id("com.saion.android.hilt")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
