@@ -9,5 +9,6 @@ android {
 }
 
 dependencies {
+    implementation(libs.lottie.compose)
     testImplementation(libs.kotlinx.coroutines.test)
 }
