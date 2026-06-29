@@ -19,7 +19,7 @@ kotlinxSerializationJson = "1.11.0"
 ktor = "3.5.1"
 
 # Internal dependencies
-designSystemAndroid = "0.2.2"
+designSystemAndroid = "0.3.0"
 kakao = "2.24.0"
 
 # Test dependencies
@@ -33,7 +33,7 @@ composeRules = "0.6.2"
 # Logging
 timber = "5.0.1"
 logger = "2.2.0"
-errorProne = "2.30.0"
+errorProne = "2.50.0"
 
 # Navigation
 nav3Core = "1.1.3"
