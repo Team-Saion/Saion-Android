@@ -22,13 +22,6 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven(url = "https://devrepo.kakao.com/nexus/content/groups/public/")
-        maven {
-            url = uri("https://maven.pkg.github.com/Team-Saion/Saion-Android-DS")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull
-                password = providers.gradleProperty("gpr.key").orNull
-            }
-        }
     }
 }
 
@@ -43,6 +36,7 @@ include(":core:navigation")
 include(":core:network")
 include(":core:ui")
 include(":core:auth")
+include(":core:design-system")
 include(":feature:auth:api")
 include(":feature:auth:impl")
 include(":feature:main:api")

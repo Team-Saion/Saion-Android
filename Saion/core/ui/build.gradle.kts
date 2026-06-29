@@ -16,7 +16,7 @@ ktlint {
 }
 
 dependencies {
-    implementation(libs.saion.design.system)
+    implementation(project(":core:design-system"))
     implementation(libs.timber)
     implementation(projects.core.model)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)

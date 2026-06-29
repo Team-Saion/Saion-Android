@@ -18,8 +18,6 @@ coroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
 ktor = "3.5.1"
 
-# Internal dependencies
-designSystemAndroid = "0.3.0"
 kakao = "2.24.0"
 
 # Test dependencies
@@ -45,9 +43,6 @@ android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 hilt-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
 ksp-gradle-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
-
-# Internal libraries
-saion-design-system = { module = "com.saion.designsystem:design-system-android", version.ref = "designSystemAndroid" }
 
 # AndroidX core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

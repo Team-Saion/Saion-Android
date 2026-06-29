@@ -27,7 +27,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.ui)
     implementation(projects.core.auth)
-    implementation(libs.saion.design.system)
+    implementation(project(":core:design-system"))
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
