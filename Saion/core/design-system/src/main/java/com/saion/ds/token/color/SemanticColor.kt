@@ -26,6 +26,7 @@ data class SemanticColor(
         val strong: Color,
         val subtle: Color,
         val disabled: Color,
+        val inverse: Color,
     )
 
     @Immutable
@@ -94,6 +95,7 @@ internal fun createSemanticColorLight(): SemanticColor = SemanticColor(
         strong = PrimitiveColor.Grey800,
         subtle = PrimitiveColor.Grey600,
         disabled = PrimitiveColor.Grey400,
+        inverse = PrimitiveColor.Common0,
     ),
     background = SemanticColor.Background(
         default = PrimitiveColor.Common0,

@@ -1,5 +1,6 @@
 package com.saion.ds.token.radius
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
 
@@ -47,3 +48,5 @@ internal fun createSemanticRadiusDefault(): SemanticRadius = SemanticRadius(
         xxLarge = PrimitiveRadius.V28,
     ),
 )
+
+fun Dp.toRoundedCornerShape(): RoundedCornerShape = RoundedCornerShape(size = this)
