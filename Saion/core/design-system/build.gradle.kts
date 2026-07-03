@@ -8,6 +8,12 @@ android {
     namespace = "com.saion.core.designsystem"
 }
 
+kotlin {
+    compilerOptions {
+        optIn.add("androidx.compose.foundation.style.ExperimentalFoundationStyleApi")
+    }
+}
+
 dependencies {
     implementation(libs.lottie.compose)
     testImplementation(libs.kotlinx.coroutines.test)
