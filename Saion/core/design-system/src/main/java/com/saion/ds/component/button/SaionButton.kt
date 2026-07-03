@@ -79,7 +79,10 @@ fun SaionButton(
                 buttonBaseStyle(size = size, variant = variant),
                 buttonInteractionStyle(colors = SaionTheme.colors),
             ),
-        horizontalArrangement = Arrangement.spacedBy(SaionTheme.spacing.v4),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = SaionTheme.spacing.v4,
+            alignment = Alignment.CenterHorizontally
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CompositionLocalProvider(LocalContentColor provides variant.contentColor) {

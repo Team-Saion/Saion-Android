@@ -71,7 +71,10 @@ fun SaionTextButton(
                 buttonBaseStyle(variant = variant),
                 buttonInteractionStyle(),
             ),
-        horizontalArrangement = Arrangement.spacedBy(SaionTheme.spacing.v4),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = SaionTheme.spacing.v4,
+            alignment = Alignment.CenterHorizontally
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CompositionLocalProvider(
