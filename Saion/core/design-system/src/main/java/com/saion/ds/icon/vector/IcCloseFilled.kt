@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-val IcCloseFilled: ImageVector
+internal val IcCloseFilled: ImageVector
     get() {
         if (_CloseFilled != null) {
             return _CloseFilled!!
