@@ -22,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -44,6 +45,7 @@ enum class IconButtonSize {
 fun SaionIconButton(
     icon: ImageVector,
     modifier: Modifier = Modifier,
+    tint: Color = SaionTheme.colors.label.strong,
     size: IconButtonSize = IconButtonSize.MEDIUM,
     enabled: Boolean = true,
     contentDescription: String? = null,
@@ -71,7 +73,7 @@ fun SaionIconButton(
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides if (enabled) SaionTheme.colors.label.strong else SaionTheme.colors.label.disabled,
+            LocalContentColor provides if (enabled) tint else SaionTheme.colors.label.disabled,
         ) {
             Icon(
                 imageVector = icon,
