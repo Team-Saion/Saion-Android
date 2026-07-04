@@ -35,8 +35,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    showIntroTransition: Boolean = false,
     modifier: Modifier = Modifier,
+    showIntroTransition: Boolean = false,
     loginViewModel: LoginViewModel = viewModel(),
 ) {
     val uiState by loginViewModel.uiState.collectAsStateWithLifecycle()
@@ -74,7 +74,7 @@ private fun LoginScreen(
     val introAlpha = rememberLoginIntroAlpha(showIntroTransition = showIntroTransition)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(SaionTheme.colors.background.default),
     ) {
@@ -86,7 +86,6 @@ private fun LoginScreen(
         )
 
         SaionScaffold(
-            modifier = modifier,
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 LoginBottomContent(
@@ -96,7 +95,7 @@ private fun LoginScreen(
                 )
             },
             contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
-            containerColor = Color.Transparent
+            containerColor = Color.Transparent,
         ) {}
 
         LoginBrandHeader(

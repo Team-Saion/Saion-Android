@@ -46,12 +46,12 @@ enum class TextButtonSize {
 @Composable
 fun SaionTextButton(
     text: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     variant: TextButtonVariant = TextButtonVariant.NORMAL,
     size: TextButtonSize = TextButtonSize.MEDIUM,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    onClick: () -> Unit,
 ) {
     val styleState = rememberUpdatedStyleState(interactionSource) { state ->
         state.isEnabled = enabled
@@ -73,7 +73,7 @@ fun SaionTextButton(
             ),
         horizontalArrangement = Arrangement.spacedBy(
             space = SaionTheme.spacing.v4,
-            alignment = Alignment.CenterHorizontally
+            alignment = Alignment.CenterHorizontally,
         ),
         verticalAlignment = Alignment.CenterVertically,
     ) {

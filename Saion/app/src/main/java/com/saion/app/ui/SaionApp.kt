@@ -7,8 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.saion.app.navigation.shared.AppRootNavigationHost
-import com.saion.app.navigation.state.rememberSaionAppState
 import com.saion.app.navigation.startup.StartupNavigationCoordinator
+import com.saion.app.navigation.state.rememberSaionAppState
 import com.saion.app.ui.splash.SplashScreen
 import com.saion.app.viewmodel.AppViewModel
 import com.saion.core.navigation.entry.NavEntryBuilder

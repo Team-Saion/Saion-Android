@@ -1,7 +1,6 @@
 package com.saion.core.auth.internal
 
 import android.content.Context
-import android.util.Log
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause

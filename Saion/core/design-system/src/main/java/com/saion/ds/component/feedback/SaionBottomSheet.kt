@@ -32,8 +32,8 @@ import com.saion.ds.token.radius.toRoundedCornerShape
 @Composable
 fun SaionBottomSheet(
     state: SheetState,
-    modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
     sheetGesturesEnabled: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {

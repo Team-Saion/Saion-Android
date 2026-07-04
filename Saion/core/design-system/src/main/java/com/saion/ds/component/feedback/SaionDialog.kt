@@ -26,9 +26,9 @@ import com.saion.ds.token.radius.toRoundedCornerShape
 @Composable
 internal fun SaionDialog(
     title: String,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
-    onDismiss: () -> Unit,
     buttonArea: @Composable () -> Unit,
 ) {
     Dialog(
@@ -80,22 +80,22 @@ internal fun SaionDialog(
 fun SaionAlertDialog(
     title: String,
     buttonText: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
-    onClick: () -> Unit,
 ) {
     SaionDialog(
         title = title,
+        onDismiss = {},
         description = description,
         modifier = modifier,
-        onDismiss = {},
     ) {
         SaionButtonArea(
-            mainButton = { modifier ->
+            mainButton = { buttonModifier ->
                 SaionButton(
                     text = buttonText,
-                    modifier = modifier,
                     onClick = onClick,
+                    modifier = buttonModifier,
                     size = ButtonSize.LARGE,
                     variant = ButtonVariant.NEUTRAL,
                 )
@@ -117,26 +117,26 @@ fun SaionConfirmDialog(
 ) {
     SaionDialog(
         title = title,
+        onDismiss = onDismiss,
         description = description,
         modifier = modifier,
-        onDismiss = onDismiss,
     ) {
         SaionButtonArea(
             isVertical = false,
-            mainButton = { modifier ->
+            mainButton = { buttonModifier ->
                 SaionButton(
                     text = dismissButtonText,
-                    modifier = modifier,
                     onClick = onDismiss,
+                    modifier = buttonModifier,
                     size = ButtonSize.LARGE,
                     variant = ButtonVariant.NEUTRAL,
                 )
             },
-            subButton = { modifier ->
+            subButton = { buttonModifier ->
                 SaionButton(
                     text = confirmButtonText,
-                    modifier = modifier,
                     onClick = onConfirm,
+                    modifier = buttonModifier,
                     size = ButtonSize.LARGE,
                     variant = if (isDanger) ButtonVariant.DANGER else ButtonVariant.PRIMARY,
                 )

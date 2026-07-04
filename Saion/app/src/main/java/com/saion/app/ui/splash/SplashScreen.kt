@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.saion.core.ui.transition.LocalSharedElementAnimatedContentScope
 import com.saion.core.ui.transition.LocalSharedElementTransitionScope
-import com.saion.core.ui.transition.SplashLoginLogoSharedKey
+import com.saion.core.ui.transition.SPLASH_LOGIN_LOGO_SHARED_KEY
 import com.saion.ds.brand.SaionBrandIntroDefaults
 import com.saion.ds.icon.SaionIcons
 
@@ -42,7 +42,7 @@ fun SplashScreen(modifier: Modifier = Modifier) {
                 tint = Color.Unspecified,
                 modifier = if (this != null && animatedContentScope != null) {
                     logoModifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(SplashLoginLogoSharedKey),
+                        sharedContentState = rememberSharedContentState(SPLASH_LOGIN_LOGO_SHARED_KEY),
                         animatedVisibilityScope = animatedContentScope,
                     )
                 } else {

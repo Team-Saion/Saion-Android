@@ -66,9 +66,10 @@ private fun SaionButtonAreaSinglePreview() {
             mainButton = { modifier ->
                 SaionButton(
                     text = "Button",
+                    onClick = {},
                     size = ButtonSize.XLARGE,
                     modifier = modifier,
-                ) { }
+                )
             },
             modifier = Modifier.padding(20.dp),
         )
@@ -83,17 +84,19 @@ private fun SaionButtonAreaVerticalPreview() {
             mainButton = { modifier ->
                 SaionButton(
                     text = "Button",
+                    onClick = {},
                     size = ButtonSize.XLARGE,
                     modifier = modifier,
-                ) { }
+                )
             },
             subButton = { modifier ->
                 SaionButton(
                     text = "Button",
+                    onClick = {},
                     size = ButtonSize.XLARGE,
                     variant = ButtonVariant.NEUTRAL,
                     modifier = modifier,
-                ) { }
+                )
             },
             modifier = Modifier.padding(20.dp),
         )
@@ -108,17 +111,19 @@ private fun SaionButtonAreaHorizontalPreview() {
             mainButton = { modifier ->
                 SaionButton(
                     text = "Button",
+                    onClick = {},
                     size = ButtonSize.XLARGE,
                     modifier = modifier,
-                ) { }
+                )
             },
             subButton = { modifier ->
                 SaionButton(
                     text = "Button",
+                    onClick = {},
                     size = ButtonSize.XLARGE,
                     variant = ButtonVariant.NEUTRAL,
                     modifier = modifier,
-                ) { }
+                )
             },
             isVertical = false,
             modifier = Modifier.padding(20.dp),

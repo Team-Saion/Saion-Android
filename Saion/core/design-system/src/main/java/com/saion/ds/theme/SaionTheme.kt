@@ -1,3 +1,8 @@
+@file:Suppress(
+    "CompositionLocalAllowlist",
+    "ktlint:compose:compositionlocal-allowlist",
+)
+
 package com.saion.ds.theme
 
 import androidx.compose.runtime.Composable

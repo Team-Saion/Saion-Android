@@ -56,10 +56,10 @@ fun SaionSpinner(modifier: Modifier = Modifier) {
 
 @Composable
 private fun RotatingTrackSpinner(
-    modifier: Modifier = Modifier,
     indicatorColor: Color,
     trackColor: Color,
     strokeWidth: Dp,
+    modifier: Modifier = Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "saion_spinner_rotation")
     val rotation = infiniteTransition.animateFloat(

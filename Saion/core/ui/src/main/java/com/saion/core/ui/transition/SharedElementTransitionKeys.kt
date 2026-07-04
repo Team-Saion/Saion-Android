@@ -1,3 +1,3 @@
 package com.saion.core.ui.transition
 
-const val SplashLoginLogoSharedKey = "splash_login_logo"
+const val SPLASH_LOGIN_LOGO_SHARED_KEY = "splash_login_logo"

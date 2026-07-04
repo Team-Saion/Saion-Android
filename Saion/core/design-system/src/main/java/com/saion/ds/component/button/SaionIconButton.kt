@@ -44,13 +44,13 @@ enum class IconButtonSize {
 @Composable
 fun SaionIconButton(
     icon: ImageVector,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = SaionTheme.colors.label.strong,
     size: IconButtonSize = IconButtonSize.MEDIUM,
     enabled: Boolean = true,
     contentDescription: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    onClick: () -> Unit,
 ) {
     val styleState = rememberUpdatedStyleState(interactionSource) { state ->
         state.isEnabled = enabled

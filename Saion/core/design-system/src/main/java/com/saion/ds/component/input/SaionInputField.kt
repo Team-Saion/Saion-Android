@@ -76,6 +76,9 @@ internal enum class SaionInputClearButtonPolicy {
 internal fun SaionInputField(
     value: String,
     onValueChange: (String) -> Unit,
+    interactionSource: MutableInteractionSource,
+    keyboardOptions: KeyboardOptions,
+    spec: SaionInputSpec,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     label: String? = null,
@@ -84,9 +87,6 @@ internal fun SaionInputField(
     isError: Boolean = false,
     minLines: Int = 1,
     maxLines: Int = 1,
-    interactionSource: MutableInteractionSource,
-    keyboardOptions: KeyboardOptions,
-    spec: SaionInputSpec,
 ) {
     val interactionFocused by interactionSource.collectIsFocusedAsState()
     val stateContext = rememberSaionInputStateContext(

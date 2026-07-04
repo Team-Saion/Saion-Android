@@ -48,18 +48,20 @@ private fun SaionBottomCTALowerPreview() {
             lower = {
                 SaionTextButton(
                     text = "닫기",
+                    onClick = {},
                     size = TextButtonSize.MEDIUM,
                     modifier = Modifier.fillMaxWidth(),
-                ) {}
+                )
             },
         ) {
             SaionButtonArea(
                 mainButton = { modifier ->
                     SaionButton(
                         text = "동의하고 다음",
+                        onClick = {},
                         size = ButtonSize.XLARGE,
                         modifier = modifier,
-                    ) {}
+                    )
                 },
             )
         }
@@ -79,9 +81,10 @@ private fun SaionBottomCTAUpperPreview() {
                 mainButton = { modifier ->
                     SaionButton(
                         text = "시작하기",
+                        onClick = {},
                         size = ButtonSize.XLARGE,
                         modifier = modifier,
-                    ) {}
+                    )
                 },
             )
         }

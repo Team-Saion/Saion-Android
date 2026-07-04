@@ -1,9 +1,9 @@
 package com.saion.app.viewmodel
 
-import com.saion.app.navigation.startup.AppStartDestination
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.saion.app.navigation.startup.AppStartDestination
 import com.saion.core.domain.usecase.auth.IsSignedInUseCase
 import com.saion.core.domain.usecase.member.GetMyInfoUseCase
 import com.saion.core.model.member.MemberRole

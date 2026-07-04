@@ -44,8 +44,7 @@ fun AppRootNavigationHost(
     }
 }
 
-private fun noOpRootTransitionSpec():
-    AnimatedContentTransitionScope<Scene<AppNavKey>>.() -> ContentTransform = {
+private fun noOpRootTransitionSpec(): AnimatedContentTransitionScope<Scene<AppNavKey>>.() -> ContentTransform = {
     EnterTransition.None togetherWith ExitTransition.None using SizeTransform(clip = false)
 }
 

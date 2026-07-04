@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import com.saion.core.ui.transition.LocalSharedElementAnimatedContentScope
 import com.saion.core.ui.transition.LocalSharedElementTransitionScope
-import com.saion.core.ui.transition.SplashLoginLogoSharedKey
+import com.saion.core.ui.transition.SPLASH_LOGIN_LOGO_SHARED_KEY
 import com.saion.ds.brand.SaionBrandIntroDefaults
 import com.saion.ds.icon.SaionIcons
 import com.saion.ds.theme.SaionTheme
@@ -50,7 +50,7 @@ internal fun LoginBrandHeader(
                 tint = Color.Unspecified,
                 modifier = if (this != null && animatedContentScope != null) {
                     logoModifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(SplashLoginLogoSharedKey),
+                        sharedContentState = rememberSharedContentState(SPLASH_LOGIN_LOGO_SHARED_KEY),
                         animatedVisibilityScope = animatedContentScope,
                     )
                 } else {

@@ -21,9 +21,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @Immutable
-data class LoginUiState(
-    val isLoading: Boolean = false,
-) : UIState
+data class LoginUiState(val isLoading: Boolean = false) : UIState
 
 sealed interface LoginIntent : UIIntent
 
