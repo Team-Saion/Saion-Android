@@ -9,9 +9,11 @@ android {
 
 dependencies {
     implementation(projects.core.auth)
+    implementation(project(":core:design-system"))
     implementation(projects.core.domain)
     implementation(projects.core.model)
     implementation(projects.feature.main.api)
+    implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     testImplementation(libs.kotlinx.coroutines.test)

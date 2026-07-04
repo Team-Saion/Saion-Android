@@ -22,7 +22,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
@@ -67,11 +66,37 @@ class LoginViewModelTest {
 
         assertEquals(LoginEffect.NavigateNext, effect.await())
         assertFalse(viewModel.uiState.value.isLoading)
-        assertNull(viewModel.uiState.value.errorMessage)
     }
 
     @Test
-    fun `social login failure updates error message`() = runTest(dispatcher) {
+    fun `social login cancellation emits snackbar effect`() = runTest(dispatcher) {
+        val viewModel = LoginViewModel(
+            socialAuthClient = FakeSocialAuthClient(
+                loginResult = SocialLoginResult.Cancelled,
+            ),
+            loginWithKakaoUseCase = LoginWithKakaoUseCase(
+                authRepository = FakeAuthRepository(
+                    loginResult = AppResult.Success(Unit),
+                ),
+            ),
+        )
+        val effect = CompletableDeferred<LoginEffect>()
+        backgroundScope.launch {
+            effect.complete(viewModel.uiEffect.first())
+        }
+
+        viewModel.login(context)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(
+            LoginEffect.ShowSnackbar("카카오 로그인이 취소되었습니다."),
+            effect.await(),
+        )
+    }
+
+    @Test
+    fun `social login failure emits snackbar effect`() = runTest(dispatcher) {
         val viewModel = LoginViewModel(
             socialAuthClient = FakeSocialAuthClient(
                 loginResult = SocialLoginResult.Failure(
@@ -85,16 +110,20 @@ class LoginViewModelTest {
                 ),
             ),
         )
+        val effect = CompletableDeferred<LoginEffect>()
+        backgroundScope.launch {
+            effect.complete(viewModel.uiEffect.first())
+        }
 
         viewModel.login(context)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals("sdk failed", viewModel.uiState.value.errorMessage)
+        assertEquals(LoginEffect.ShowSnackbar("sdk failed"), effect.await())
     }
 
     @Test
-    fun `backend login failure updates error message`() = runTest(dispatcher) {
+    fun `backend login failure emits snackbar effect`() = runTest(dispatcher) {
         val viewModel = LoginViewModel(
             socialAuthClient = FakeSocialAuthClient(
                 loginResult = SocialLoginResult.Success(
@@ -110,12 +139,16 @@ class LoginViewModelTest {
                 ),
             ),
         )
+        val effect = CompletableDeferred<LoginEffect>()
+        backgroundScope.launch {
+            effect.complete(viewModel.uiEffect.first())
+        }
 
         viewModel.login(context)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
-        assertEquals("login failed", viewModel.uiState.value.errorMessage)
+        assertEquals(LoginEffect.ShowSnackbar("login failed"), effect.await())
     }
 }
 
