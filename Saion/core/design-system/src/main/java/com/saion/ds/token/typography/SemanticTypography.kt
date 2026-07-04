@@ -30,6 +30,7 @@ data class SemanticTypography(
     val label1Subtle: TextStyle,
     val label2Strong: TextStyle,
     val caption2Strong: TextStyle,
+    val title1Strong: TextStyle,
 )
 
 @Composable
@@ -159,5 +160,11 @@ internal fun createSemanticTypographyDefault(): SemanticTypography = SemanticTyp
         fontWeight = FontWeight.SemiBold,
         lineHeight = 14.dp,
         letterSpacing = 0.25.dp,
+    ),
+    title1Strong = createSaionTextStyle(
+        fontSize = 18.dp,
+        fontWeight = FontWeight.Bold,
+        lineHeight = 25.dp,
+        letterSpacing = 0.dp,
     ),
 )
