@@ -6,25 +6,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.saion.app.navigation.shared.AppRootNavigationHost
 import com.saion.app.navigation.state.rememberSaionAppState
+import com.saion.app.navigation.startup.StartupNavigationCoordinator
 import com.saion.app.ui.splash.SplashScreen
 import com.saion.app.viewmodel.AppViewModel
-import com.saion.app.viewmodel.RootNavigationTarget
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.key.AppNavKey
-import com.saion.core.navigation.ui.AppNavigationHost
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.event.GlobalUiEvent
 import com.saion.core.ui.event.GlobalUiEventBus
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.auth.api.key.AuthNavKey
-import com.saion.feature.main.api.key.MainNavKey
+import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 fun SaionApp(
     appViewModel: AppViewModel,
-    rootEntryBuilders: Set<NavEntryBuilder<AppNavKey>>,
+    rootEntryBuilders: ImmutableSet<NavEntryBuilder<AppNavKey>>,
     modifier: Modifier = Modifier,
 ) {
     val appState = rememberSaionAppState()
@@ -41,28 +41,19 @@ fun SaionApp(
             }
         }
 
-        LaunchedEffect(uiState.isLoading, uiState.rootTarget) {
-            if (uiState.isLoading) return@LaunchedEffect
-
-            when (val target = uiState.rootTarget) {
-                is RootNavigationTarget.Auth -> appState.navigationState.replaceAll(AuthNavKey(startStep = target.startStep))
-                RootNavigationTarget.Main -> appState.navigationState.replaceAll(MainNavKey)
-                null -> Unit
-            }
-        }
+        StartupNavigationCoordinator(
+            uiState = uiState,
+            navigationState = appState.navigationState,
+        )
 
         SaionScaffold(
             modifier = modifier,
             systemBarInset = SystemBarInset.None,
         ) {
-            if (uiState.isLoading) {
-                SplashScreen()
-            } else {
-                AppNavigationHost(
-                    navigationState = appState.navigationState,
-                    entryBuilders = rootEntryBuilders,
-                )
-            }
+            AppRootNavigationHost(
+                navigationState = appState.navigationState,
+                entryBuilders = rootEntryBuilders,
+            )
         }
     }
 }

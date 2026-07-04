@@ -4,4 +4,7 @@ import com.saion.core.navigation.key.AppNavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AuthNavKey(val startStep: AuthStartStep = AuthStartStep.LOGIN) : AppNavKey
+data class AuthNavKey(
+    val startStep: AuthStartStep = AuthStartStep.LOGIN,
+    val showIntroTransition: Boolean = false,
+) : AppNavKey

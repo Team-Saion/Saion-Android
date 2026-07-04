@@ -3,6 +3,7 @@ plugins {
     id("com.saion.android.compose")
     id("com.saion.android.hilt")
     id("com.saion.android.testing")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -30,9 +31,12 @@ dependencies {
     implementation(project(":core:design-system"))
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.kotlinx.collections.immutable)
 
     implementation(projects.feature.auth.api)
     implementation(projects.feature.auth.impl)

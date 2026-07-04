@@ -20,6 +20,7 @@ class SaionFeatureImplPlugin : Plugin<Project> {
                 add("implementation", project(":core:ui"))
                 add("implementation", project(":core:design-system"))
                 add("implementation", libs.library("androidx-navigation3-runtime"))
+                add("implementation", libs.library("kotlinx-collections-immutable"))
                 add("implementation", project(requirePairedFeatureApiProjectPath()))
             }
         }

@@ -15,6 +15,7 @@ import com.saion.core.navigation.key.AppNavKey
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.jvm.JvmSuppressWildcards
+import kotlinx.collections.immutable.toImmutableSet
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SaionApp(
                 appViewModel = appViewModel,
-                rootEntryBuilders = rootEntryBuilders,
+                rootEntryBuilders = rootEntryBuilders.toImmutableSet(),
             )
         }
     }

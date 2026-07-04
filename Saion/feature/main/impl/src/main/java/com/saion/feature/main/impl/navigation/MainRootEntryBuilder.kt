@@ -22,6 +22,8 @@ import com.saion.feature.notification.api.key.NotificationNavKey
 import com.saion.feature.search.api.key.SearchNavKey
 import javax.inject.Inject
 import kotlin.jvm.JvmSuppressWildcards
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.toImmutableSet
 
 class MainRootEntryBuilder @Inject constructor(private val tabEntryBuilders: Set<@JvmSuppressWildcards NavEntryBuilder<MainTabNavKey>>) :
     NavEntryBuilder<AppNavKey> {
@@ -32,7 +34,7 @@ class MainRootEntryBuilder @Inject constructor(private val tabEntryBuilders: Set
         with(scope) {
             entry<MainNavKey> {
                 MainRoute(
-                    tabEntryBuilders = tabEntryBuilders,
+                    tabEntryBuilders = tabEntryBuilders.toImmutableSet(),
                 )
             }
         }
@@ -40,7 +42,7 @@ class MainRootEntryBuilder @Inject constructor(private val tabEntryBuilders: Set
 }
 
 @Composable
-private fun MainRoute(tabEntryBuilders: Set<NavEntryBuilder<MainTabNavKey>>) {
+private fun MainRoute(tabEntryBuilders: ImmutableSet<NavEntryBuilder<MainTabNavKey>>) {
     val navigationState = rememberNavigationState<MainTabNavKey>(HomeNavKey)
 
     val items = remember {

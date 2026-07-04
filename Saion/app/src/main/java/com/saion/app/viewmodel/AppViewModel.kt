@@ -1,5 +1,7 @@
 package com.saion.app.viewmodel
 
+import com.saion.app.navigation.startup.AppStartDestination
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.auth.IsSignedInUseCase
@@ -17,16 +19,11 @@ import kotlinx.coroutines.launch
 
 data class AppUiState(
     val isLoading: Boolean = true,
-    val rootTarget: RootNavigationTarget? = null,
+    val startDestination: AppStartDestination? = null,
 )
 
-sealed interface RootNavigationTarget {
-    data class Auth(val startStep: AuthStartStep) : RootNavigationTarget
-
-    data object Main : RootNavigationTarget
-}
-
 @HiltViewModel
+@Stable
 class AppViewModel @Inject constructor(
     private val isSignedInUseCase: IsSignedInUseCase,
     private val getMyInfoUseCase: GetMyInfoUseCase,
@@ -36,31 +33,31 @@ class AppViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val target = resolveStartTarget()
+            val startDestination = resolveStartDestination()
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    rootTarget = target,
+                    startDestination = startDestination,
                 )
             }
         }
     }
 
-    private suspend fun resolveStartTarget(): RootNavigationTarget {
+    private suspend fun resolveStartDestination(): AppStartDestination {
         if (!isSignedInUseCase()) {
-            return RootNavigationTarget.Auth(startStep = AuthStartStep.LOGIN)
+            return AppStartDestination.SplashThenLogin
         }
 
         return when (val result = getMyInfoUseCase()) {
             is AppResult.Success -> when (result.data.role) {
-                MemberRole.PENDING -> RootNavigationTarget.Auth(startStep = AuthStartStep.TERMS)
+                MemberRole.PENDING -> AppStartDestination.Auth(startStep = AuthStartStep.TERMS)
 
                 MemberRole.MEMBER,
                 MemberRole.ADMIN,
-                -> RootNavigationTarget.Main
+                -> AppStartDestination.Main
             }
 
-            is AppResult.Failure -> RootNavigationTarget.Auth(startStep = AuthStartStep.LOGIN)
+            is AppResult.Failure -> AppStartDestination.SplashThenLogin
         }
     }
 }

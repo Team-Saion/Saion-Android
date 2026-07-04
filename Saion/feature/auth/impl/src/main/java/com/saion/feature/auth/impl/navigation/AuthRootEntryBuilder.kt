@@ -15,6 +15,7 @@ import com.saion.feature.auth.impl.nickname.NicknameScreen
 import com.saion.feature.auth.impl.terms.TermsScreen
 import com.saion.feature.main.api.key.MainNavKey
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentSetOf
 
 class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
     override fun build(
@@ -25,6 +26,7 @@ class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
             entry<AuthNavKey> { key ->
                 AuthRoute(
                     startStep = key.startStep,
+                    showIntroTransition = key.showIntroTransition,
                     onAuthComplete = { navigator.replaceAll(MainNavKey) },
                 )
             }
@@ -35,6 +37,7 @@ class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
 @Composable
 private fun AuthRoute(
     startStep: AuthStartStep,
+    showIntroTransition: Boolean,
     onAuthComplete: () -> Unit,
 ) {
     val startKey = when (startStep) {
@@ -42,12 +45,13 @@ private fun AuthRoute(
         AuthStartStep.TERMS -> TermsNavKey
     }
     val navigationState = rememberNavigationState(startKey)
-    val entryBuilders = remember(onAuthComplete) {
-        setOf(
+    val entryBuilders = remember(onAuthComplete, showIntroTransition) {
+        persistentSetOf(
             NavEntryBuilder { builderScope, flowNavigator ->
                 with(builderScope) {
                     entry<LoginNavKey> {
                         LoginScreen(
+                            showIntroTransition = showIntroTransition,
                             onLoginSuccess = { flowNavigator.replace(TermsNavKey) },
                         )
                     }
