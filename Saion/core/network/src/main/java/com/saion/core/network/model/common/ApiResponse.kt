@@ -17,7 +17,7 @@ data class ApiResponse<T>(
             with(NetworkJson.instance.decodeFromString<BaseResponse<T>>(bodyAsText())) {
                 ApiResponse(
                     statusCode = status.value,
-                    isSuccess = isSuccess,
+                    isSuccess = success,
                     data = data,
                     errorCode = errorCode,
                     message = message,
