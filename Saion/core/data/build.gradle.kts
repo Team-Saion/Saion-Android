@@ -12,5 +12,6 @@ dependencies {
     implementation(projects.core.datastore)
     implementation(projects.core.model)
     implementation(projects.core.network)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
 }
