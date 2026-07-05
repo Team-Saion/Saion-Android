@@ -1,6 +1,8 @@
 package com.saion.ds.icon
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.saion.ds.icon.vector.IcCheck
+import com.saion.ds.icon.vector.IcCheckFilled
 import com.saion.ds.icon.vector.IcChevronLeft
 import com.saion.ds.icon.vector.IcChevronRight
 import com.saion.ds.icon.vector.IcCloseFilled
@@ -17,4 +19,6 @@ object SaionIcons {
     val ChevronRight: ImageVector = IcChevronRight
     val ChevronLeft: ImageVector = IcChevronLeft
     val CloseFilled: ImageVector = IcCloseFilled
+    val Check: ImageVector = IcCheck
+    val CheckFilled: ImageVector = IcCheckFilled
 }
