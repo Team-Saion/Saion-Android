@@ -8,6 +8,9 @@ import com.saion.core.network.datasource.TermRemoteDataSource
 import com.saion.core.network.model.term.TermResponse
 import javax.inject.Inject
 
+/**
+ * 약관 전송 모델을 도메인 모델로 변환하는 기본 구현입니다.
+ */
 internal class TermRepositoryImpl @Inject constructor(private val termRemoteDataSource: TermRemoteDataSource) : TermRepository {
     override suspend fun getActiveTerms(): AppResult<List<Term>> = safeRequest(
         request = { termRemoteDataSource.getActiveTerms() },
