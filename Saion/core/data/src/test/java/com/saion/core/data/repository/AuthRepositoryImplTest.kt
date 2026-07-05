@@ -94,10 +94,71 @@ class AuthRepositoryImplTest {
 
         assertInvalidRoleFailure(result)
     }
+
+    @Test
+    fun `getStoredMemberRole returns pending role when stored access token contains pending claim`() = runBlocking {
+        val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("PENDING"))
+        val repository = createRepository(localDataSource = localDataSource)
+
+        val result = repository.getStoredMemberRole()
+
+        assertEquals(AppResult.Success(MemberRole.PENDING), result)
+    }
+
+    @Test
+    fun `getStoredMemberRole returns member role when stored access token contains member claim`() = runBlocking {
+        val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("MEMBER"))
+        val repository = createRepository(localDataSource = localDataSource)
+
+        val result = repository.getStoredMemberRole()
+
+        assertEquals(AppResult.Success(MemberRole.MEMBER), result)
+    }
+
+    @Test
+    fun `getStoredMemberRole returns admin role when stored access token contains admin claim`() = runBlocking {
+        val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("ADMIN"))
+        val repository = createRepository(localDataSource = localDataSource)
+
+        val result = repository.getStoredMemberRole()
+
+        assertEquals(AppResult.Success(MemberRole.ADMIN), result)
+    }
+
+    @Test
+    fun `getStoredMemberRole returns failure when stored access token is missing`() = runBlocking {
+        val repository = createRepository(localDataSource = FakeAuthLocalDataSource(accessToken = null))
+
+        val result = repository.getStoredMemberRole()
+
+        assertInvalidRoleFailure(result)
+    }
+
+    @Test
+    fun `getStoredMemberRole returns failure when stored access token payload is invalid`() = runBlocking {
+        val repository = createRepository(localDataSource = FakeAuthLocalDataSource(accessToken = "header.%%%.signature"))
+
+        val result = repository.getStoredMemberRole()
+
+        assertInvalidRoleFailure(result)
+    }
+
+    @Test
+    fun `clearSession clears local tokens`() = runBlocking {
+        val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("MEMBER"))
+        val repository = createRepository(localDataSource = localDataSource)
+
+        repository.clearSession()
+
+        assertTrue(localDataSource.clearTokensCalled)
+    }
 }
 
-private fun createRepository(accessToken: String): AuthRepositoryImpl = AuthRepositoryImpl(
-    localDataSource = FakeAuthLocalDataSource(),
+private fun createRepository(
+    accessToken: String = jwtWithRoles("MEMBER"),
+    localDataSource: FakeAuthLocalDataSource = FakeAuthLocalDataSource(),
+): AuthRepositoryImpl = AuthRepositoryImpl(
+    localDataSource = localDataSource,
     remoteDataSource = FakeAuthRemoteDataSource(accessToken = accessToken),
 )
 
@@ -121,19 +182,31 @@ private fun jwtWithPayload(payload: String): String {
     return "header.$encodedPayload.signature"
 }
 
-private class FakeAuthLocalDataSource : AuthLocalDataSource {
+private class FakeAuthLocalDataSource(
+    private var accessToken: String? = null,
+    private var refreshToken: String? = null,
+) : AuthLocalDataSource {
+    var clearTokensCalled: Boolean = false
+
     override suspend fun saveTokens(
         accessToken: String,
         refreshToken: String,
-    ) = Unit
+    ) {
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
+    }
 
-    override suspend fun getAccessToken(): String? = null
+    override suspend fun getAccessToken(): String? = accessToken
 
-    override suspend fun getRefreshToken(): String? = null
+    override suspend fun getRefreshToken(): String? = refreshToken
 
     override suspend fun hasSession(): Boolean = false
 
-    override suspend fun clearTokens() = Unit
+    override suspend fun clearTokens() {
+        clearTokensCalled = true
+        accessToken = null
+        refreshToken = null
+    }
 }
 
 private class FakeAuthRemoteDataSource(private val accessToken: String) : AuthRemoteDataSource {

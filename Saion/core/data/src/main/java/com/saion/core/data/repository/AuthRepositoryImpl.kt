@@ -29,12 +29,18 @@ internal class AuthRepositoryImpl @Inject constructor(
             accessToken = tokenData.accessToken,
             refreshToken = tokenData.refreshToken,
         )
-        tokenData.accessToken.extractMemberRoleFromJwt()
-            ?.let { role -> AppResult.Success(role) }
-            ?: AppResult.Failure(AppError.Unknown(message = "Access token roles claim is missing or invalid."))
+        tokenData.accessToken.toMemberRoleResult()
     }
 
+    override suspend fun getStoredMemberRole(): AppResult<MemberRole> = localDataSource.getAccessToken()
+        ?.toMemberRoleResult()
+        ?: invalidStoredMemberRole()
+
     override suspend fun isSignedIn(): Boolean = localDataSource.hasSession()
+
+    override suspend fun clearSession() {
+        localDataSource.clearTokens()
+    }
 }
 
 private fun String.extractMemberRoleFromJwt(): MemberRole? = runCatching {
@@ -53,3 +59,11 @@ private fun String.extractMemberRoleFromJwt(): MemberRole? = runCatching {
         ?.contentOrNull
         ?.let { role -> MemberRole.from(role) }
 }.getOrNull()
+
+private fun String.toMemberRoleResult(): AppResult<MemberRole> = extractMemberRoleFromJwt()
+    ?.let { role -> AppResult.Success(role) }
+    ?: invalidStoredMemberRole()
+
+private fun invalidStoredMemberRole(): AppResult.Failure = AppResult.Failure(
+    AppError.Unknown(message = "Access token roles claim is missing or invalid."),
+)

@@ -13,7 +13,17 @@ interface AuthRepository {
     suspend fun loginWithKakao(idToken: String): AppResult<MemberRole>
 
     /**
+     * 로컬에 저장된 access token에서 멤버 역할을 읽어옵니다.
+     */
+    suspend fun getStoredMemberRole(): AppResult<MemberRole>
+
+    /**
      * 현재 로컬 세션이 유효한지 확인합니다.
      */
     suspend fun isSignedIn(): Boolean
+
+    /**
+     * 로컬 세션을 정리합니다.
+     */
+    suspend fun clearSession()
 }
