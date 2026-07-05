@@ -8,8 +8,10 @@ import com.saion.core.auth.SocialLoginFailureReason
 import com.saion.core.auth.SocialLoginResult
 import com.saion.core.domain.repository.AuthRepository
 import com.saion.core.domain.usecase.auth.LoginWithKakaoUseCase
+import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.feature.auth.api.key.AuthStartStep
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,7 +44,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login success emits navigate effect`() = runTest(dispatcher) {
+    fun `login success with pending role emits terms navigation effect`() = runTest(dispatcher) {
         val viewModel = LoginViewModel(
             socialAuthClient = FakeSocialAuthClient(
                 loginResult = SocialLoginResult.Success(
@@ -52,7 +54,7 @@ class LoginViewModelTest {
             ),
             loginWithKakaoUseCase = LoginWithKakaoUseCase(
                 authRepository = FakeAuthRepository(
-                    loginResult = AppResult.Success(Unit),
+                    loginResult = AppResult.Success(MemberRole.PENDING),
                 ),
             ),
         )
@@ -64,7 +66,61 @@ class LoginViewModelTest {
         viewModel.login(context)
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals(LoginEffect.NavigateNext, effect.await())
+        assertEquals(LoginEffect.NavigateNext(AuthStartStep.TERMS), effect.await())
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `login success with member role emits main navigation effect`() = runTest(dispatcher) {
+        val viewModel = LoginViewModel(
+            socialAuthClient = FakeSocialAuthClient(
+                loginResult = SocialLoginResult.Success(
+                    provider = SocialAuthProvider.KAKAO,
+                    idToken = "token",
+                ),
+            ),
+            loginWithKakaoUseCase = LoginWithKakaoUseCase(
+                authRepository = FakeAuthRepository(
+                    loginResult = AppResult.Success(MemberRole.MEMBER),
+                ),
+            ),
+        )
+        val effect = CompletableDeferred<LoginEffect>()
+        backgroundScope.launch {
+            effect.complete(viewModel.uiEffect.first())
+        }
+
+        viewModel.login(context)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(LoginEffect.NavigateMain, effect.await())
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `login success with admin role emits main navigation effect`() = runTest(dispatcher) {
+        val viewModel = LoginViewModel(
+            socialAuthClient = FakeSocialAuthClient(
+                loginResult = SocialLoginResult.Success(
+                    provider = SocialAuthProvider.KAKAO,
+                    idToken = "token",
+                ),
+            ),
+            loginWithKakaoUseCase = LoginWithKakaoUseCase(
+                authRepository = FakeAuthRepository(
+                    loginResult = AppResult.Success(MemberRole.ADMIN),
+                ),
+            ),
+        )
+        val effect = CompletableDeferred<LoginEffect>()
+        backgroundScope.launch {
+            effect.complete(viewModel.uiEffect.first())
+        }
+
+        viewModel.login(context)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(LoginEffect.NavigateMain, effect.await())
         assertFalse(viewModel.uiState.value.isLoading)
     }
 
@@ -76,7 +132,7 @@ class LoginViewModelTest {
             ),
             loginWithKakaoUseCase = LoginWithKakaoUseCase(
                 authRepository = FakeAuthRepository(
-                    loginResult = AppResult.Success(Unit),
+                    loginResult = AppResult.Success(MemberRole.MEMBER),
                 ),
             ),
         )
@@ -106,7 +162,7 @@ class LoginViewModelTest {
             ),
             loginWithKakaoUseCase = LoginWithKakaoUseCase(
                 authRepository = FakeAuthRepository(
-                    loginResult = AppResult.Success(Unit),
+                    loginResult = AppResult.Success(MemberRole.MEMBER),
                 ),
             ),
         )
@@ -161,8 +217,14 @@ private class FakeSocialAuthClient(private val loginResult: SocialLoginResult) :
     override suspend fun logout(provider: SocialAuthProvider): SocialAuthActionResult = SocialAuthActionResult.Success
 }
 
-private class FakeAuthRepository(private val loginResult: AppResult<Unit>) : AuthRepository {
-    override suspend fun loginWithKakao(idToken: String): AppResult<Unit> = loginResult
+private class FakeAuthRepository(private val loginResult: AppResult<MemberRole>) : AuthRepository {
+    override suspend fun loginWithKakao(idToken: String): AppResult<MemberRole> = loginResult
+
+    override suspend fun getStoredMemberRole(): AppResult<MemberRole> {
+        throw UnsupportedOperationException("Not required for this test")
+    }
 
     override suspend fun isSignedIn(): Boolean = false
+
+    override suspend fun clearSession() = Unit
 }

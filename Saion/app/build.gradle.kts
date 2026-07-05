@@ -55,4 +55,6 @@ dependencies {
 
     implementation(projects.feature.mypage.api)
     implementation(projects.feature.mypage.impl)
+
+    testImplementation(libs.kotlinx.coroutines.test)
 }

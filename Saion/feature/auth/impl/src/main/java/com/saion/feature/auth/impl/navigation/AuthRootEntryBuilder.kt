@@ -52,7 +52,13 @@ private fun AuthRoute(
                     entry<LoginNavKey> {
                         LoginScreen(
                             showIntroTransition = showIntroTransition,
-                            onLoginSuccess = { flowNavigator.replace(TermsNavKey) },
+                            onNavigateNext = { startStep ->
+                                when (startStep) {
+                                    AuthStartStep.LOGIN -> flowNavigator.replace(LoginNavKey)
+                                    AuthStartStep.TERMS -> flowNavigator.replace(TermsNavKey)
+                                }
+                            },
+                            onNavigateMain = onAuthComplete,
                         )
                     }
                     entry<TermsNavKey> {

@@ -28,13 +28,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.ds.brand.SaionBrandIntroDefaults
 import com.saion.ds.theme.SaionTheme
+import com.saion.feature.auth.api.key.AuthStartStep
 import com.saion.feature.auth.impl.login.component.LoginBottomContent
 import com.saion.feature.auth.impl.login.component.LoginBrandHeader
 import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onNavigateNext: (AuthStartStep) -> Unit,
+    onNavigateMain: () -> Unit,
     modifier: Modifier = Modifier,
     showIntroTransition: Boolean = false,
     loginViewModel: LoginViewModel = viewModel(),
@@ -46,7 +48,8 @@ fun LoginScreen(
     LaunchedEffect(loginViewModel, snackbarHostState) {
         loginViewModel.uiEffect.collect { effect ->
             when (effect) {
-                LoginEffect.NavigateNext -> onLoginSuccess()
+                is LoginEffect.NavigateNext -> onNavigateNext(effect.startStep)
+                LoginEffect.NavigateMain -> onNavigateMain()
                 is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
             }
         }

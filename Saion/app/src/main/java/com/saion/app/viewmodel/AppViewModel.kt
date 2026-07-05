@@ -4,8 +4,9 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saion.app.navigation.startup.AppStartDestination
+import com.saion.core.domain.usecase.auth.ClearSessionUseCase
+import com.saion.core.domain.usecase.auth.GetStoredMemberRoleUseCase
 import com.saion.core.domain.usecase.auth.IsSignedInUseCase
-import com.saion.core.domain.usecase.member.GetMyInfoUseCase
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppResult
 import com.saion.feature.auth.api.key.AuthStartStep
@@ -26,7 +27,8 @@ data class AppUiState(
 @Stable
 class AppViewModel @Inject constructor(
     private val isSignedInUseCase: IsSignedInUseCase,
-    private val getMyInfoUseCase: GetMyInfoUseCase,
+    private val getStoredMemberRoleUseCase: GetStoredMemberRoleUseCase,
+    private val clearSessionUseCase: ClearSessionUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -48,8 +50,8 @@ class AppViewModel @Inject constructor(
             return AppStartDestination.SplashThenLogin
         }
 
-        return when (val result = getMyInfoUseCase()) {
-            is AppResult.Success -> when (result.data.role) {
+        return when (val result = getStoredMemberRoleUseCase()) {
+            is AppResult.Success -> when (result.data) {
                 MemberRole.PENDING -> AppStartDestination.Auth(startStep = AuthStartStep.TERMS)
 
                 MemberRole.MEMBER,
@@ -57,7 +59,10 @@ class AppViewModel @Inject constructor(
                 -> AppStartDestination.Main
             }
 
-            is AppResult.Failure -> AppStartDestination.SplashThenLogin
+            is AppResult.Failure -> {
+                clearSessionUseCase()
+                AppStartDestination.SplashThenLogin
+            }
         }
     }
 }

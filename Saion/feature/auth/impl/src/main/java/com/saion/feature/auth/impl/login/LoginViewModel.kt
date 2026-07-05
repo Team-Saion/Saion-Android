@@ -2,12 +2,14 @@ package com.saion.feature.auth.impl.login
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import com.saion.core.auth.SocialAuthClient
 import com.saion.core.auth.SocialAuthProvider
 import com.saion.core.auth.SocialLoginFailureReason
 import com.saion.core.auth.SocialLoginResult
 import com.saion.core.domain.usecase.auth.LoginWithKakaoUseCase
+import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.ui.event.GlobalUiEvent
@@ -16,6 +18,7 @@ import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.core.ui.viewmodel.UIEffect
 import com.saion.core.ui.viewmodel.UIIntent
 import com.saion.core.ui.viewmodel.UIState
+import com.saion.feature.auth.api.key.AuthStartStep
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -26,12 +29,15 @@ data class LoginUiState(val isLoading: Boolean = false) : UIState
 sealed interface LoginIntent : UIIntent
 
 sealed interface LoginEffect : UIEffect {
-    data object NavigateNext : LoginEffect
+    data class NavigateNext(val startStep: AuthStartStep) : LoginEffect
+
+    data object NavigateMain : LoginEffect
 
     data class ShowSnackbar(val message: String) : LoginEffect
 }
 
 @HiltViewModel
+@Stable
 class LoginViewModel @Inject constructor(
     private val socialAuthClient: SocialAuthClient,
     private val loginWithKakaoUseCase: LoginWithKakaoUseCase,
@@ -69,7 +75,13 @@ class LoginViewModel @Inject constructor(
 
                     is AppResult.Success -> {
                         update { copy(isLoading = false) }
-                        emitEffect(LoginEffect.NavigateNext)
+                        when (loginResult.data) {
+                            MemberRole.PENDING -> emitEffect(LoginEffect.NavigateNext(AuthStartStep.TERMS))
+
+                            MemberRole.MEMBER,
+                            MemberRole.ADMIN,
+                            -> emitEffect(LoginEffect.NavigateMain)
+                        }
                     }
                 }
             }
