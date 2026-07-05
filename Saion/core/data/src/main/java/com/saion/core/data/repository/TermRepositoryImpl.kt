@@ -17,6 +17,12 @@ internal class TermRepositoryImpl @Inject constructor(private val termRemoteData
     ) { response ->
         AppResult.Success(response.map(TermResponse::toDomain))
     }
+
+    override suspend fun agreeTerms(termIds: List<Long>): AppResult<Unit> = safeRequest(
+        request = { termRemoteDataSource.agreeTerms(termIds = termIds) },
+    ) {
+        AppResult.Success(Unit)
+    }
 }
 
 private fun TermResponse.toDomain(): Term = Term(

@@ -63,6 +63,7 @@ private fun AuthRoute(
                     }
                     entry<TermsNavKey> {
                         TermsScreen(
+                            onBack = { flowNavigator.pop() },
                             onContinue = { flowNavigator.replace(NicknameNavKey) },
                         )
                     }

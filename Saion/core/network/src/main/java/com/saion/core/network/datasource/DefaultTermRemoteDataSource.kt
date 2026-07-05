@@ -10,4 +10,6 @@ import javax.inject.Inject
  */
 class DefaultTermRemoteDataSource @Inject constructor(private val service: TermService) : TermRemoteDataSource {
     override suspend fun getActiveTerms(): ApiResponse<List<TermResponse>> = service.getActiveTerms()
+
+    override suspend fun agreeTerms(termIds: List<Long>): ApiResponse<Unit> = service.agreeTerms(termIds = termIds)
 }
