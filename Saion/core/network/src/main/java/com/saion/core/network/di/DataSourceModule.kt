@@ -8,6 +8,8 @@ import com.saion.core.network.datasource.DefaultInvitationRemoteDataSource
 import com.saion.core.network.datasource.DefaultMemberRemoteDataSource
 import com.saion.core.network.datasource.DefaultScheduleRemoteDataSource
 import com.saion.core.network.datasource.DefaultTermRemoteDataSource
+import com.saion.core.network.datasource.DefaultHomeRemoteDataSource
+import com.saion.core.network.datasource.HomeRemoteDataSource
 import com.saion.core.network.datasource.InvitationRemoteDataSource
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import com.saion.core.network.datasource.ScheduleRemoteDataSource
@@ -32,6 +34,10 @@ abstract class DataSourceModule {
     @Binds
     @Singleton
     abstract fun bindInvitationRemoteDataSource(impl: DefaultInvitationRemoteDataSource): InvitationRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeRemoteDataSource(impl: DefaultHomeRemoteDataSource): HomeRemoteDataSource
 
     @Binds
     @Singleton
