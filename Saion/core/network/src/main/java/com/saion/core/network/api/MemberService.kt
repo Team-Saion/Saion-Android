@@ -1,8 +1,8 @@
 package com.saion.core.network.api
 
+import com.saion.core.network.model.auth.TokenResponse
 import com.saion.core.network.model.common.ApiResponse
 import com.saion.core.network.model.common.ApiResponse.Companion.toApiResponse
-import com.saion.core.network.model.auth.TokenResponse
 import com.saion.core.network.model.member.CompleteOnboardingRequest
 import com.saion.core.network.model.member.MemberInfoResponse
 import com.saion.core.network.model.member.OnboardingInfoResponse

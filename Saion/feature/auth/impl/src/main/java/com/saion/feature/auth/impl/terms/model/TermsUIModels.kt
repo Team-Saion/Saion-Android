@@ -6,9 +6,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Immutable
-internal data class TermsUIModels(
-    val items: ImmutableList<TermsUIModel> = persistentListOf(),
-) {
+internal data class TermsUIModels(val items: ImmutableList<TermsUIModel> = persistentListOf()) {
     val hasAllRequiredChecked: Boolean
         get() = items.all { term -> !term.required || term.isChecked }
 

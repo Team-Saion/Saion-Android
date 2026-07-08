@@ -47,8 +47,7 @@ private fun NicknameProfileFallbackImage(
     )
 }
 
-private fun colorFromHexOrDefault(hex: String): Color =
-    runCatching { Color(hex.toColorInt()) }.getOrElse { Color(0xFFFFD35C) }
+private fun colorFromHexOrDefault(hex: String): Color = runCatching { Color(hex.toColorInt()) }.getOrElse { Color(0xFFFFD35C) }
 
 @Preview(showBackground = true)
 @Composable

@@ -92,43 +92,43 @@ private fun TopBarTitle(
 @Composable
 private fun SaionTopBarLargePreview() {
     SaionTheme {
-            SaionTopBar(
-                variant = TopBarVariant.Large(title = "Title"),
-                actions = {
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                },
-            )
-        }
+        SaionTopBar(
+            variant = TopBarVariant.Large(title = "Title"),
+            actions = {
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+            },
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun SaionTopBarStandardPreview() {
     SaionTheme {
-            SaionTopBar(
-                variant = TopBarVariant.Standard(title = "Title", onBack = {}),
-                actions = {
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                },
-            )
-        }
+        SaionTopBar(
+            variant = TopBarVariant.Standard(title = "Title", onBack = {}),
+            actions = {
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+            },
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun SaionTopBarMainPreview() {
     SaionTheme {
-            SaionTopBar(
-                variant = TopBarVariant.Main,
-                actions = {
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                    SaionIconButton(icon = SaionIcons.Selection, onClick = {})
-                },
-            )
-        }
+        SaionTopBar(
+            variant = TopBarVariant.Main,
+            actions = {
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+                SaionIconButton(icon = SaionIcons.Selection, onClick = {})
+            },
+        )
+    }
 }
