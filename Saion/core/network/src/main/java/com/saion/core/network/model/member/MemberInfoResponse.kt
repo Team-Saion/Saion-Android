@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * @property role 멤버 역할입니다.
  * @property avatarColor 멤버 아바타 기본 색상입니다.
  * @property profileImageKey 프로필 이미지 객체 키입니다. 설정하지 않았으면 `null`입니다.
+ * @property profileImageUrl 프로필 이미지 객체 URL입니다. 설정하지 않았으면 `null`입니다.
  * @property status 멤버 상태입니다.
  * @property createdAt 멤버 생성 시각입니다.
  */
@@ -31,9 +32,11 @@ data class MemberInfoResponse(
     @SerialName("role")
     val role: String,
     @SerialName("avatarColor")
-    val avatarColor: String? = null,
+    val avatarColor: AvatarColorResponse,
     @SerialName("profileImageKey")
     val profileImageKey: String? = null,
+    @SerialName("profileImageUrl")
+    val profileImageUrl: String? = null,
     @SerialName("status")
     val status: String,
     @SerialName("createdAt")

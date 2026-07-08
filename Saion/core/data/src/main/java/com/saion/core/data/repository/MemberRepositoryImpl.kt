@@ -5,10 +5,12 @@ import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
+import com.saion.core.model.member.MemberStatus
 import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.network.model.member.MemberInfoResponse
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import javax.inject.Inject
 
@@ -21,18 +23,7 @@ internal class MemberRepositoryImpl @Inject constructor(
 ) : MemberRepository {
     override suspend fun getMyInfo(): AppResult<MemberInfo> = safeRequest(
         request = { memberRemoteDataSource.getMyInfo() },
-    ) { response ->
-        val memberRole = MemberRole.from(response.role)
-            ?: return@safeRequest AppResult.Failure(
-                AppError.Unknown(message = "Member role is missing or invalid."),
-            )
-
-        AppResult.Success(
-            MemberInfo(
-                role = memberRole,
-            ),
-        )
-    }
+    ) { response -> response.toMemberInfoResult() }
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = safeRequest(
         request = { memberRemoteDataSource.getOnboardingInfo() },
@@ -87,6 +78,24 @@ internal class MemberRepositoryImpl @Inject constructor(
         authLocalDataSource.clearTokens()
         AppResult.Success(Unit)
     }
+}
+
+private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> {
+    val memberRole = MemberRole.from(role)
+        ?: return AppResult.Failure(
+            AppError.Unknown(message = "Member role is missing or invalid."),
+        )
+    val memberStatus = MemberStatus.from(status)
+        ?: return AppResult.Failure(
+            AppError.Unknown(message = "Member status is missing or invalid."),
+        )
+
+    return AppResult.Success(
+        MemberInfo(
+            role = memberRole,
+            status = memberStatus,
+        ),
+    )
 }
 
 private fun String.normalizeProfileImageUrl(): String = replace(
