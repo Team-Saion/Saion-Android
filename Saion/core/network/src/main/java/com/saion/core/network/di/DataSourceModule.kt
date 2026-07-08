@@ -4,8 +4,10 @@ import com.saion.core.network.datasource.AuthRemoteDataSource
 import com.saion.core.network.datasource.CircleRemoteDataSource
 import com.saion.core.network.datasource.DefaultAuthRemoteDataSource
 import com.saion.core.network.datasource.DefaultCircleRemoteDataSource
+import com.saion.core.network.datasource.DefaultInvitationRemoteDataSource
 import com.saion.core.network.datasource.DefaultMemberRemoteDataSource
 import com.saion.core.network.datasource.DefaultTermRemoteDataSource
+import com.saion.core.network.datasource.InvitationRemoteDataSource
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import com.saion.core.network.datasource.TermRemoteDataSource
 import dagger.Binds
@@ -24,6 +26,10 @@ abstract class DataSourceModule {
     @Binds
     @Singleton
     abstract fun bindCircleRemoteDataSource(impl: DefaultCircleRemoteDataSource): CircleRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindInvitationRemoteDataSource(impl: DefaultInvitationRemoteDataSource): InvitationRemoteDataSource
 
     @Binds
     @Singleton

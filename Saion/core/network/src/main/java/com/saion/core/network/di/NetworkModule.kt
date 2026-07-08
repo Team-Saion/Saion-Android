@@ -2,6 +2,7 @@ package com.saion.core.network.di
 
 import com.saion.core.network.api.AuthService
 import com.saion.core.network.api.CircleService
+import com.saion.core.network.api.InvitationService
 import com.saion.core.network.api.MemberService
 import com.saion.core.network.api.TermService
 import com.saion.core.network.client.HttpClientFactory
@@ -27,6 +28,10 @@ object NetworkModule {
     @Provides
     @Singleton
     internal fun provideCircleService(httpClient: HttpClient): CircleService = CircleService(client = httpClient)
+
+    @Provides
+    @Singleton
+    internal fun provideInvitationService(httpClient: HttpClient): InvitationService = InvitationService(client = httpClient)
 
     @Provides
     @Singleton
