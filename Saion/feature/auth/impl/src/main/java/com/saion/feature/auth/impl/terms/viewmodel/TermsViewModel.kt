@@ -27,6 +27,7 @@ internal class TermsViewModel @Inject constructor(
         when (intent) {
             TermsUIIntent.BackClicked -> {
                 viewModelScope.launch {
+                    update { copy(isBottomSheetVisible = false) }
                     emitEffect(TermsUIEffect.NavigateBack)
                 }
             }
@@ -60,10 +61,10 @@ internal class TermsViewModel @Inject constructor(
                 update {
                     copy(
                         isLoading = false,
+                        isBottomSheetVisible = true,
                         terms = uiTerms,
                     )
                 }
-                emitEffect(TermsUIEffect.ShowTermsSheet)
             },
             onFailure = { error ->
                 update { copy(isLoading = false) }
@@ -105,18 +106,24 @@ internal class TermsViewModel @Inject constructor(
             }
 
         update { copy(isLoading = true) }
-        viewModelScope.launch {
-            emitEffect(TermsUIEffect.HideTermsSheet)
-        }
 
         launchSafely(
             onSuccess = {
-                update { copy(isLoading = false) }
+                update {
+                    copy(
+                        isLoading = false,
+                        isBottomSheetVisible = false,
+                    )
+                }
                 emitEffect(TermsUIEffect.NavigateNext)
             },
             onFailure = { error ->
-                update { copy(isLoading = false) }
-                emitEffect(TermsUIEffect.ShowTermsSheet)
+                update {
+                    copy(
+                        isLoading = false,
+                        isBottomSheetVisible = true,
+                    )
+                }
                 emitEffect(TermsUIEffect.ShowSnackbar(error.toDisplayMessage(defaultMessage = "약관 동의에 실패했습니다. 다시 시도해주세요.")))
             },
             onFinally = { update { copy(isLoading = false) } },

@@ -2,7 +2,10 @@ package com.saion.core.network.api
 
 import com.saion.core.network.model.common.ApiResponse
 import com.saion.core.network.model.common.ApiResponse.Companion.toApiResponse
+import com.saion.core.network.model.auth.TokenResponse
+import com.saion.core.network.model.member.CompleteOnboardingRequest
 import com.saion.core.network.model.member.MemberInfoResponse
+import com.saion.core.network.model.member.OnboardingInfoResponse
 import com.saion.core.network.model.member.UpdateProfileRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
@@ -27,6 +30,23 @@ class MemberService(private val client: HttpClient) {
     suspend fun getMyInfo(): ApiResponse<MemberInfoResponse> = client
         .get("/api/v1/members/me")
         .toApiResponse()
+
+    /**
+     * 현재 인증된 멤버의 온보딩 사전정보를 조회합니다.
+     */
+    suspend fun getOnboardingInfo(): ApiResponse<OnboardingInfoResponse> = client
+        .get("/api/v1/members/me/onboarding-info")
+        .toApiResponse()
+
+    /**
+     * 현재 인증된 멤버의 온보딩을 완료합니다.
+     *
+     * 성공 시 멤버 역할이 `MEMBER`로 바뀌며 새 access token과 refresh token을 반환합니다.
+     */
+    suspend fun completeOnboarding(nickname: String): ApiResponse<TokenResponse> = client
+        .patch("/api/v1/members/me/onboarding") {
+            setBody(CompleteOnboardingRequest(nickname = nickname))
+        }.toApiResponse()
 
     /**
      * 현재 인증된 멤버의 닉네임을 변경합니다.

@@ -5,6 +5,8 @@
 
 package com.saion.ds.theme
 
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -68,6 +70,13 @@ fun SaionTheme(content: @Composable () -> Unit) {
         LocalSaionRadius provides createSemanticRadiusDefault(),
         LocalSaionSpacing provides createSemanticSpacingDefault(),
         LocalSaionShadow provides createSaionShadow(),
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(
+            LocalTextSelectionColors provides TextSelectionColors(
+                handleColor = LocalSaionColors.current.primary.default,
+                backgroundColor = LocalSaionColors.current.primary.default.copy(alpha = 0.3f),
+            ),
+            content = content,
+        )
+    }
 }

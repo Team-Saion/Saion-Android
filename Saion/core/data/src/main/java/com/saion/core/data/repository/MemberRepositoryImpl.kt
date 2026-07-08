@@ -5,6 +5,7 @@ import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
+import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -31,6 +32,28 @@ internal class MemberRepositoryImpl @Inject constructor(
                 role = memberRole,
             ),
         )
+    }
+
+    override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = safeRequest(
+        request = { memberRemoteDataSource.getOnboardingInfo() },
+    ) { response ->
+        AppResult.Success(
+            OnboardingInfo(
+                socialNickname = response.socialNickname,
+                socialProfileImageUrl = response.socialProfileImageUrl?.normalizeProfileImageUrl(),
+                avatarColorHex = response.avatarColor.hex,
+            ),
+        )
+    }
+
+    override suspend fun completeOnboarding(nickname: String): AppResult<Unit> = safeRequest(
+        request = { memberRemoteDataSource.completeOnboarding(nickname = nickname) },
+    ) { response ->
+        authLocalDataSource.saveTokens(
+            accessToken = response.accessToken,
+            refreshToken = response.refreshToken,
+        )
+        AppResult.Success(Unit)
     }
 
     override suspend fun updateProfile(nickname: String): AppResult<Unit> = safeRequest(
@@ -65,3 +88,12 @@ internal class MemberRepositoryImpl @Inject constructor(
         AppResult.Success(Unit)
     }
 }
+
+private fun String.normalizeProfileImageUrl(): String = replace(
+    oldValue = "http://",
+    newValue = "https://",
+).replace(
+    oldValue = "http%3A%2F%2F",
+    newValue = "https%3A%2F%2F",
+    ignoreCase = true,
+)

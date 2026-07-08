@@ -55,7 +55,7 @@ private fun AuthRoute(
                             onNavigateNext = { startStep ->
                                 when (startStep) {
                                     AuthStartStep.LOGIN -> flowNavigator.replace(LoginNavKey)
-                                    AuthStartStep.TERMS -> flowNavigator.replace(TermsNavKey)
+                                    AuthStartStep.TERMS -> flowNavigator.push(TermsNavKey)
                                 }
                             },
                             onNavigateMain = onAuthComplete,
@@ -63,12 +63,13 @@ private fun AuthRoute(
                     }
                     entry<TermsNavKey> {
                         TermsScreen(
-                            onBack = { flowNavigator.pop() },
+                            onBack = { flowNavigator.replace(LoginNavKey) },
                             onContinue = { flowNavigator.replace(NicknameNavKey) },
                         )
                     }
                     entry<NicknameNavKey> {
                         NicknameScreen(
+                            onBack = { flowNavigator.replace(TermsNavKey) },
                             onComplete = { onAuthComplete() },
                         )
                     }

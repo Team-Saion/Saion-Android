@@ -7,6 +7,7 @@ import com.saion.feature.auth.impl.terms.model.TermsUIModels
 @Immutable
 internal data class TermsUIState(
     val isLoading: Boolean = false,
+    val isBottomSheetVisible: Boolean = false,
     val terms: TermsUIModels = TermsUIModels(),
 ) : UIState {
     val isSubmitEnabled: Boolean

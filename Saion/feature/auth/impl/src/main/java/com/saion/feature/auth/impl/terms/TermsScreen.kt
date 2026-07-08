@@ -55,6 +55,7 @@ import com.saion.feature.auth.impl.terms.viewmodel.TermsUIIntent
 import com.saion.feature.auth.impl.terms.viewmodel.TermsUIState
 import com.saion.feature.auth.impl.terms.viewmodel.TermsViewModel
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,19 +69,19 @@ internal fun TermsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
+    LaunchedEffect(uiState.isBottomSheetVisible) {
+        if (uiState.isBottomSheetVisible) sheetState.show() else sheetState.hide()
+    }
+
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                TermsUIEffect.NavigateBack -> onBack()
-
-                TermsUIEffect.NavigateNext -> onContinue()
-
-                TermsUIEffect.ShowTermsSheet -> {
-                    sheetState.show()
+                TermsUIEffect.NavigateBack -> {
+                    launch { sheetState.hide() }.invokeOnCompletion { onBack() }
                 }
 
-                TermsUIEffect.HideTermsSheet -> {
-                    sheetState.hide()
+                TermsUIEffect.NavigateNext -> {
+                    launch { sheetState.hide() }.invokeOnCompletion { onContinue() }
                 }
 
                 is TermsUIEffect.OpenBrowser -> {
@@ -119,11 +120,11 @@ private fun TermsScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
     ) {
-        if (uiState.isLoading) {
+        if (uiState.isLoading && uiState.terms.items.isEmpty()) {
             SaionSpinner()
         }
 
-        if (!uiState.isLoading) {
+        if (!uiState.isLoading && uiState.isBottomSheetVisible) {
             SaionBottomSheet(
                 state = sheetState,
                 onDismissRequest = onBackClick,

@@ -17,5 +17,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+//    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 }

@@ -1,8 +1,10 @@
 package com.saion.core.network.datasource
 
 import com.saion.core.network.api.MemberService
+import com.saion.core.network.model.auth.TokenResponse
 import com.saion.core.network.model.common.ApiResponse
 import com.saion.core.network.model.member.MemberInfoResponse
+import com.saion.core.network.model.member.OnboardingInfoResponse
 import javax.inject.Inject
 
 /**
@@ -10,6 +12,12 @@ import javax.inject.Inject
  */
 class DefaultMemberRemoteDataSource @Inject constructor(private val service: MemberService) : MemberRemoteDataSource {
     override suspend fun getMyInfo(): ApiResponse<MemberInfoResponse> = service.getMyInfo()
+
+    override suspend fun getOnboardingInfo(): ApiResponse<OnboardingInfoResponse> = service.getOnboardingInfo()
+
+    override suspend fun completeOnboarding(nickname: String): ApiResponse<TokenResponse> = service.completeOnboarding(
+        nickname = nickname,
+    )
 
     override suspend fun updateProfile(nickname: String): ApiResponse<MemberInfoResponse> = service.updateProfile(nickname = nickname)
 

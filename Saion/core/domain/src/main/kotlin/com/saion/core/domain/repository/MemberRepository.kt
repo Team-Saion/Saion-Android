@@ -1,6 +1,7 @@
 package com.saion.core.domain.repository
 
 import com.saion.core.model.member.MemberInfo
+import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppResult
 
@@ -12,6 +13,16 @@ interface MemberRepository {
      * 현재 로그인한 멤버의 프로필을 조회합니다.
      */
     suspend fun getMyInfo(): AppResult<MemberInfo>
+
+    /**
+     * 현재 로그인한 멤버의 온보딩 사전정보를 조회합니다.
+     */
+    suspend fun getOnboardingInfo(): AppResult<OnboardingInfo>
+
+    /**
+     * 현재 로그인한 멤버의 온보딩을 완료합니다.
+     */
+    suspend fun completeOnboarding(nickname: String): AppResult<Unit>
 
     /**
      * 현재 로그인한 멤버의 닉네임을 수정합니다.

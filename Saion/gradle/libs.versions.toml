@@ -38,6 +38,7 @@ lifecycleViewmodelNav3 = "2.11.0"
 
 kakao = "2.24.0"
 lottieCompose = "6.7.1"
+coilCompose = "2.7.0"
 
 [libraries]
 # Build tooling
@@ -101,6 +102,7 @@ androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecy
 
 # Animation
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 
 # Logging
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }

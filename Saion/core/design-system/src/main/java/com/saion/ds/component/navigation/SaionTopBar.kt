@@ -24,7 +24,7 @@ import com.saion.ds.theme.SaionTheme
 sealed interface TopBarVariant {
     data class Large(val title: String) : TopBarVariant
     data class Standard(
-        val title: String,
+        val title: String? = null,
         val onBack: () -> Unit,
     ) : TopBarVariant
 
@@ -53,7 +53,7 @@ fun SaionTopBar(
         )
 
         is TopBarVariant.Standard -> CenterAlignedTopAppBar(
-            title = { TopBarTitle(title = variant.title, textStyle = SaionTheme.typography.title2) },
+            title = { TopBarTitle(title = variant.title.orEmpty(), textStyle = SaionTheme.typography.title2) },
             actions = actions,
             modifier = modifier.height(52.dp),
             colors = colors,

@@ -22,8 +22,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +34,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -89,6 +94,15 @@ internal fun SaionInputField(
     maxLines: Int = 1,
 ) {
     val interactionFocused by interactionSource.collectIsFocusedAsState()
+    var textFieldValue by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = value,
+                selection = TextRange(value.length),
+            ),
+        )
+    }
+    var wasFocused by remember { mutableStateOf(interactionFocused) }
     val stateContext = rememberSaionInputStateContext(
         value = value,
         enabled = enabled,
@@ -100,7 +114,30 @@ internal fun SaionInputField(
     val colors = state.colors(stateContext)
     val metrics = spec.containerVariant.metrics()
     val showClear = spec.clearButtonPolicy.shouldShow(stateContext)
-    val textStyle = spec.typography.resolve()
+    val textStyle = spec.typography.resolve(component = spec.component)
+    val cursorBrush = SolidColor(
+        if (value.isEmpty()) {
+            Color.Transparent
+        } else {
+            SaionTheme.colors.label.default
+        },
+    )
+
+    LaunchedEffect(value, interactionFocused) {
+        val selection = when {
+            !wasFocused && interactionFocused -> TextRange(value.length)
+            else -> textFieldValue.selection.constrainedTo(value.length)
+        }
+
+        if (textFieldValue.text != value || textFieldValue.selection != selection) {
+            textFieldValue = textFieldValue.copy(
+                text = value,
+                selection = selection,
+            )
+        }
+
+        wasFocused = interactionFocused
+    }
 
     Column(
         modifier = modifier
@@ -117,8 +154,13 @@ internal fun SaionInputField(
         }
 
         BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = textFieldValue,
+            onValueChange = { updatedValue ->
+                textFieldValue = updatedValue
+                if (updatedValue.text != value) {
+                    onValueChange(updatedValue.text)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             minLines = minLines,
@@ -126,7 +168,7 @@ internal fun SaionInputField(
             singleLine = maxLines == 1,
             textStyle = textStyle.copy(color = colors.textColor, textAlign = spec.textAlign),
             keyboardOptions = keyboardOptions,
-            cursorBrush = SolidColor(SaionTheme.colors.label.default),
+            cursorBrush = cursorBrush,
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
                 SaionInputDecoration(
@@ -375,9 +417,16 @@ private fun SaionInputContainerVariant.metrics(): TextFieldMetrics = when (this)
 }
 
 @Composable
-private fun SaionInputTypography.resolve(): TextStyle = when (this) {
-    SaionInputTypography.HEADING -> SaionTheme.typography.heading1Subtle
-    SaionInputTypography.TITLE -> SaionTheme.typography.title1Subtle
+private fun SaionInputTypography.resolve(component: SaionInputComponent): TextStyle = when (component) {
+    SaionInputComponent.TEXT_FIELD -> when (this) {
+        SaionInputTypography.HEADING -> SaionTheme.typography.heading1Subtle
+        SaionInputTypography.TITLE -> SaionTheme.typography.title1Subtle
+    }
+
+    SaionInputComponent.TEXT_AREA -> when (this) {
+        SaionInputTypography.HEADING -> SaionTheme.typography.heading1
+        SaionInputTypography.TITLE -> SaionTheme.typography.body1
+    }
 }
 
 private fun SaionInputClearButtonPolicy.shouldShow(context: SaionInputStateContext): Boolean = when (this) {
@@ -587,3 +636,8 @@ internal fun previewFocusedInteractionSource(): MutableInteractionSource = remem
         interactionSource.tryEmit(FocusInteraction.Focus())
     }
 }
+
+private fun TextRange.constrainedTo(textLength: Int): TextRange = TextRange(
+    start = start.coerceIn(0, textLength),
+    end = end.coerceIn(0, textLength),
+)
