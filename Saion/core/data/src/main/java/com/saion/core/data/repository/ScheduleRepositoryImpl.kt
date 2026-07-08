@@ -15,6 +15,7 @@ import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUpdateValue
 import com.saion.core.model.schedule.UpdateScheduleCommand
 import com.saion.core.network.datasource.ScheduleRemoteDataSource
 import com.saion.core.network.model.schedule.ConfirmationCountResponse
@@ -31,9 +32,7 @@ import com.saion.core.network.model.schedule.UpdateScheduleRequest
 import com.saion.core.network.model.schedule.UpdateScheduleRequestValue
 import javax.inject.Inject
 
-internal class ScheduleRepositoryImpl @Inject constructor(
-    private val scheduleRemoteDataSource: ScheduleRemoteDataSource,
-) : ScheduleRepository {
+internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRemoteDataSource: ScheduleRemoteDataSource) : ScheduleRepository {
     override suspend fun getScheduleList(
         circleId: String,
         cursor: String?,
@@ -151,9 +150,9 @@ private fun UpdateScheduleCommand.toRequest(): UpdateScheduleRequest = UpdateSch
     memo = memo.toRequestValue(),
 )
 
-private fun <T> com.saion.core.model.schedule.ScheduleUpdateValue<T>.toRequestValue(): UpdateScheduleRequestValue<T> = when (this) {
-    com.saion.core.model.schedule.ScheduleUpdateValue.Unchanged -> UpdateScheduleRequestValue.Unchanged
-    is com.saion.core.model.schedule.ScheduleUpdateValue.Set -> UpdateScheduleRequestValue.Set(value)
+private fun <T> ScheduleUpdateValue<T>.toRequestValue(): UpdateScheduleRequestValue<T> = when (this) {
+    ScheduleUpdateValue.Unchanged -> UpdateScheduleRequestValue.Unchanged
+    is ScheduleUpdateValue.Set -> UpdateScheduleRequestValue.Set(value)
 }
 
 private fun ScheduleListResponse.toDomain(): AppResult<ScheduleListPage> {
