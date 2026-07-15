@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ sealed interface TopBarVariant {
     data class Standard(
         val title: String? = null,
         val onBack: () -> Unit,
+        val navigationIcon: ImageVector = SaionIcons.ChevronLeft,
     ) : TopBarVariant
 
     data object Main : TopBarVariant
@@ -59,7 +61,7 @@ fun SaionTopBar(
             colors = colors,
             navigationIcon = {
                 SaionIconButton(
-                    icon = SaionIcons.ChevronLeft,
+                    icon = variant.navigationIcon,
                     size = IconButtonSize.LARGE,
                     onClick = variant.onBack,
                 )

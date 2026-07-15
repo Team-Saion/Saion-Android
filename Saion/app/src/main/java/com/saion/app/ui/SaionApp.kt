@@ -34,6 +34,7 @@ fun SaionApp(
         LaunchedEffect(Unit) {
             GlobalUiEventBus.events.collect { event ->
                 when (event) {
+                    GlobalUiEvent.CircleCreated -> Unit
                     GlobalUiEvent.SessionExpired -> {
                         appState.navigationState.replaceAll(AuthNavKey())
                     }
