@@ -1,0 +1,13 @@
+package com.saion.core.domain.usecase.notification
+
+import com.saion.core.domain.repository.NotificationRepository
+import com.saion.core.model.notification.NotificationInboxItem
+import com.saion.core.model.result.AppResult
+import javax.inject.Inject
+
+class MarkNotificationReadUseCase @Inject constructor(
+    private val notificationRepository: NotificationRepository,
+) {
+    suspend operator fun invoke(notificationId: Long): AppResult<NotificationInboxItem> =
+        notificationRepository.markRead(notificationId = notificationId)
+}
