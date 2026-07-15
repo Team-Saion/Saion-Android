@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,8 +27,10 @@ import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
 import com.saion.ds.theme.SaionTheme
+import com.saion.feature.auth.impl.R
 import com.saion.feature.auth.impl.nickname.component.NicknameBottomAction
 import com.saion.feature.auth.impl.nickname.component.NicknameContent
+import com.saion.feature.auth.impl.ui.resolve
 import com.saion.feature.auth.impl.nickname.viewmodel.NicknameEffect
 import com.saion.feature.auth.impl.nickname.viewmodel.NicknameIntent
 import com.saion.feature.auth.impl.nickname.viewmodel.NicknameUiState
@@ -40,13 +44,14 @@ internal fun NicknameScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 NicknameEffect.NavigateBack -> onBack()
                 NicknameEffect.NavigateComplete -> onComplete()
-                is NicknameEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is NicknameEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
             }
         }
     }
@@ -70,6 +75,7 @@ private fun NicknameScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }.apply { requestFocus() }
+    val defaultPlaceholder = stringResource(R.string.nickname_placeholder)
 
     SaionScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -98,7 +104,7 @@ private fun NicknameScreen(
         ) {
             NicknameContent(
                 nickname = uiState.nickname,
-                placeholder = uiState.nickNamePlaceholder,
+                placeholder = uiState.nickNamePlaceholder.ifBlank { defaultPlaceholder },
                 validationResult = uiState.validation?.result,
                 imageUrl = uiState.socialProfileImageUrl,
                 avatarColorHex = uiState.avatarColorHex,

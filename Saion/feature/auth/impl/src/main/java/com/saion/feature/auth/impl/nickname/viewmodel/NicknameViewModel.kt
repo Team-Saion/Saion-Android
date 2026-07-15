@@ -9,6 +9,8 @@ import com.saion.core.model.member.NicknameValidationResult
 import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.result.AppError
 import com.saion.core.ui.viewmodel.BaseViewModel
+import com.saion.feature.auth.impl.R
+import com.saion.feature.auth.impl.ui.AuthSnackbarMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -44,7 +46,11 @@ internal class NicknameViewModel @Inject constructor(
                 applyOnboardingInfo(onboardingInfo)
             },
             onFailure = { error ->
-                emitEffect(NicknameEffect.ShowSnackbar(error.toDisplayMessage("온보딩 정보를 불러오지 못했습니다.")))
+                emitEffect(
+                    NicknameEffect.ShowSnackbar(
+                        error.toDisplayMessage(R.string.nickname_error_load_onboarding),
+                    ),
+                )
             },
         ) {
             getOnboardingInfoUseCase()
@@ -56,7 +62,7 @@ internal class NicknameViewModel @Inject constructor(
         update {
             copy(
                 nickname = initialNickname,
-                nickNamePlaceholder = initialNickname.ifBlank { "닉네임" },
+                nickNamePlaceholder = initialNickname,
                 validation = validateNicknameUseCase(initialNickname),
                 socialProfileImageUrl = onboardingInfo.socialProfileImageUrl,
                 avatarColorHex = onboardingInfo.avatarColorHex.ifBlank { avatarColorHex },
@@ -88,7 +94,11 @@ internal class NicknameViewModel @Inject constructor(
             },
             onFailure = { error ->
                 update { copy(isSubmitting = false) }
-                emitEffect(NicknameEffect.ShowSnackbar(error.toDisplayMessage("닉네임 저장에 실패했습니다. 다시 시도해주세요.")))
+                emitEffect(
+                    NicknameEffect.ShowSnackbar(
+                        error.toDisplayMessage(R.string.nickname_error_save),
+                    ),
+                )
             },
             onFinally = { update { copy(isSubmitting = false) } },
         ) {
@@ -97,11 +107,5 @@ internal class NicknameViewModel @Inject constructor(
     }
 }
 
-private fun AppError.toDisplayMessage(defaultMessage: String): String = when (this) {
-    is AppError.Business -> message ?: defaultMessage
-    is AppError.Unknown -> message ?: defaultMessage
-    is AppError.NetworkUnavailable -> "네트워크 연결을 확인한 뒤 다시 시도해주세요."
-    is AppError.Timeout -> "응답이 지연되고 있습니다. 다시 시도해주세요."
-    is AppError.ServerUnavailable -> "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
-    is AppError.Unauthorized -> "로그인 정보가 만료되었습니다. 다시 로그인해주세요."
-}
+private fun AppError.toDisplayMessage(defaultMessageResId: Int): AuthSnackbarMessage =
+    AuthSnackbarMessage.Error(error = this, defaultMessageResId = defaultMessageResId)

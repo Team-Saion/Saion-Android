@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -48,8 +49,10 @@ import com.saion.ds.component.selection.CheckBoxSize
 import com.saion.ds.component.selection.SaionCheckBox
 import com.saion.ds.icon.SaionIcons
 import com.saion.ds.theme.SaionTheme
+import com.saion.feature.auth.impl.R
 import com.saion.feature.auth.impl.terms.model.TermsUIModel
 import com.saion.feature.auth.impl.terms.model.TermsUIModels
+import com.saion.feature.auth.impl.ui.resolve
 import com.saion.feature.auth.impl.terms.viewmodel.TermsUIEffect
 import com.saion.feature.auth.impl.terms.viewmodel.TermsUIIntent
 import com.saion.feature.auth.impl.terms.viewmodel.TermsUIState
@@ -88,7 +91,7 @@ internal fun TermsScreen(
                     context.startActivity(Intent(Intent.ACTION_VIEW, effect.url.toUri()))
                 }
 
-                is TermsUIEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is TermsUIEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
             }
         }
     }
@@ -196,13 +199,20 @@ private fun TermsListItem(
             Text(
                 text = buildAnnotatedString {
                     val prefixStyle = SaionTheme.typography.label1
+                    val prefix = stringResource(
+                        if (term.required) {
+                            R.string.terms_required_prefix
+                        } else {
+                            R.string.terms_optional_prefix
+                        },
+                    )
                     withStyle(
                         SpanStyle(
                             fontSize = prefixStyle.fontSize,
                             fontWeight = prefixStyle.fontWeight,
                             letterSpacing = prefixStyle.letterSpacing,
                         ),
-                    ) { append(if (term.required) "[필수]" else "[선택]") }
+                    ) { append(prefix) }
                     append(" ${term.title}")
                 },
                 style = SaionTheme.typography.label1Subtle,
@@ -232,7 +242,7 @@ private fun TermsBottomAction(
         contentPadding = PaddingValues(),
         lower = {
             SaionTextButton(
-                text = "닫기",
+                text = stringResource(R.string.terms_close),
                 size = TextButtonSize.MEDIUM,
                 onClick = onBackClick,
             )
@@ -241,7 +251,7 @@ private fun TermsBottomAction(
         SaionButtonArea(
             mainButton = { modifier ->
                 SaionButton(
-                    text = "동의하고 다음",
+                    text = stringResource(R.string.terms_agree_and_next),
                     modifier = modifier,
                     size = ButtonSize.LARGE,
                     enabled = isSubmitEnabled && !isLoading,

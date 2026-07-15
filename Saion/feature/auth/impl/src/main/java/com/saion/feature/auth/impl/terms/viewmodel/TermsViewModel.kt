@@ -6,8 +6,10 @@ import com.saion.core.domain.usecase.term.AgreeTermsUseCase
 import com.saion.core.domain.usecase.term.GetActiveTermsUseCase
 import com.saion.core.model.result.AppError
 import com.saion.core.ui.viewmodel.BaseViewModel
+import com.saion.feature.auth.impl.R
 import com.saion.feature.auth.impl.terms.model.TermsUIModel
 import com.saion.feature.auth.impl.terms.model.TermsUIModels
+import com.saion.feature.auth.impl.ui.AuthSnackbarMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
@@ -68,7 +70,11 @@ internal class TermsViewModel @Inject constructor(
             },
             onFailure = { error ->
                 update { copy(isLoading = false) }
-                emitEffect(TermsUIEffect.ShowSnackbar(error.toDisplayMessage(defaultMessage = "약관 정보를 불러오지 못했습니다.")))
+                emitEffect(
+                    TermsUIEffect.ShowSnackbar(
+                        error.toDisplayMessage(R.string.terms_error_load),
+                    ),
+                )
             },
             onFinally = { update { copy(isLoading = false) } },
         ) {
@@ -100,7 +106,7 @@ internal class TermsViewModel @Inject constructor(
         val agreedTermIds = currentState.terms.checkedTermIdsAsLongOrNull()
             ?: run {
                 viewModelScope.launch {
-                    emitEffect(TermsUIEffect.ShowSnackbar("약관 정보를 확인한 뒤 다시 시도해주세요."))
+                    emitEffect(TermsUIEffect.ShowSnackbar(AuthSnackbarMessage.Res(R.string.terms_error_invalid_data)))
                 }
                 return
             }
@@ -124,7 +130,11 @@ internal class TermsViewModel @Inject constructor(
                         isBottomSheetVisible = true,
                     )
                 }
-                emitEffect(TermsUIEffect.ShowSnackbar(error.toDisplayMessage(defaultMessage = "약관 동의에 실패했습니다. 다시 시도해주세요.")))
+                emitEffect(
+                    TermsUIEffect.ShowSnackbar(
+                        error.toDisplayMessage(R.string.terms_error_submit),
+                    ),
+                )
             },
             onFinally = { update { copy(isLoading = false) } },
         ) {
@@ -133,11 +143,5 @@ internal class TermsViewModel @Inject constructor(
     }
 }
 
-private fun AppError.toDisplayMessage(defaultMessage: String): String = when (this) {
-    is AppError.Business -> message ?: defaultMessage
-    is AppError.Unknown -> message ?: defaultMessage
-    is AppError.NetworkUnavailable -> "네트워크 연결을 확인한 뒤 다시 시도해주세요."
-    is AppError.Timeout -> "응답이 지연되고 있습니다. 다시 시도해주세요."
-    is AppError.ServerUnavailable -> "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
-    is AppError.Unauthorized -> "로그인 정보가 만료되었습니다. 다시 로그인해주세요."
-}
+private fun AppError.toDisplayMessage(defaultMessageResId: Int): AuthSnackbarMessage =
+    AuthSnackbarMessage.Error(error = this, defaultMessageResId = defaultMessageResId)

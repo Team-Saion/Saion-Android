@@ -31,10 +31,11 @@ import com.saion.ds.theme.SaionTheme
 import com.saion.feature.auth.api.key.AuthStartStep
 import com.saion.feature.auth.impl.login.component.LoginBottomContent
 import com.saion.feature.auth.impl.login.component.LoginBrandHeader
+import com.saion.feature.auth.impl.ui.resolve
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(
+internal fun LoginScreen(
     onNavigateNext: (AuthStartStep) -> Unit,
     onNavigateMain: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,7 +51,7 @@ fun LoginScreen(
             when (effect) {
                 is LoginEffect.NavigateNext -> onNavigateNext(effect.startStep)
                 LoginEffect.NavigateMain -> onNavigateMain()
-                is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
+                is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
             }
         }
     }

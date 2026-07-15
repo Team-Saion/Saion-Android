@@ -19,26 +19,28 @@ import com.saion.core.ui.viewmodel.UIEffect
 import com.saion.core.ui.viewmodel.UIIntent
 import com.saion.core.ui.viewmodel.UIState
 import com.saion.feature.auth.api.key.AuthStartStep
+import com.saion.feature.auth.impl.R
+import com.saion.feature.auth.impl.ui.AuthSnackbarMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
 @Immutable
-data class LoginUiState(val isLoading: Boolean = false) : UIState
+internal data class LoginUiState(val isLoading: Boolean = false) : UIState
 
-sealed interface LoginIntent : UIIntent
+internal sealed interface LoginIntent : UIIntent
 
-sealed interface LoginEffect : UIEffect {
+internal sealed interface LoginEffect : UIEffect {
     data class NavigateNext(val startStep: AuthStartStep) : LoginEffect
 
     data object NavigateMain : LoginEffect
 
-    data class ShowSnackbar(val message: String) : LoginEffect
+    data class ShowSnackbar(val message: AuthSnackbarMessage) : LoginEffect
 }
 
 @HiltViewModel
 @Stable
-class LoginViewModel @Inject constructor(
+internal class LoginViewModel @Inject constructor(
     private val socialAuthClient: SocialAuthClient,
     private val loginWithKakaoUseCase: LoginWithKakaoUseCase,
 ) : BaseViewModel<LoginUiState, LoginEffect, LoginIntent>(LoginUiState()) {
@@ -58,7 +60,7 @@ class LoginViewModel @Inject constructor(
             ) {
                 SocialLoginResult.Cancelled -> {
                     update { copy(isLoading = false) }
-                    emitEffect(LoginEffect.ShowSnackbar("카카오 로그인이 취소되었습니다."))
+                    emitEffect(LoginEffect.ShowSnackbar(AuthSnackbarMessage.Res(R.string.login_error_cancelled)))
                 }
 
                 is SocialLoginResult.Failure -> {
@@ -88,21 +90,26 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun SocialLoginResult.Failure.toDisplayMessage(): String = when (reason) {
-        SocialLoginFailureReason.MISSING_ID_TOKEN -> "카카오 ID 토큰을 받지 못했습니다. OpenID Connect 설정을 확인해주세요."
-        SocialLoginFailureReason.PROVIDER_UNAVAILABLE -> message ?: "카카오 로그인을 사용할 수 없습니다. 잠시 후 다시 시도해주세요."
-        SocialLoginFailureReason.SDK_ERROR -> message ?: "카카오 로그인에 실패했습니다. 다시 시도해주세요."
-        SocialLoginFailureReason.UNSUPPORTED_PROVIDER -> message ?: "지원하지 않는 로그인 방식입니다."
+    private fun SocialLoginResult.Failure.toDisplayMessage(): AuthSnackbarMessage = when (reason) {
+        SocialLoginFailureReason.MISSING_ID_TOKEN -> AuthSnackbarMessage.Res(R.string.login_error_missing_id_token)
+        SocialLoginFailureReason.PROVIDER_UNAVAILABLE -> AuthSnackbarMessage.Text(
+            value = message.orEmpty(),
+            defaultMessageResId = R.string.login_error_provider_unavailable,
+        )
+
+        SocialLoginFailureReason.SDK_ERROR -> AuthSnackbarMessage.Text(
+            value = message.orEmpty(),
+            defaultMessageResId = R.string.login_error_kakao_failed,
+        )
+
+        SocialLoginFailureReason.UNSUPPORTED_PROVIDER -> AuthSnackbarMessage.Text(
+            value = message.orEmpty(),
+            defaultMessageResId = R.string.login_error_unsupported_provider,
+        )
     }
 
-    private fun AppError.toDisplayMessage(): String = when (this) {
-        is AppError.Business -> message ?: "로그인에 실패했습니다. 다시 시도해주세요."
-        is AppError.Unknown -> message ?: "로그인에 실패했습니다. 다시 시도해주세요."
-        is AppError.NetworkUnavailable -> "네트워크 연결을 확인한 뒤 다시 시도해주세요."
-        is AppError.Timeout -> "응답이 지연되고 있습니다. 다시 시도해주세요."
-        is AppError.ServerUnavailable -> "서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
-        is AppError.Unauthorized -> "로그인 정보가 만료되었습니다. 다시 시도해주세요."
-    }
+    private fun AppError.toDisplayMessage(): AuthSnackbarMessage =
+        AuthSnackbarMessage.Error(error = this, defaultMessageResId = R.string.login_error_default)
 
     private fun handleAppError(error: AppError) {
         when (error) {

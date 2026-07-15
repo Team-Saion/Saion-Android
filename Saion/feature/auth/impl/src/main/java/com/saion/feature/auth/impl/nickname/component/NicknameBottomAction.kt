@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.saion.core.model.member.NicknameValidationResult
@@ -15,6 +16,7 @@ import com.saion.ds.component.button.SaionBottomCTA
 import com.saion.ds.component.button.SaionButton
 import com.saion.ds.component.button.SaionButtonArea
 import com.saion.ds.theme.SaionTheme
+import com.saion.feature.auth.impl.R
 
 @Composable
 internal fun NicknameBottomAction(
@@ -39,7 +41,7 @@ internal fun NicknameBottomAction(
         SaionButtonArea(
             mainButton = { buttonModifier ->
                 SaionButton(
-                    text = "시작하기",
+                    text = stringResource(R.string.nickname_submit),
                     modifier = buttonModifier,
                     size = ButtonSize.XLARGE,
                     enabled = isSubmitEnabled,
@@ -50,15 +52,16 @@ internal fun NicknameBottomAction(
     }
 }
 
+@Composable
 private fun supportingMessage(result: NicknameValidationResult?): String = when (result) {
     NicknameValidationResult.Valid,
     null,
-    -> "2~10자, 한글, 영문, 숫자만"
+    -> stringResource(R.string.nickname_validation_guide)
 
-    NicknameValidationResult.Empty -> "닉네임을 입력해주세요."
-    NicknameValidationResult.TooShort -> "닉네임은 2자 이상이어야 해요."
-    NicknameValidationResult.TooLong -> "닉네임은 10자 이하로 입력해주세요."
-    NicknameValidationResult.InvalidCharacter -> "한글, 영문, 숫자만 사용할 수 있어요."
+    NicknameValidationResult.Empty -> stringResource(R.string.nickname_validation_empty)
+    NicknameValidationResult.TooShort -> stringResource(R.string.nickname_validation_too_short)
+    NicknameValidationResult.TooLong -> stringResource(R.string.nickname_validation_too_long)
+    NicknameValidationResult.InvalidCharacter -> stringResource(R.string.nickname_validation_invalid_character)
 }
 
 @Composable

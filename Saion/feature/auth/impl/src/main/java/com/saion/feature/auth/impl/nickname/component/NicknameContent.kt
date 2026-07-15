@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,6 +21,7 @@ import com.saion.core.model.member.NicknameValidationResult
 import com.saion.ds.component.input.SaionTextArea
 import com.saion.ds.component.input.SaionTextAreaVariant
 import com.saion.ds.theme.SaionTheme
+import com.saion.feature.auth.impl.R
 
 @Composable
 internal fun NicknameContent(
@@ -46,7 +48,7 @@ internal fun NicknameContent(
         Spacer(modifier = Modifier.height(40.dp))
 
         androidx.compose.material3.Text(
-            text = "어떻게 불러드릴까요?",
+            text = stringResource(R.string.nickname_title),
             style = SaionTheme.typography.title2,
             color = SaionTheme.colors.label.default,
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -84,7 +86,7 @@ private fun NicknameContentPreview() {
     SaionTheme {
         NicknameContent(
             nickname = "사이온",
-            placeholder = "닉네임을 입력해주세요",
+            placeholder = stringResource(R.string.nickname_placeholder),
             validationResult = NicknameValidationResult.Valid,
             imageUrl = null,
             avatarColorHex = "#FFD35C",
