@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_tab_home">홈</string>
+    <string name="main_tab_schedule">일정</string>
+    <string name="main_tab_mypage">마이</string>
+</resources>

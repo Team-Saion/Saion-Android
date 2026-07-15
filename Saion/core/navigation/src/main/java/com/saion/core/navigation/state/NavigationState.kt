@@ -56,9 +56,4 @@ class NavigationState<K : AppNavKey>(val backStack: NavBackStack<NavKey>) : AppN
         }
         return true
     }
-
-    override fun moveToTopLevel(key: K) {
-        if (current == key) return
-        replaceAll(key)
-    }
 }

@@ -20,6 +20,4 @@ interface AppNavigator<K : AppNavKey> {
         key: K,
         inclusive: Boolean = false,
     ): Boolean
-
-    fun moveToTopLevel(key: K)
 }

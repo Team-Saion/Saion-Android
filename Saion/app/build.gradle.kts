@@ -47,11 +47,8 @@ dependencies {
     implementation(projects.feature.home.api)
     implementation(projects.feature.home.impl)
 
-    implementation(projects.feature.search.api)
-    implementation(projects.feature.search.impl)
-
-    implementation(projects.feature.notification.api)
-    implementation(projects.feature.notification.impl)
+    implementation(projects.feature.schedule.api)
+    implementation(projects.feature.schedule.impl)
 
     implementation(projects.feature.mypage.api)
     implementation(projects.feature.mypage.impl)
