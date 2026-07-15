@@ -47,6 +47,9 @@ dependencies {
     implementation(projects.feature.home.api)
     implementation(projects.feature.home.impl)
 
+    implementation(projects.feature.circlecreate.api)
+    implementation(projects.feature.circlecreate.impl)
+
     implementation(projects.feature.schedule.api)
     implementation(projects.feature.schedule.impl)
 
