@@ -1,12 +1,17 @@
 package com.saion.feature.home.impl.viewmodel
+
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.circle.ListCirclesUseCase
 import com.saion.core.domain.usecase.home.GetHomeUseCase
 import com.saion.core.model.result.AppError
+import com.saion.core.ui.event.GlobalUiEvent
+import com.saion.core.ui.event.GlobalUiEventBus
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.home.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 @Stable
@@ -16,6 +21,13 @@ internal class HomeViewModel @Inject constructor(
 ) : BaseViewModel<HomeState, HomeEffect, HomeIntent>(HomeState.Loading) {
     init {
         dispatch(HomeIntent.Load)
+        viewModelScope.launch {
+            GlobalUiEventBus.events.collect { event ->
+                if (event is GlobalUiEvent.CircleCreated) {
+                    dispatch(HomeIntent.Load)
+                }
+            }
+        }
     }
 
     override fun handleIntent(intent: HomeIntent) {

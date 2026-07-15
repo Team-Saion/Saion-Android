@@ -3,6 +3,7 @@ package com.saion.feature.home.impl.di
 import androidx.navigation3.runtime.EntryProviderScope
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
+import com.saion.feature.circlecreate.api.key.CircleCreateNavKey
 import com.saion.feature.home.api.key.HomeNavKey
 import com.saion.feature.home.impl.HomeScreen
 import com.saion.feature.main.api.key.MainTabNavKey
@@ -18,10 +19,12 @@ object HomeNavigationModule {
     @Provides
     @IntoSet
     fun provideHomeEntryBuilder(): NavEntryBuilder<MainTabNavKey> =
-        NavEntryBuilder { scope: EntryProviderScope<MainTabNavKey>, _: AppNavigator<MainTabNavKey> ->
+        NavEntryBuilder { scope: EntryProviderScope<MainTabNavKey>, navigator: AppNavigator<MainTabNavKey> ->
             with(scope) {
                 entry<HomeNavKey> {
-                    HomeScreen()
+                    HomeScreen(
+                        onCreateCircleClick = { navigator.push(CircleCreateNavKey) },
+                    )
                 }
             }
         }
