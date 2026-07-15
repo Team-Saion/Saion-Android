@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_circle_title_loading">불러오는 중</string>
+    <string name="home_circle_title_none">서클 없음</string>
+    <string name="home_date_header">%1$d월 %2$d일 (%3$s)</string>
+    <string name="home_members_title">구성원</string>
+    <string name="home_view_all">전체 보기</string>
+    <string name="home_member_me_suffix">(나)</string>
+    <string name="home_invite_family">가족 초대</string>
+    <string name="home_hero_loading_title">홈 정보를 불러오고 있어요</string>
+    <string name="home_hero_empty_title">가입한 서클이 없습니다!</string>
+    <string name="home_hero_create_circle">서클 생성하기</string>
+    <string name="home_hero_invite_title">써클에 함께할 가족을 초대해주세요</string>
+    <string name="home_hero_send_invitation">초대장 보내기</string>
+    <string name="home_schedule_title">일정</string>
+    <string name="home_schedule_add">일정 추가</string>
+    <string name="home_schedule_detail">일정 상세 보기</string>
+    <string name="home_schedule_date">%1$d월 %2$d일 (%3$s)</string>
+    <string name="home_schedule_dday_default">일정</string>
+    <string name="home_schedule_dday_offset">%1$d일 전</string>
+    <string name="home_schedule_dday_today">오늘</string>
+    <string name="home_error_load_circles">서클 목록을 불러오지 못했습니다.</string>
+    <string name="home_error_load_overview">홈 정보를 불러오지 못했습니다.</string>
+</resources>

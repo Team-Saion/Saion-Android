@@ -4,7 +4,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
 import com.saion.feature.home.api.key.HomeNavKey
-import com.saion.feature.home.impl.ui.HomeScreen
+import com.saion.feature.home.impl.HomeScreen
 import com.saion.feature.main.api.key.MainTabNavKey
 import dagger.Module
 import dagger.Provides

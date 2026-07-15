@@ -1,0 +1,274 @@
+package com.saion.feature.home.impl
+
+import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.saion.core.model.circle.CircleSummary
+import com.saion.core.model.home.CircleMember
+import com.saion.core.model.result.AppError
+import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.error.getString
+import com.saion.ds.component.feedback.SaionSpinner
+import com.saion.ds.theme.SaionTheme
+import com.saion.feature.home.impl.component.HomeDateHeader
+import com.saion.feature.home.impl.component.HomeHeroCard
+import com.saion.feature.home.impl.component.HomeMembersSection
+import com.saion.feature.home.impl.component.HomeScheduleSection
+import com.saion.feature.home.impl.component.HomeTitleSection
+import com.saion.feature.home.impl.component.HomeTopBar
+import com.saion.feature.home.impl.viewmodel.HomeState
+import com.saion.feature.home.impl.viewmodel.HomeEffect
+import com.saion.feature.home.impl.viewmodel.HomeSnackbarMessage
+import com.saion.feature.home.impl.viewmodel.HomeViewModel
+import kotlinx.collections.immutable.toImmutableList
+
+@Composable
+internal fun HomeScreen(
+    onNotificationClick: () -> Unit = {},
+    onInviteClick: () -> Unit = {},
+    onCreateCircleClick: () -> Unit = {},
+    onScheduleAddClick: () -> Unit = {},
+    onScheduleListClick: () -> Unit = {},
+    onScheduleClick: (String) -> Unit = {},
+    onMemberListClick: () -> Unit = {},
+    viewModel: HomeViewModel = viewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is HomeEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            }
+        }
+    }
+
+    HomeScreen(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onNotificationClick = onNotificationClick,
+        onInviteClick = onInviteClick,
+        onCreateCircleClick = onCreateCircleClick,
+        onScheduleAddClick = onScheduleAddClick,
+        onScheduleListClick = onScheduleListClick,
+        onScheduleClick = onScheduleClick,
+        onMemberListClick = onMemberListClick,
+    )
+}
+
+private val HOME_BACKGROUND: Brush = Brush.verticalGradient(
+    0f to Color(0xFFFFF9E6),
+    1f to Color(0xFFF3F4F2),
+)
+
+@Composable
+private fun HomeScreen(
+    uiState: HomeState,
+    snackbarHostState: SnackbarHostState,
+    onNotificationClick: () -> Unit,
+    onInviteClick: () -> Unit,
+    onCreateCircleClick: () -> Unit,
+    onScheduleAddClick: () -> Unit,
+    onScheduleListClick: () -> Unit,
+    onScheduleClick: (String) -> Unit,
+    onMemberListClick: () -> Unit,
+) {
+    SaionScaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = HOME_BACKGROUND),
+        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        systemBarInset = SystemBarInset.None,
+        topBar = { HomeTopBar(onNotificationClick = onNotificationClick) },
+    ) {
+        HomeContent(
+            uiState = uiState,
+            onInviteClick = onInviteClick,
+            onCreateCircleClick = onCreateCircleClick,
+            onScheduleAddClick = onScheduleAddClick,
+            onScheduleListClick = onScheduleListClick,
+            onScheduleClick = onScheduleClick,
+            onMemberListClick = onMemberListClick,
+        )
+    }
+}
+
+@Composable
+private fun HomeContent(
+    uiState: HomeState,
+    onInviteClick: () -> Unit,
+    onCreateCircleClick: () -> Unit,
+    onScheduleAddClick: () -> Unit,
+    onScheduleListClick: () -> Unit,
+    onScheduleClick: (String) -> Unit,
+    onMemberListClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+            .padding(top = 20.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+    ) {
+        HomeTitleSection(circleName = uiState.circleTitle)
+        HomeDateHeader()
+        HomeHeroCard(
+            state = uiState,
+            onInviteClick = onInviteClick,
+            onCreateCircleClick = onCreateCircleClick,
+        )
+
+        when (uiState) {
+            HomeState.Loading -> SaionSpinner()
+
+            HomeState.None -> Unit
+
+            is HomeState.Content -> {
+                HomeScheduleSection(
+                    mainSchedule = uiState.mainSchedule,
+                    totalScheduleCount = uiState.totalScheduleCount,
+                    onAddClick = onScheduleAddClick,
+                    onViewAllClick = onScheduleListClick,
+                    onScheduleClick = onScheduleClick,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                HomeMembersSection(
+                    members = uiState.members,
+                    canInvite = uiState.canInvite,
+                    onInviteClick = onInviteClick,
+                    onViewAllClick = onMemberListClick,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+private val HomeState.circleTitle: String
+    @Composable get() = when (this) {
+        HomeState.Loading -> stringResource(R.string.home_circle_title_loading)
+        HomeState.None -> stringResource(R.string.home_circle_title_none)
+        is HomeState.Content -> circle.name
+    }
+
+private fun HomeSnackbarMessage.resolve(context: Context): String = when (this) {
+    is HomeSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
+    is HomeSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun AppError.resolveMessage(
+    context: Context,
+    defaultMessageResId: Int,
+): String = when (this) {
+    is AppError.Business -> message ?: context.getString(defaultMessageResId)
+
+    is AppError.Unknown -> message ?: context.getString(defaultMessageResId)
+
+    is AppError.NetworkUnavailable,
+    is AppError.Timeout,
+    is AppError.ServerUnavailable,
+    is AppError.Unauthorized,
+    -> context.getString(this)
+}
+
+@Preview
+@Composable
+private fun HomeScreenNonePreview() {
+    SaionTheme {
+        HomeScreen(
+            uiState = HomeState.None,
+            snackbarHostState = remember { SnackbarHostState() },
+            onNotificationClick = {},
+            onInviteClick = {},
+            onCreateCircleClick = {},
+            onScheduleAddClick = {},
+            onScheduleListClick = {},
+            onScheduleClick = {},
+            onMemberListClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun HomeScreenContentPreview() {
+    SaionTheme {
+        HomeScreen(
+            uiState = HomeState.Content(
+                circle = CircleSummary(
+                    circleId = "circle-1",
+                    name = "비니네",
+                    ownerId = "owner-1",
+                ),
+                members = listOf(
+                    CircleMember(
+                        memberId = "1",
+                        nickname = "수빈",
+                        avatarColor = "#FFE3A3",
+                        isMe = true,
+                        role = "MEMBER",
+                    ),
+                    CircleMember(
+                        memberId = "2",
+                        nickname = "아빠",
+                        avatarColor = "#D8EEFF",
+                        isMe = false,
+                        role = "MEMBER",
+                    ),
+                ).toImmutableList(),
+                canInvite = true,
+                mainSchedule = ScheduleSummary(
+                    scheduleId = "schedule-1",
+                    title = "가족 식사",
+                    startDate = "2026-06-28",
+                    endDate = "2026-06-28",
+                    startTime = "18:00",
+                    endTime = "20:00",
+                    isAllDay = false,
+                    needConfirm = false,
+                    status = ScheduleStatus.UPCOMING,
+                    progressRate = 0,
+                    dday = 0,
+                ),
+                schedules = emptyList<ScheduleSummary>().toImmutableList(),
+                totalScheduleCount = 3L,
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            onNotificationClick = {},
+            onInviteClick = {},
+            onCreateCircleClick = {},
+            onScheduleAddClick = {},
+            onScheduleListClick = {},
+            onScheduleClick = {},
+            onMemberListClick = {},
+        )
+    }
+}
