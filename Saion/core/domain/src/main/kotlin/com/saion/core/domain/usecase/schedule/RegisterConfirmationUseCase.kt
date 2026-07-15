@@ -6,6 +6,9 @@ import com.saion.core.model.schedule.ConfirmationType
 import com.saion.core.model.schedule.RegisteredConfirmation
 import javax.inject.Inject
 
+/**
+ * 일정 확인 응답을 등록하거나 변경합니다.
+ */
 class RegisterConfirmationUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
 ) {

@@ -4,6 +4,9 @@ import com.saion.core.domain.repository.ScheduleRepository
 import com.saion.core.model.result.AppResult
 import javax.inject.Inject
 
+/**
+ * 일정 확인 응답을 취소합니다.
+ */
 class CancelConfirmationUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
 ) {

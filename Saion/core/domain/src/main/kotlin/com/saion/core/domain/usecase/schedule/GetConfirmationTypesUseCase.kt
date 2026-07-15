@@ -5,6 +5,9 @@ import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ConfirmationOption
 import javax.inject.Inject
 
+/**
+ * 일정 확인 종류를 조회합니다.
+ */
 class GetConfirmationTypesUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
 ) {

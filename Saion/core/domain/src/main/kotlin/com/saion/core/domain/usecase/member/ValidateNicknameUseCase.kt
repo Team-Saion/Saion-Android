@@ -4,6 +4,11 @@ import com.saion.core.model.member.NicknameValidation
 import com.saion.core.model.member.NicknameValidationResult
 import javax.inject.Inject
 
+/**
+ * 닉네임을 서버 규칙에 맞춰 검증합니다.
+ *
+ * 2자 이상 10자 이하 길이와 허용 문자 조건을 확인하고, 원본 문자열과 trim 결과를 함께 반환합니다.
+ */
 class ValidateNicknameUseCase @Inject constructor() {
     operator fun invoke(nickname: String): NicknameValidation {
         val trimmedNickname = nickname.trim()

@@ -4,6 +4,9 @@ import com.saion.core.domain.repository.ScheduleRepository
 import com.saion.core.model.result.AppResult
 import javax.inject.Inject
 
+/**
+ * 일정을 삭제합니다.
+ */
 class DeleteScheduleUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
 ) {

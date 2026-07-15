@@ -5,6 +5,9 @@ import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleDetail
 import javax.inject.Inject
 
+/**
+ * 일정 상세 정보를 조회합니다.
+ */
 class GetScheduleDetailUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
 ) {
