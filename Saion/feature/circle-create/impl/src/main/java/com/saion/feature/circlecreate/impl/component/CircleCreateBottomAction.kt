@@ -3,6 +3,7 @@ package com.saion.feature.circlecreate.impl.component
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.SaionBottomCTA
 import com.saion.ds.component.button.SaionButton
@@ -16,8 +17,10 @@ internal fun CircleCreateBottomAction(
     isSubmitEnabled: Boolean,
     isSubmitting: Boolean,
     onSubmit: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     SaionBottomCTA(
+        modifier = modifier,
         upper = validationMessage?.let { message ->
             {
                 Text(
@@ -31,7 +34,7 @@ internal fun CircleCreateBottomAction(
         SaionButtonArea(
             mainButton = { modifier: Modifier ->
                 SaionButton(
-                    text = androidx.compose.ui.res.stringResource(R.string.circle_create_submit),
+                    text = stringResource(R.string.circle_create_submit),
                     modifier = modifier,
                     size = ButtonSize.XLARGE,
                     enabled = isSubmitEnabled && !isSubmitting,

@@ -26,9 +26,7 @@ internal fun NicknameBottomAction(
     modifier: Modifier = Modifier,
 ) {
     SaionBottomCTA(
-        modifier = modifier
-            .navigationBarsPadding()
-            .imePadding(),
+        modifier = modifier,
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
         upper = {
             Text(
@@ -59,8 +57,11 @@ private fun supportingMessage(result: NicknameValidationResult?): String = when 
     -> stringResource(R.string.nickname_validation_guide)
 
     NicknameValidationResult.Empty -> stringResource(R.string.nickname_validation_empty)
+
     NicknameValidationResult.TooShort -> stringResource(R.string.nickname_validation_too_short)
+
     NicknameValidationResult.TooLong -> stringResource(R.string.nickname_validation_too_long)
+
     NicknameValidationResult.InvalidCharacter -> stringResource(R.string.nickname_validation_invalid_character)
 }
 

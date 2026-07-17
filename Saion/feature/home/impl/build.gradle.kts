@@ -9,7 +9,7 @@ android {
 dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.model)
-    implementation(projects.feature.circlecreate.api)
+    implementation(projects.feature.circleCreate.api)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")

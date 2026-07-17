@@ -3,9 +3,9 @@ package com.saion.feature.circlecreate.impl
 import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.result.AppError
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SystemBarInset
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
@@ -78,7 +79,7 @@ private fun CircleCreateScreen(
                 variant = TopBarVariant.Standard(
                     title = stringResource(R.string.circle_create_title),
                     onBack = onCloseClick,
-                    navigationIcon = SaionIcons.CloseFilled,
+                    navigationIcon = SaionIcons.ChevronLeft,
                 ),
                 modifier = Modifier.statusBarsPadding(),
             )
@@ -89,9 +90,10 @@ private fun CircleCreateScreen(
                 isSubmitEnabled = uiState.isSubmitEnabled,
                 isSubmitting = uiState.isSubmitting,
                 onSubmit = onSubmit,
+                modifier = Modifier.navigationBarsPadding(),
             )
         },
-        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
+        systemBarInset = SystemBarInset.None,
     ) {
         Box(
             modifier = Modifier
@@ -104,9 +106,7 @@ private fun CircleCreateScreen(
                 onNameChange = onNameChange,
             )
 
-            if (uiState.isSubmitting) {
-                SaionSpinner()
-            }
+            if (uiState.isSubmitting) SaionSpinner()
         }
     }
 }
@@ -122,7 +122,9 @@ private fun AppError.resolveMessage(
     defaultMessageResId: Int,
 ): String = when (this) {
     is AppError.Business -> message ?: context.getString(defaultMessageResId)
+
     is AppError.Unknown -> message ?: context.getString(defaultMessageResId)
+
     is AppError.NetworkUnavailable,
     is AppError.Timeout,
     is AppError.ServerUnavailable,

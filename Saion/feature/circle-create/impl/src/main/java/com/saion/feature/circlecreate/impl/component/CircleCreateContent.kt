@@ -42,11 +42,12 @@ internal fun CircleCreateContent(
         SaionTextArea(
             value = name,
             onValueChange = onNameChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp),
             variant = SaionTextAreaVariant.NONE,
             placeholder = placeholder,
             minLines = 1,
-            maxLines = 1,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
                 imeAction = ImeAction.Done,
