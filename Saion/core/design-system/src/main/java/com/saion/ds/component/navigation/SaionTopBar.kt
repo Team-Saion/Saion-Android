@@ -69,7 +69,13 @@ fun SaionTopBar(
         )
 
         TopBarVariant.Main -> TopAppBar(
-            title = { Icon(imageVector = SaionIcons.Logo, contentDescription = "") },
+            title = {
+                Icon(
+                    imageVector = SaionIcons.Logo,
+                    contentDescription = "",
+                    modifier = Modifier.height(20.dp),
+                )
+            },
             actions = actions,
             modifier = modifier.height(44.dp),
             colors = colors,
