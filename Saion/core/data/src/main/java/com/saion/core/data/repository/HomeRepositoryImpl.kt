@@ -61,7 +61,7 @@ private fun CircleHomeResponse.toDomain(): AppResult<HomeOverview> {
 private fun CircleMemberResponse.toDomain(): CircleMember = CircleMember(
     memberId = memberId,
     nickname = nickname,
-    avatarColor = avatarColor,
+    avatarColor = avatarColor.hex,
     isMe = isMe,
     role = role,
 )

@@ -4,8 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import com.saion.core.domain.usecase.circle.CreateCircleUseCase
 import com.saion.core.model.result.AppError
-import com.saion.core.ui.event.GlobalUiEvent
-import com.saion.core.ui.event.GlobalUiEventBus
+import com.saion.core.ui.event.CircleCreatedEventBus
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.circlecreate.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,7 +55,7 @@ internal class CircleCreateViewModel @Inject constructor(
                 update { copy(isSubmitting = true) }
             },
             onSuccess = {
-                GlobalUiEventBus.emit(GlobalUiEvent.CircleCreated)
+                CircleCreatedEventBus.emit()
                 emitEffect(CircleCreateEffect.Close)
             },
             onFailure = { error ->

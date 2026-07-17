@@ -5,8 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.circle.ListCirclesUseCase
 import com.saion.core.domain.usecase.home.GetHomeUseCase
 import com.saion.core.model.result.AppError
-import com.saion.core.ui.event.GlobalUiEvent
-import com.saion.core.ui.event.GlobalUiEventBus
+import com.saion.core.ui.event.CircleCreatedEventBus
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.home.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,10 +21,8 @@ internal class HomeViewModel @Inject constructor(
     init {
         dispatch(HomeIntent.Load)
         viewModelScope.launch {
-            GlobalUiEventBus.events.collect { event ->
-                if (event is GlobalUiEvent.CircleCreated) {
-                    dispatch(HomeIntent.Load)
-                }
+            CircleCreatedEventBus.events.collect {
+                dispatch(HomeIntent.Load)
             }
         }
     }

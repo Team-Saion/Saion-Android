@@ -11,6 +11,7 @@ import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.ui.event.CircleCreatedEventBus
 import com.saion.feature.home.impl.viewmodel.HomeEffect
 import com.saion.feature.home.impl.viewmodel.HomeSnackbarMessage
 import com.saion.feature.home.impl.viewmodel.HomeState
@@ -127,10 +128,43 @@ class HomeViewModelTest {
         assertTrue(message is HomeSnackbarMessage.Error)
         assertEquals(HomeState.None, viewModel.uiState.value)
     }
+
+    @Test
+    fun `서클 생성 이벤트를 받으면 홈을 다시 조회한다`() = runTest {
+        val circleRepository = FakeCircleRepository(
+            result = AppResult.Success(
+                listOf(
+                    CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
+                ),
+            ),
+        )
+        val homeRepository = FakeHomeRepository(
+            result = AppResult.Success(defaultOverview()),
+        )
+        HomeViewModel(
+            listCirclesUseCase = ListCirclesUseCase(circleRepository),
+            getHomeUseCase = GetHomeUseCase(homeRepository),
+        )
+
+        advanceUntilIdle()
+        assertEquals(1, circleRepository.listCallCount)
+        assertEquals(1, homeRepository.requestCount)
+
+        CircleCreatedEventBus.emit()
+        advanceUntilIdle()
+
+        assertEquals(2, circleRepository.listCallCount)
+        assertEquals(2, homeRepository.requestCount)
+    }
 }
 
 private class FakeCircleRepository(private val result: AppResult<List<CircleSummary>>) : CircleRepository {
-    override suspend fun listCircles(): AppResult<List<CircleSummary>> = result
+    var listCallCount: Int = 0
+
+    override suspend fun listCircles(): AppResult<List<CircleSummary>> {
+        listCallCount += 1
+        return result
+    }
 
     override suspend fun createCircle(name: String): AppResult<CircleSummary> {
         error("Not used")
@@ -146,9 +180,11 @@ private class FakeCircleRepository(private val result: AppResult<List<CircleSumm
 
 private class FakeHomeRepository(private val result: AppResult<HomeOverview>) : HomeRepository {
     var requestedCircleId: String? = null
+    var requestCount: Int = 0
 
     override suspend fun getHome(circleId: String): AppResult<HomeOverview> {
         requestedCircleId = circleId
+        requestCount += 1
         return result
     }
 
