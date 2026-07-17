@@ -108,6 +108,9 @@ private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> {
 
     return AppResult.Success(
         MemberInfo(
+            nickname = nickname,
+            profileImageUrl = profileImageUrl?.normalizeProfileImageUrl(),
+            avatarColorHex = avatarColor.hex,
             role = memberRole,
             status = memberStatus,
         ),
