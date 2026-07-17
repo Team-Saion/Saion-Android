@@ -3,12 +3,14 @@ package com.saion.feature.home.impl.di
 import androidx.navigation3.runtime.EntryProviderScope
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
+import com.saion.core.navigation.state.TabNavigationState
 import com.saion.feature.circlecreate.api.key.CircleCreateNavKey
 import com.saion.feature.home.api.key.HomeMemberListNavKey
 import com.saion.feature.home.api.key.HomeNavKey
 import com.saion.feature.home.impl.home.HomeScreen
 import com.saion.feature.home.impl.memberlist.HomeMemberListScreen
 import com.saion.feature.main.api.key.MainTabNavKey
+import com.saion.feature.schedule.api.key.ScheduleNavKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,9 @@ object HomeNavigationModule {
                 entry<HomeNavKey> {
                     HomeScreen(
                         onCreateCircleClick = { navigator.push(CircleCreateNavKey) },
+                        onScheduleListClick = {
+                            (navigator as? TabNavigationState<MainTabNavKey>)?.selectTab(ScheduleNavKey)
+                        },
                         onMemberListClick = {
                             navigator.push(HomeMemberListNavKey)
                         },

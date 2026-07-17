@@ -5,7 +5,7 @@ import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
 import com.saion.feature.main.api.key.MainTabNavKey
 import com.saion.feature.schedule.api.key.ScheduleNavKey
-import com.saion.feature.schedule.impl.ui.ScheduleScreen
+import com.saion.feature.schedule.impl.ScheduleScreen
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
