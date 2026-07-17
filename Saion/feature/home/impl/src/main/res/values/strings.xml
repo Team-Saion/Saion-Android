@@ -12,6 +12,12 @@
     <string name="home_hero_create_circle">서클 생성하기</string>
     <string name="home_hero_invite_title">써클에 함께할 가족을 초대해주세요</string>
     <string name="home_hero_send_invitation">초대장 보내기</string>
+    <string name="home_hero_schedule_title">가장 가까운 일정이에요</string>
+    <string name="home_hero_schedule_date">%1$d월 %2$d일 (%3$s)</string>
+    <string name="home_hero_schedule_all_day">종일</string>
+    <string name="home_hero_progress_start">여유있어요</string>
+    <string name="home_hero_progress_end">서두르세요</string>
+    <string name="home_hero_schedule_cta">가족에게 전하기</string>
     <string name="home_schedule_title">일정</string>
     <string name="home_schedule_detail">일정 상세 보기</string>
     <string name="home_schedule_date">%1$d월 %2$d일 (%3$s)</string>

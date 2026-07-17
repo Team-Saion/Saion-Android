@@ -120,7 +120,7 @@ class HomeViewModelTest {
 
     @Test
     fun `content 상태에서 나 외의 구성원이 있으면 hero를 숨긴다`() {
-        val uiState = defaultOverview().toUiState()
+        val uiState = defaultOverview(schedules = emptyList()).toUiState()
 
         assertTrue(uiState.shouldShowHero.not())
     }
@@ -141,6 +141,14 @@ class HomeViewModelTest {
         ).toUiState()
 
         assertTrue(uiState.shouldShowHero)
+    }
+
+    @Test
+    fun `content 상태에서 첫 일정이 있으면 다른 구성원이 있어도 hero를 노출한다`() {
+        val uiState = defaultOverview().toUiState()
+
+        assertTrue(uiState.shouldShowHero)
+        assertEquals("schedule-1", uiState.heroSchedule?.scheduleId)
     }
 
     @Test
@@ -355,23 +363,38 @@ private fun defaultOverview(
             role = "MEMBER",
         ),
     ),
+    schedules: List<ScheduleSummary> = listOf(
+        ScheduleSummary(
+            scheduleId = "schedule-1",
+            title = "가족 식사",
+            startDate = "2026-07-20",
+            endDate = "2026-07-20",
+            startTime = "18:00",
+            endTime = "20:00",
+            isAllDay = false,
+            needConfirm = false,
+            status = ScheduleStatus.UPCOMING,
+            progressRate = 0,
+            dday = 3,
+        ),
+        ScheduleSummary(
+            scheduleId = "schedule-2",
+            title = "장보기",
+            startDate = "2026-07-22",
+            endDate = "2026-07-22",
+            startTime = "15:00",
+            endTime = "16:00",
+            isAllDay = false,
+            needConfirm = false,
+            status = ScheduleStatus.UPCOMING,
+            progressRate = 0,
+            dday = 5,
+        ),
+    ),
 ): HomeOverview = HomeOverview(
     circle = CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
     members = members,
     canInvite = true,
-    mainSchedule = ScheduleSummary(
-        scheduleId = "schedule-1",
-        title = "가족 식사",
-        startDate = "2026-06-28",
-        endDate = "2026-06-28",
-        startTime = "18:00",
-        endTime = "20:00",
-        isAllDay = false,
-        needConfirm = false,
-        status = ScheduleStatus.UPCOMING,
-        progressRate = 0,
-        dday = 0,
-    ),
-    schedules = emptyList(),
+    schedules = schedules,
     totalScheduleCount = 3L,
 )

@@ -32,12 +32,6 @@ internal class HomeRepositoryImpl @Inject constructor(
 }
 
 private fun CircleHomeResponse.toDomain(): AppResult<HomeOverview> {
-    val mainScheduleResponse = mainSchedule
-    val mappedMainSchedule = if (mainScheduleResponse == null) {
-        null
-    } else {
-        mainScheduleResponse.toDomain() ?: return mainScheduleResponse.invalidStatusResult()
-    }
     val mappedSchedules = schedules.map { response ->
         response.toDomain() ?: return response.invalidStatusResult()
     }
@@ -51,7 +45,6 @@ private fun CircleHomeResponse.toDomain(): AppResult<HomeOverview> {
             ),
             members = members.map(CircleMemberResponse::toDomain),
             canInvite = canInvite,
-            mainSchedule = mappedMainSchedule,
             schedules = mappedSchedules,
             totalScheduleCount = totalScheduleCount,
         ),

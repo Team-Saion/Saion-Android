@@ -3,6 +3,7 @@ package com.saion.feature.home.impl.home
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +57,7 @@ internal fun HomeScreen(
     onScheduleAddClick: () -> Unit = {},
     onScheduleListClick: () -> Unit = {},
     onScheduleClick: (String) -> Unit = {},
+    onHeroScheduleShareClick: () -> Unit = {},
     onMemberListClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -77,6 +80,10 @@ internal fun HomeScreen(
         onScheduleAddClick = onScheduleAddClick,
         onScheduleListClick = onScheduleListClick,
         onScheduleClick = onScheduleClick,
+        onHeroScheduleShareClick = {
+            onHeroScheduleShareClick()
+            viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        },
         onMemberListClick = onMemberListClick,
     )
 }
@@ -96,6 +103,7 @@ private fun HomeScreen(
     onScheduleAddClick: () -> Unit,
     onScheduleListClick: () -> Unit,
     onScheduleClick: (String) -> Unit,
+    onHeroScheduleShareClick: () -> Unit,
     onMemberListClick: () -> Unit,
 ) {
     SaionScaffold(
@@ -114,6 +122,7 @@ private fun HomeScreen(
             onScheduleAddClick = onScheduleAddClick,
             onScheduleListClick = onScheduleListClick,
             onScheduleClick = onScheduleClick,
+            onHeroScheduleShareClick = onHeroScheduleShareClick,
             onMemberListClick = onMemberListClick,
         )
     }
@@ -127,8 +136,14 @@ private fun HomeContent(
     onScheduleAddClick: () -> Unit,
     onScheduleListClick: () -> Unit,
     onScheduleClick: (String) -> Unit,
+    onHeroScheduleShareClick: () -> Unit,
     onMemberListClick: () -> Unit,
 ) {
+    if (uiState == HomeState.Loading) {
+        HomeLoadingContent()
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -144,17 +159,17 @@ private fun HomeContent(
                 state = uiState,
                 onInviteClick = onInviteClick,
                 onCreateCircleClick = onCreateCircleClick,
+                onScheduleClick = onScheduleClick,
+                onHeroScheduleShareClick = onHeroScheduleShareClick,
             )
         }
 
         when (uiState) {
-            HomeState.Loading -> SaionSpinner()
-
             HomeState.None -> Unit
 
             is HomeState.Content -> {
                 HomeScheduleSection(
-                    mainSchedule = uiState.mainSchedule,
+                    schedules = uiState.sectionSchedules,
                     totalScheduleCount = uiState.totalScheduleCount,
                     onAddClick = onScheduleAddClick,
                     onViewAllClick = onScheduleListClick,
@@ -174,11 +189,24 @@ private fun HomeContent(
     }
 }
 
+@Composable
+private fun HomeLoadingContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp)
+            .padding(top = 20.dp, bottom = 32.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        SaionSpinner()
+    }
+}
+
 private val HomeState.circleTitle: String
     @Composable get() = when (this) {
-        HomeState.Loading -> stringResource(R.string.home_circle_title_loading)
         HomeState.None -> stringResource(R.string.home_circle_title_none)
         is HomeState.Content -> circle.name
+        HomeState.Loading -> stringResource(R.string.home_circle_title_loading)
     }
 
 private fun HomeSnackbarMessage.resolve(context: Context): String = when (this) {
@@ -199,6 +227,26 @@ private fun HomeScreenNonePreview() {
             onScheduleAddClick = {},
             onScheduleListClick = {},
             onScheduleClick = {},
+            onHeroScheduleShareClick = {},
+            onMemberListClick = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun HomeScreenLoadingPreview() {
+    SaionTheme {
+        HomeScreen(
+            uiState = HomeState.Loading,
+            snackbarHostState = remember { SnackbarHostState() },
+            onNotificationClick = {},
+            onInviteClick = {},
+            onCreateCircleClick = {},
+            onScheduleAddClick = {},
+            onScheduleListClick = {},
+            onScheduleClick = {},
+            onHeroScheduleShareClick = {},
             onMemberListClick = {},
         )
     }
@@ -235,20 +283,34 @@ private fun HomeScreenContentPreview() {
                 ).toImmutableList(),
                 canInvite = true,
                 isInviting = false,
-                mainSchedule = ScheduleSummary(
-                    scheduleId = "schedule-1",
-                    title = "가족 식사",
-                    startDate = "2026-06-28",
-                    endDate = "2026-06-28",
-                    startTime = "18:00",
-                    endTime = "20:00",
-                    isAllDay = false,
-                    needConfirm = false,
-                    status = ScheduleStatus.UPCOMING,
-                    progressRate = 0,
-                    dday = 0,
-                ),
-                schedules = emptyList<ScheduleSummary>().toImmutableList(),
+                schedules = listOf(
+                    ScheduleSummary(
+                        scheduleId = "schedule-1",
+                        title = "가족 식사",
+                        startDate = "2026-07-20",
+                        endDate = "2026-07-20",
+                        startTime = "18:00",
+                        endTime = "20:00",
+                        isAllDay = false,
+                        needConfirm = false,
+                        status = ScheduleStatus.UPCOMING,
+                        progressRate = 0,
+                        dday = 3,
+                    ),
+                    ScheduleSummary(
+                        scheduleId = "schedule-2",
+                        title = "장보기",
+                        startDate = "2026-07-22",
+                        endDate = "2026-07-22",
+                        startTime = "15:00",
+                        endTime = "16:00",
+                        isAllDay = false,
+                        needConfirm = false,
+                        status = ScheduleStatus.UPCOMING,
+                        progressRate = 0,
+                        dday = 5,
+                    ),
+                ).toImmutableList(),
                 totalScheduleCount = 3L,
             ),
             snackbarHostState = remember { SnackbarHostState() },
@@ -258,6 +320,7 @@ private fun HomeScreenContentPreview() {
             onScheduleAddClick = {},
             onScheduleListClick = {},
             onScheduleClick = {},
+            onHeroScheduleShareClick = {},
             onMemberListClick = {},
         )
     }

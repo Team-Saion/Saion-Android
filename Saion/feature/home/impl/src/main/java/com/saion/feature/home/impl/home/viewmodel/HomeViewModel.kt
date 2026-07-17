@@ -37,6 +37,7 @@ internal class HomeViewModel @Inject constructor(
     override fun handleIntent(intent: HomeIntent) {
         when (intent) {
             HomeIntent.InviteClicked -> invite()
+            HomeIntent.HeroScheduleShareClicked -> Unit
         }
     }
 
