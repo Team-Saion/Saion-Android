@@ -1,6 +1,8 @@
 package com.saion.core.data.repository
 
 import com.saion.core.data.util.safeRequest
+import com.saion.core.datastore.datasource.NotificationSettingLocalDataSource
+import com.saion.core.datastore.model.NotificationSettingCache
 import com.saion.core.domain.repository.NotificationRepository
 import com.saion.core.model.notification.NotificationInboxItem
 import com.saion.core.model.notification.NotificationInboxPage
@@ -21,7 +23,10 @@ import javax.inject.Inject
 internal class NotificationRepositoryImpl @Inject constructor(
     private val notificationRemoteDataSource: NotificationRemoteDataSource,
     private val notificationSettingRemoteDataSource: NotificationSettingRemoteDataSource,
+    private val notificationSettingLocalDataSource: NotificationSettingLocalDataSource,
 ) : NotificationRepository {
+    private var hasFetchedNotificationSetting: Boolean = false
+
     override suspend fun getInbox(
         cursor: Long?,
         size: Int?,
@@ -37,10 +42,30 @@ internal class NotificationRepositoryImpl @Inject constructor(
         response.toDomain()
     }
 
-    override suspend fun getSetting(): AppResult<NotificationSetting> = safeRequest(
-        request = { notificationSettingRemoteDataSource.getSetting() },
-    ) { response ->
-        AppResult.Success(response.toDomain())
+    override suspend fun getSetting(): AppResult<NotificationSetting> {
+        if (hasFetchedNotificationSetting) {
+            notificationSettingLocalDataSource.getSetting()?.let { cached ->
+                return AppResult.Success(cached.toDomain())
+            }
+        }
+
+        val remoteResult = fetchNotificationSetting()
+        return when (remoteResult) {
+            is AppResult.Success -> {
+                hasFetchedNotificationSetting = true
+                remoteResult
+            }
+
+            is AppResult.Failure -> {
+                val cachedSetting = notificationSettingLocalDataSource.getSetting()?.toDomain()
+                if (cachedSetting != null) {
+                    hasFetchedNotificationSetting = true
+                    AppResult.Success(cachedSetting)
+                } else {
+                    remoteResult
+                }
+            }
+        }
     }
 
     override suspend fun updateSetting(setting: NotificationSetting): AppResult<NotificationSetting> = safeRequest(
@@ -53,7 +78,18 @@ internal class NotificationRepositoryImpl @Inject constructor(
             )
         },
     ) { response ->
-        AppResult.Success(response.toDomain())
+        val updatedSetting = response.toDomain()
+        notificationSettingLocalDataSource.saveSetting(updatedSetting.toCache())
+        hasFetchedNotificationSetting = true
+        AppResult.Success(updatedSetting)
+    }
+
+    private suspend fun fetchNotificationSetting(): AppResult<NotificationSetting> = safeRequest(
+        request = { notificationSettingRemoteDataSource.getSetting() },
+    ) { response ->
+        val setting = response.toDomain()
+        notificationSettingLocalDataSource.saveSetting(setting.toCache())
+        AppResult.Success(setting)
     }
 }
 
@@ -104,6 +140,21 @@ private fun NotificationRouteResponse.toDomain(): NotificationRoute? = Notificat
     }
 
 private fun NotificationSettingResponse.toDomain(): NotificationSetting = NotificationSetting(
+    d7Enabled = d7Enabled,
+    d1Enabled = d1Enabled,
+    ddayEnabled = dDayEnabled,
+    familyScheduleCheckEnabled = familyScheduleCheckEnabled,
+)
+
+private fun NotificationSettingCache.toDomain(): NotificationSetting = NotificationSetting(
+    d7Enabled = d7Enabled,
+    d1Enabled = d1Enabled,
+    ddayEnabled = ddayEnabled,
+    familyScheduleCheckEnabled = familyScheduleCheckEnabled,
+)
+
+private fun NotificationSetting.toCache(): NotificationSettingCache = NotificationSettingCache(
+    hasValue = true,
     d7Enabled = d7Enabled,
     d1Enabled = d1Enabled,
     ddayEnabled = ddayEnabled,

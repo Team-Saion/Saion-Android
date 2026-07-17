@@ -9,8 +9,8 @@ data class NotificationSettingResponse(
     val d7Enabled: Boolean,
     @SerialName("d1Enabled")
     val d1Enabled: Boolean,
-    @SerialName("ddayEnabled")
-    val ddayEnabled: Boolean,
+    @SerialName("dDayEnabled")
+    val dDayEnabled: Boolean,
     @SerialName("familyScheduleCheckEnabled")
     val familyScheduleCheckEnabled: Boolean,
 )

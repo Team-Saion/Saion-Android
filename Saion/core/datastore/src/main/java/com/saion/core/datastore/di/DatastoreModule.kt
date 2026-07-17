@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import com.saion.core.datastore.datastore.authDataStore
 import com.saion.core.datastore.datastore.currentCircleDataStore
+import com.saion.core.datastore.datastore.notificationSettingDataStore
 import com.saion.core.datastore.model.AuthTokens
 import com.saion.core.datastore.model.CurrentCircle
+import com.saion.core.datastore.model.NotificationSettingCache
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,4 +26,10 @@ object DatastoreModule {
     @Provides
     @Singleton
     internal fun provideCurrentCircleDataStore(@ApplicationContext context: Context): DataStore<CurrentCircle> = context.currentCircleDataStore
+
+    @Provides
+    @Singleton
+    internal fun provideNotificationSettingDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<NotificationSettingCache> = context.notificationSettingDataStore
 }

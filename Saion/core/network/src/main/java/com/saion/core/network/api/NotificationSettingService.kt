@@ -25,7 +25,7 @@ class NotificationSettingService(private val client: HttpClient) {
                 UpdateNotificationSettingRequest(
                     d7Enabled = d7Enabled,
                     d1Enabled = d1Enabled,
-                    ddayEnabled = ddayEnabled,
+                    dDayEnabled = ddayEnabled,
                     familyScheduleCheckEnabled = familyScheduleCheckEnabled,
                 ),
             )

@@ -6,6 +6,7 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import com.saion.core.datastore.model.AuthTokens
 import com.saion.core.datastore.model.CurrentCircle
+import com.saion.core.datastore.model.NotificationSettingCache
 import java.io.InputStream
 import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
@@ -46,5 +47,31 @@ internal val Context.currentCircleDataStore: DataStore<CurrentCircle> by dataSto
         }
 
         override val defaultValue: CurrentCircle get() = CurrentCircle(selectedCircleId = "")
+    },
+)
+
+internal val Context.notificationSettingDataStore: DataStore<NotificationSettingCache> by dataStore(
+    fileName = "notification-setting.preferences_pb",
+    serializer = object : Serializer<NotificationSettingCache> {
+        override suspend fun readFrom(input: InputStream): NotificationSettingCache =
+            Json.decodeFromString<NotificationSettingCache>(input.readBytes().decodeToString())
+
+        override suspend fun writeTo(
+            t: NotificationSettingCache,
+            output: OutputStream,
+        ) {
+            withContext(Dispatchers.IO) {
+                output.write(Json.encodeToString<NotificationSettingCache>(t).encodeToByteArray())
+            }
+        }
+
+        override val defaultValue: NotificationSettingCache
+            get() = NotificationSettingCache(
+                hasValue = false,
+                d7Enabled = false,
+                d1Enabled = false,
+                ddayEnabled = false,
+                familyScheduleCheckEnabled = false,
+            )
     },
 )

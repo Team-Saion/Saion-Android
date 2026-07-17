@@ -4,6 +4,8 @@ import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.datastore.datasource.DefaultAuthLocalDataSource
 import com.saion.core.datastore.datasource.DefaultCurrentCircleLocalDataSource
+import com.saion.core.datastore.datasource.DefaultNotificationSettingLocalDataSource
+import com.saion.core.datastore.datasource.NotificationSettingLocalDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,4 +22,10 @@ abstract class DataSourceModule {
     @Binds
     @Singleton
     internal abstract fun bindCurrentCircleLocalDataSource(impl: DefaultCurrentCircleLocalDataSource): CurrentCircleLocalDataSource
+
+    @Binds
+    @Singleton
+    internal abstract fun bindNotificationSettingLocalDataSource(
+        impl: DefaultNotificationSettingLocalDataSource,
+    ): NotificationSettingLocalDataSource
 }
