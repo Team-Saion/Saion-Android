@@ -29,6 +29,7 @@ import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
@@ -283,6 +284,20 @@ private fun HomeScreenContentPreview() {
                 ).toImmutableList(),
                 canInvite = true,
                 isInviting = false,
+                mainSchedule = ScheduleSummary(
+                    scheduleId = "schedule-0",
+                    title = "오늘 저녁",
+                    startDate = "2026-07-17",
+                    endDate = "2026-07-17",
+                    startTime = "18:00",
+                    endTime = "19:00",
+                    isAllDay = false,
+                    needConfirm = false,
+                    status = ScheduleStatus.UPCOMING,
+                    urgencyLevel = ScheduleUrgencyLevel.URGENT,
+                    progressRate = 0,
+                    dday = 0,
+                ),
                 schedules = listOf(
                     ScheduleSummary(
                         scheduleId = "schedule-1",
@@ -294,6 +309,7 @@ private fun HomeScreenContentPreview() {
                         isAllDay = false,
                         needConfirm = false,
                         status = ScheduleStatus.UPCOMING,
+                        urgencyLevel = ScheduleUrgencyLevel.URGENT,
                         progressRate = 0,
                         dday = 3,
                     ),
@@ -307,6 +323,7 @@ private fun HomeScreenContentPreview() {
                         isAllDay = false,
                         needConfirm = false,
                         status = ScheduleStatus.UPCOMING,
+                        urgencyLevel = ScheduleUrgencyLevel.NORMAL,
                         progressRate = 0,
                         dday = 5,
                     ),

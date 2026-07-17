@@ -21,6 +21,7 @@ import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.share.InvitationShareClient
 import com.saion.core.share.InvitationShareResult
 import com.saion.feature.home.impl.home.viewmodel.HomeEffect
@@ -119,7 +120,10 @@ class HomeViewModelTest {
 
     @Test
     fun `content 상태에서 나 외의 구성원이 있으면 hero를 숨긴다`() {
-        val uiState = defaultOverview(schedules = emptyList()).toUiState()
+        val uiState = defaultOverview(
+            mainSchedule = null,
+            schedules = emptyList(),
+        ).toUiState()
 
         assertTrue(uiState.shouldShowHero.not())
     }
@@ -137,17 +141,34 @@ class HomeViewModelTest {
                     role = "ADMIN",
                 ),
             ),
+            mainSchedule = null,
         ).toUiState()
 
         assertTrue(uiState.shouldShowHero)
     }
 
     @Test
-    fun `content 상태에서 첫 일정이 있으면 다른 구성원이 있어도 hero를 노출한다`() {
+    fun `content 상태에서 main 일정이 있으면 다른 구성원이 있어도 hero를 노출한다`() {
         val uiState = defaultOverview().toUiState()
 
         assertTrue(uiState.shouldShowHero)
-        assertEquals("schedule-1", uiState.heroSchedule?.scheduleId)
+        assertEquals("schedule-0", uiState.heroSchedule?.scheduleId)
+    }
+
+    @Test
+    fun `section 일정은 main 일정을 제외한 schedules를 그대로 사용한다`() {
+        val uiState = defaultOverview().toUiState()
+
+        assertEquals(listOf("schedule-1", "schedule-2"), uiState.sectionSchedules.map(ScheduleSummary::scheduleId))
+    }
+
+    @Test
+    fun `main 일정이 없어도 schedules가 있으면 hero 없이 section 일정은 유지된다`() {
+        val uiState = defaultOverview(mainSchedule = null).toUiState()
+
+        assertTrue(uiState.shouldShowHero.not())
+        assertEquals(null, uiState.heroSchedule)
+        assertEquals(listOf("schedule-1", "schedule-2"), uiState.sectionSchedules.map(ScheduleSummary::scheduleId))
     }
 
     @Test
@@ -362,6 +383,20 @@ private fun defaultOverview(
             role = "MEMBER",
         ),
     ),
+    mainSchedule: ScheduleSummary? = ScheduleSummary(
+        scheduleId = "schedule-0",
+        title = "오늘 일정",
+        startDate = "2026-07-17",
+        endDate = "2026-07-17",
+        startTime = "12:00",
+        endTime = "13:00",
+        isAllDay = false,
+        needConfirm = false,
+        status = ScheduleStatus.UPCOMING,
+        urgencyLevel = ScheduleUrgencyLevel.URGENT,
+        progressRate = 0,
+        dday = 0,
+    ),
     schedules: List<ScheduleSummary> = listOf(
         ScheduleSummary(
             scheduleId = "schedule-1",
@@ -373,6 +408,7 @@ private fun defaultOverview(
             isAllDay = false,
             needConfirm = false,
             status = ScheduleStatus.UPCOMING,
+            urgencyLevel = ScheduleUrgencyLevel.URGENT,
             progressRate = 0,
             dday = 3,
         ),
@@ -386,6 +422,7 @@ private fun defaultOverview(
             isAllDay = false,
             needConfirm = false,
             status = ScheduleStatus.UPCOMING,
+            urgencyLevel = ScheduleUrgencyLevel.NORMAL,
             progressRate = 0,
             dday = 5,
         ),
@@ -394,6 +431,7 @@ private fun defaultOverview(
     circle = CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
     members = members,
     canInvite = true,
+    mainSchedule = mainSchedule,
     schedules = schedules,
     totalScheduleCount = 3L,
 )

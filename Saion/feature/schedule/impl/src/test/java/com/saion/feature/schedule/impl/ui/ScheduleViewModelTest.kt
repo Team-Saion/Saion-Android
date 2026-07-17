@@ -17,6 +17,7 @@ import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.model.schedule.UpdateScheduleCommand
 import com.saion.feature.schedule.impl.viewmodel.ScheduleEffect
 import com.saion.feature.schedule.impl.viewmodel.ScheduleIntent
@@ -415,6 +416,7 @@ private fun defaultSchedule(scheduleId: String): ScheduleSummary = ScheduleSumma
     isAllDay = false,
     needConfirm = false,
     status = ScheduleStatus.UPCOMING,
+    urgencyLevel = ScheduleUrgencyLevel.URGENT,
     progressRate = 0,
     dday = 1,
 )

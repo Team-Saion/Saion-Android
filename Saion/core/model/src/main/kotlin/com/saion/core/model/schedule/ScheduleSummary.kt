@@ -10,6 +10,7 @@ data class ScheduleSummary(
     val isAllDay: Boolean,
     val needConfirm: Boolean,
     val status: ScheduleStatus,
+    val urgencyLevel: ScheduleUrgencyLevel,
     val progressRate: Int,
     val dday: Int?,
 )

@@ -7,6 +7,7 @@ import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import org.junit.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -137,6 +138,20 @@ private fun defaultHomeOverview(): HomeOverview = HomeOverview(
         ),
     ),
     canInvite = true,
+    mainSchedule = ScheduleSummary(
+        scheduleId = "schedule-0",
+        title = "오늘 일정",
+        startDate = "2026-07-17",
+        endDate = "2026-07-17",
+        startTime = "09:00",
+        endTime = "10:00",
+        isAllDay = false,
+        needConfirm = true,
+        status = ScheduleStatus.UPCOMING,
+        urgencyLevel = ScheduleUrgencyLevel.URGENT,
+        progressRate = 0,
+        dday = 0,
+    ),
     schedules = listOf(
         ScheduleSummary(
             scheduleId = "schedule-1",
@@ -148,6 +163,7 @@ private fun defaultHomeOverview(): HomeOverview = HomeOverview(
             isAllDay = false,
             needConfirm = true,
             status = ScheduleStatus.UPCOMING,
+            urgencyLevel = ScheduleUrgencyLevel.URGENT,
             progressRate = 0,
             dday = 1,
         ),

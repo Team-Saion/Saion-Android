@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
@@ -245,6 +246,7 @@ private fun HomeScheduleHeroCardPreview() {
                 isAllDay = false,
                 needConfirm = false,
                 status = ScheduleStatus.UPCOMING,
+                urgencyLevel = ScheduleUrgencyLevel.URGENT,
                 progressRate = 35,
                 dday = 3,
             ),

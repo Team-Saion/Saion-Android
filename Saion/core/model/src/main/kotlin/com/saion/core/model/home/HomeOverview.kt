@@ -7,6 +7,7 @@ data class HomeOverview(
     val circle: CircleSummary,
     val members: List<CircleMember>,
     val canInvite: Boolean,
+    val mainSchedule: ScheduleSummary?,
     val schedules: List<ScheduleSummary>,
     val totalScheduleCount: Long,
 )

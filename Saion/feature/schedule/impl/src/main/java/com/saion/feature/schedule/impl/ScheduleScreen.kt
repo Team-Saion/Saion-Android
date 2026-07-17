@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.ScheduleAddCard
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.ScheduleSummaryCard
@@ -225,6 +226,7 @@ private fun ScheduleScreenContentPreview() {
                         isAllDay = false,
                         needConfirm = false,
                         status = ScheduleStatus.UPCOMING,
+                        urgencyLevel = ScheduleUrgencyLevel.URGENT,
                         progressRate = 0,
                         dday = 1,
                     ),
@@ -238,6 +240,7 @@ private fun ScheduleScreenContentPreview() {
                         isAllDay = false,
                         needConfirm = false,
                         status = ScheduleStatus.UPCOMING,
+                        urgencyLevel = ScheduleUrgencyLevel.NORMAL,
                         progressRate = 0,
                         dday = 10,
                     ),

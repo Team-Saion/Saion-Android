@@ -9,6 +9,7 @@ import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.network.datasource.HomeRemoteDataSource
 import com.saion.core.network.model.home.CircleHomeResponse
 import com.saion.core.network.model.home.CircleMemberResponse
@@ -32,6 +33,9 @@ internal class HomeRepositoryImpl @Inject constructor(
 }
 
 private fun CircleHomeResponse.toDomain(): AppResult<HomeOverview> {
+    val mainScheduleResponse = mainSchedule
+    val mappedMainSchedule = mainScheduleResponse?.toDomain()
+        ?: if (mainScheduleResponse != null) return mainScheduleResponse.invalidStatusResult() else null
     val mappedSchedules = schedules.map { response ->
         response.toDomain() ?: return response.invalidStatusResult()
     }
@@ -45,6 +49,7 @@ private fun CircleHomeResponse.toDomain(): AppResult<HomeOverview> {
             ),
             members = members.map(CircleMemberResponse::toDomain),
             canInvite = canInvite,
+            mainSchedule = mappedMainSchedule,
             schedules = mappedSchedules,
             totalScheduleCount = totalScheduleCount,
         ),
@@ -61,6 +66,7 @@ private fun CircleMemberResponse.toDomain(): CircleMember = CircleMember(
 )
 
 private fun ScheduleSummaryResponse.toDomain(): ScheduleSummary? = ScheduleStatus.from(status)?.let { scheduleStatus ->
+    val mappedUrgencyLevel = ScheduleUrgencyLevel.from(urgencyLevel) ?: return null
     ScheduleSummary(
         scheduleId = scheduleId,
         title = title,
@@ -71,6 +77,7 @@ private fun ScheduleSummaryResponse.toDomain(): ScheduleSummary? = ScheduleStatu
         isAllDay = isAllDay,
         needConfirm = needConfirm,
         status = scheduleStatus,
+        urgencyLevel = mappedUrgencyLevel,
         progressRate = progressRate,
         dday = dday ?: dDay,
     )

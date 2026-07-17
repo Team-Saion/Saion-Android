@@ -25,6 +25,7 @@ import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
@@ -193,21 +194,21 @@ private fun HomeHeroCardSchedulePreview() {
                 ).toImmutableList(),
                 canInvite = true,
                 isInviting = false,
-                schedules = listOf(
-                    ScheduleSummary(
-                        scheduleId = "schedule-1",
-                        title = "엄마 생신",
-                        startDate = "2026-07-24",
-                        endDate = "2026-07-24",
-                        startTime = "12:00",
-                        endTime = "23:00",
-                        isAllDay = false,
-                        needConfirm = false,
-                        status = ScheduleStatus.UPCOMING,
-                        progressRate = 40,
-                        dday = 7,
-                    ),
-                ).toImmutableList(),
+                mainSchedule = ScheduleSummary(
+                    scheduleId = "schedule-1",
+                    title = "엄마 생신",
+                    startDate = "2026-07-24",
+                    endDate = "2026-07-24",
+                    startTime = "12:00",
+                    endTime = "23:00",
+                    isAllDay = false,
+                    needConfirm = false,
+                    status = ScheduleStatus.UPCOMING,
+                    urgencyLevel = ScheduleUrgencyLevel.URGENT,
+                    progressRate = 40,
+                    dday = 7,
+                ),
+                schedules = emptyList<ScheduleSummary>().toImmutableList(),
             ),
             onInviteClick = {},
             onCreateCircleClick = {},

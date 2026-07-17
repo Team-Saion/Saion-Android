@@ -15,6 +15,7 @@ import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.model.schedule.ScheduleUpdateValue
 import com.saion.core.model.schedule.UpdateScheduleCommand
 import com.saion.core.network.datasource.ScheduleRemoteDataSource
@@ -167,6 +168,7 @@ private fun ScheduleListResponse.toDomain(): AppResult<ScheduleListPage> {
 }
 
 private fun ScheduleSummaryResponse.toDomain(): ScheduleSummary? = ScheduleStatus.from(status)?.let { scheduleStatus ->
+    val mappedUrgencyLevel = ScheduleUrgencyLevel.from(urgencyLevel) ?: return null
     ScheduleSummary(
         scheduleId = scheduleId,
         title = title,
@@ -177,6 +179,7 @@ private fun ScheduleSummaryResponse.toDomain(): ScheduleSummary? = ScheduleStatu
         isAllDay = isAllDay,
         needConfirm = needConfirm,
         status = scheduleStatus,
+        urgencyLevel = mappedUrgencyLevel,
         progressRate = progressRate,
         dday = dday ?: dDay,
     )

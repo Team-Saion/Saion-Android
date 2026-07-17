@@ -21,13 +21,13 @@ internal sealed interface HomeState : UIState {
         val members: ImmutableList<CircleMember>,
         val canInvite: Boolean,
         val isInviting: Boolean,
+        val mainSchedule: ScheduleSummary?,
         val schedules: ImmutableList<ScheduleSummary>,
     ) : HomeState {
-        val heroSchedule: ScheduleSummary?
-            get() = schedules.firstOrNull()
+        val heroSchedule: ScheduleSummary? = mainSchedule
 
         val sectionSchedules: ImmutableList<ScheduleSummary>
-            get() = schedules.drop(1).take(3).toImmutableList()
+            get() = schedules.take(3).toImmutableList()
     }
 
     val shouldShowHero: Boolean
@@ -50,5 +50,6 @@ internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Cont
     members = members.toImmutableList(),
     canInvite = canInvite,
     isInviting = isInviting,
+    mainSchedule = mainSchedule,
     schedules = schedules.toImmutableList(),
 )

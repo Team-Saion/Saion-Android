@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.R
 import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.component.button.IconButtonSize
@@ -120,38 +121,45 @@ private fun ScheduleSummary.formatScheduleDate(): String {
 @Composable
 private fun ScheduleSummary.ddayPresentation(): Triple<String, Color, Color> {
     val ddayValue = dday
+    val (backgroundColor, contentColor) = urgencyChipColors()
 
     return when {
         ddayValue == null -> Triple(
             stringResource(R.string.schedule_summary_dday_default),
-            SaionTheme.colors.fill.subtle,
-            SaionTheme.colors.label.subtle,
+            backgroundColor,
+            contentColor,
         )
 
         ddayValue < 0 -> Triple(
             stringResource(R.string.schedule_summary_dday_offset, -ddayValue),
-            SaionTheme.colors.fill.subtle,
-            SaionTheme.colors.label.subtle,
+            backgroundColor,
+            contentColor,
         )
 
         ddayValue == 0 -> Triple(
             stringResource(R.string.schedule_summary_dday_today),
-            Color(0xFFFFF1F1),
-            Color(0xFFFF5A5A),
+            backgroundColor,
+            contentColor,
         )
 
         ddayValue <= 7 -> Triple(
             stringResource(R.string.schedule_summary_dday_offset, ddayValue),
-            Color(0xFFFFF1F1),
-            Color(0xFFFF5A5A),
+            backgroundColor,
+            contentColor,
         )
 
         else -> Triple(
             stringResource(R.string.schedule_summary_dday_offset, ddayValue),
-            SaionTheme.colors.fill.subtle,
-            SaionTheme.colors.label.subtle,
+            backgroundColor,
+            contentColor,
         )
     }
+}
+
+@Composable
+private fun ScheduleSummary.urgencyChipColors(): Pair<Color, Color> = when (urgencyLevel) {
+    ScheduleUrgencyLevel.URGENT -> Color(0xFFFFF1F1) to Color(0xFFFF5A5A)
+    ScheduleUrgencyLevel.NORMAL -> SaionTheme.colors.fill.subtle to SaionTheme.colors.label.subtle
 }
 
 @Preview(showBackground = true)
@@ -169,6 +177,7 @@ private fun ScheduleSummaryCardPreview() {
                 isAllDay = false,
                 needConfirm = false,
                 status = ScheduleStatus.UPCOMING,
+                urgencyLevel = ScheduleUrgencyLevel.URGENT,
                 progressRate = 0,
                 dday = 1,
             ),
