@@ -7,9 +7,12 @@ import com.saion.core.navigation.state.TabNavigationState
 import com.saion.feature.circlecreate.api.key.CircleCreateNavKey
 import com.saion.feature.home.api.key.HomeMemberListNavKey
 import com.saion.feature.home.api.key.HomeNavKey
+import com.saion.feature.home.api.key.NotificationHistoryNavKey
 import com.saion.feature.home.impl.home.HomeScreen
 import com.saion.feature.home.impl.memberlist.HomeMemberListScreen
+import com.saion.feature.home.impl.notificationhistory.NotificationHistoryScreen
 import com.saion.feature.main.api.key.MainTabNavKey
+import com.saion.feature.mypage.api.key.NotificationSettingsNavKey
 import com.saion.feature.schedule.api.key.ScheduleNavKey
 import dagger.Module
 import dagger.Provides
@@ -27,12 +30,34 @@ object HomeNavigationModule {
             with(scope) {
                 entry<HomeNavKey> {
                     HomeScreen(
+                        onNotificationClick = { navigator.push(NotificationHistoryNavKey) },
                         onCreateCircleClick = { navigator.push(CircleCreateNavKey) },
                         onScheduleListClick = {
                             (navigator as? TabNavigationState<MainTabNavKey>)?.selectTab(ScheduleNavKey)
                         },
                         onMemberListClick = {
                             navigator.push(HomeMemberListNavKey)
+                        },
+                    )
+                }
+
+                entry<NotificationHistoryNavKey> {
+                    NotificationHistoryScreen(
+                        onBack = { navigator.pop() },
+                        onSettingsClick = { navigator.push(NotificationSettingsNavKey) },
+                        onNavigateToHome = {
+                            val tabNavigator = navigator as? TabNavigationState<MainTabNavKey>
+                            if (tabNavigator != null) {
+                                tabNavigator.popUpTo(HomeNavKey)
+                                tabNavigator.selectTab(HomeNavKey)
+                            }
+                        },
+                        onNavigateToSchedule = {
+                            val tabNavigator = navigator as? TabNavigationState<MainTabNavKey>
+                            if (tabNavigator != null) {
+                                tabNavigator.popUpTo(HomeNavKey)
+                                tabNavigator.selectTab(ScheduleNavKey)
+                            }
                         },
                     )
                 }

@@ -28,6 +28,16 @@
     <string name="home_error_load_overview">홈 정보를 불러오지 못했습니다.</string>
     <string name="home_error_issue_invitation">초대장을 발급하지 못했습니다.</string>
     <string name="home_error_share_invitation">카카오 공유를 열지 못했습니다.</string>
+    <string name="notification_history_title">알림</string>
+    <string name="notification_history_settings">알림 설정</string>
+    <string name="notification_history_empty">도착한 알림이 아직 없어요</string>
+    <string name="notification_history_error_load">알림을 불러오지 못했어요</string>
+    <string name="notification_history_error_read">알림 상태를 업데이트하지 못했어요</string>
+    <string name="notification_history_time_now">방금 전</string>
+    <string name="notification_history_time_minutes">%1$d분 전</string>
+    <string name="notification_history_time_hours">%1$d시간 전</string>
+    <string name="notification_history_time_date_this_year">%1$d월 %2$d일</string>
+    <string name="notification_history_time_date_full">%1$d년 %2$d월 %3$d일</string>
     <string name="home_member_list_empty">아직 구성원이 없습니다.</string>
     <string name="home_member_list_error_load">구성원 목록을 불러오지 못했습니다.</string>
     <string name="home_member_list_error_fallback">구성원 목록을 표시할 수 없습니다.</string>

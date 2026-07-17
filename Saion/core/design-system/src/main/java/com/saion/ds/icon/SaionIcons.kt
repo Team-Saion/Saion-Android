@@ -12,6 +12,7 @@ import com.saion.ds.icon.vector.IcKakaoLogo
 import com.saion.ds.icon.vector.IcPerson
 import com.saion.ds.icon.vector.IcPlus
 import com.saion.ds.icon.vector.IcSchedule
+import com.saion.ds.icon.vector.IcSettings
 import com.saion.ds.icon.vector.IcSelection
 import com.saion.ds.icon.vector.SaionLogo
 import com.saion.ds.icon.vector.SaionSymbol
@@ -30,5 +31,6 @@ object SaionIcons {
     val Person: ImageVector = IcPerson
     val Schedule: ImageVector = IcSchedule
     val Bell: ImageVector = IcBell
+    val Settings: ImageVector = IcSettings
     val Plus: ImageVector = IcPlus
 }
