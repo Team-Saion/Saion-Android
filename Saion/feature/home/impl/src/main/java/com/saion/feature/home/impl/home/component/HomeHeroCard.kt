@@ -208,7 +208,6 @@ private fun HomeHeroCardSchedulePreview() {
                         dday = 7,
                     ),
                 ).toImmutableList(),
-                totalScheduleCount = 1L,
             ),
             onInviteClick = {},
             onCreateCircleClick = {},

@@ -115,7 +115,6 @@ class HomeViewModelTest {
         val uiState = viewModel.uiState.value
         assertTrue(uiState is HomeState.Content)
         assertEquals(overview.circle.name, (uiState as HomeState.Content).circle.name)
-        assertEquals(overview.totalScheduleCount, uiState.totalScheduleCount)
     }
 
     @Test

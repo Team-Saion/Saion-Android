@@ -170,7 +170,7 @@ private fun HomeContent(
             is HomeState.Content -> {
                 HomeScheduleSection(
                     schedules = uiState.sectionSchedules,
-                    totalScheduleCount = uiState.totalScheduleCount,
+                    shouldShowAddSchedule = uiState.shouldShowAddSchedule,
                     onAddClick = onScheduleAddClick,
                     onViewAllClick = onScheduleListClick,
                     onScheduleClick = onScheduleClick,
@@ -311,7 +311,6 @@ private fun HomeScreenContentPreview() {
                         dday = 5,
                     ),
                 ).toImmutableList(),
-                totalScheduleCount = 3L,
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onNotificationClick = {},

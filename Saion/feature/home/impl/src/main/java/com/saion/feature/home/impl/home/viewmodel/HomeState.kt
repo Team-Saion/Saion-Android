@@ -22,7 +22,6 @@ internal sealed interface HomeState : UIState {
         val canInvite: Boolean,
         val isInviting: Boolean,
         val schedules: ImmutableList<ScheduleSummary>,
-        val totalScheduleCount: Long,
     ) : HomeState {
         val heroSchedule: ScheduleSummary?
             get() = schedules.firstOrNull()
@@ -37,6 +36,13 @@ internal sealed interface HomeState : UIState {
             None -> true
             is Content -> heroSchedule != null || members.none { member -> member.isMe.not() }
         }
+
+    val shouldShowAddSchedule: Boolean
+        get() = when(this) {
+            is Content -> this.sectionSchedules.size < 3
+            None -> true
+            Loading -> false
+        }
 }
 
 internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Content = HomeState.Content(
@@ -45,5 +51,4 @@ internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Cont
     canInvite = canInvite,
     isInviting = isInviting,
     schedules = schedules.toImmutableList(),
-    totalScheduleCount = totalScheduleCount,
 )

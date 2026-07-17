@@ -14,11 +14,12 @@ import com.saion.core.ui.component.ScheduleSummaryCard
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.home.impl.R
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun HomeScheduleSection(
     schedules: ImmutableList<ScheduleSummary>,
-    totalScheduleCount: Long,
+    shouldShowAddSchedule: Boolean,
     onAddClick: () -> Unit,
     onViewAllClick: () -> Unit,
     onScheduleClick: (String) -> Unit,
@@ -34,22 +35,14 @@ internal fun HomeScheduleSection(
             onActionClick = onViewAllClick,
         )
 
-        val visibleSchedules = schedules.take(3)
-        if (visibleSchedules.isEmpty()) {
-            ScheduleAddCard(onClick = onAddClick)
-            return
-        }
-
-        visibleSchedules.forEach { schedule ->
+        schedules.forEach { schedule ->
             ScheduleSummaryCard(
                 schedule = schedule,
                 onClick = { onScheduleClick(schedule.scheduleId) },
             )
         }
 
-        if (visibleSchedules.size < 3) {
-            ScheduleAddCard(onClick = onAddClick)
-        }
+        if (shouldShowAddSchedule) ScheduleAddCard(onClick = onAddClick)
     }
 }
 
@@ -58,11 +51,12 @@ internal fun HomeScheduleSection(
 private fun HomeScheduleSectionEmptyPreview() {
     SaionTheme {
         HomeScheduleSection(
-            schedules = emptyList(),
-            totalScheduleCount = 0,
+            schedules = persistentListOf(),
+            shouldShowAddSchedule = true,
             onAddClick = {},
             onViewAllClick = {},
             onScheduleClick = {},
         )
     }
 }
+
