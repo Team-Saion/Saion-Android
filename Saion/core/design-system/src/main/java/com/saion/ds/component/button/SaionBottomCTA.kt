@@ -19,7 +19,7 @@ import com.saion.ds.theme.SaionTheme
 @Composable
 fun SaionBottomCTA(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp),
+    contentPadding: PaddingValues = PaddingValues(start = 20.dp, end = 20.dp, bottom = 12.dp),
     upper: @Composable (() -> Unit)? = null,
     lower: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
@@ -28,7 +28,6 @@ fun SaionBottomCTA(
         modifier = modifier
             .fillMaxWidth()
             .padding(contentPadding)
-            .padding(bottom = 12.dp)
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

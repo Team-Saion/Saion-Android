@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
@@ -48,7 +50,9 @@ fun SaionBottomSheet(
         containerColor = SaionTheme.colors.background.default,
         shape = SaionTheme.radius.container.xxLarge.toRoundedCornerShape(),
         dragHandle = null,
-        modifier = modifier.padding(horizontal = 12.dp),
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .navigationBarsPadding(),
     ) {
         SaionBottomSheetDragHandle()
         Column(
