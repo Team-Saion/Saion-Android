@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="mypage_title">My Page</string>
+    <string name="mypage_profile_image_description">프로필 이미지</string>
+    <string name="mypage_notification_settings">알림 설정</string>
+    <string name="mypage_terms">약관 확인</string>
+    <string name="mypage_feedback">의견 보내기</string>
+    <string name="mypage_logout">로그아웃</string>
+    <string name="mypage_withdraw">회원 탈퇴</string>
+    <string name="mypage_version_format">앱 버전 %1$s</string>
+    <string name="mypage_version_latest">최신</string>
+    <string name="mypage_version_update">업데이트</string>
+    <string name="mypage_error_load">마이페이지 정보를 불러오지 못했어요</string>
 </resources>

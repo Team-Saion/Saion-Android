@@ -5,7 +5,7 @@ import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
 import com.saion.feature.main.api.key.MainTabNavKey
 import com.saion.feature.mypage.api.key.MyPageNavKey
-import com.saion.feature.mypage.impl.ui.MyPageScreen
+import com.saion.feature.mypage.impl.mypage.MyPageScreen
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
