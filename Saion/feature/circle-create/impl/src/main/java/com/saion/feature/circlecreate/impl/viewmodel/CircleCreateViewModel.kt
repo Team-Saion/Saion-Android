@@ -24,10 +24,11 @@ internal class CircleCreateViewModel @Inject constructor(
     }
 
     private fun handleNameChanged(value: String) {
-        val validationMessageResId = value.validationMessageResId()
+        val validationMessageResId = value.validationMessageResId(showEmptyError = true)
         update {
             copy(
                 name = value,
+                hasEditedName = true,
                 validationMessageResId = validationMessageResId,
                 isSubmitEnabled = value.isSubmittable(validationMessageResId),
             )
@@ -35,7 +36,19 @@ internal class CircleCreateViewModel @Inject constructor(
     }
 
     private fun submit() {
-        if (currentState.isSubmitEnabled.not() || currentState.isSubmitting) return
+        if (currentState.isSubmitting) return
+
+        val validationMessageResId = currentState.name.validationMessageResId(showEmptyError = true)
+        if (validationMessageResId != null) {
+            update {
+                copy(
+                    hasEditedName = true,
+                    validationMessageResId = validationMessageResId,
+                    isSubmitEnabled = false,
+                )
+            }
+            return
+        }
 
         val trimmedName = currentState.name.trim()
         launchSafely(
@@ -66,9 +79,10 @@ private fun String.isSubmittable(@StringRes validationMessageResId: Int?): Boole
     trim().isNotEmpty() && validationMessageResId == null
 
 @StringRes
-private fun String.validationMessageResId(): Int? {
+private fun String.validationMessageResId(showEmptyError: Boolean): Int? {
     val trimmed = trim()
     return when {
+        trimmed.isEmpty() && showEmptyError -> R.string.circle_create_error_required
         trimmed.isEmpty() -> null
         trimmed.length > MAX_CIRCLE_NAME_LENGTH -> R.string.circle_create_error_too_long
         BLACKLIST_REGEX.containsMatchIn(this) -> R.string.circle_create_error_invalid_character

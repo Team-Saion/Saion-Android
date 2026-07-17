@@ -7,6 +7,7 @@ import com.saion.core.ui.viewmodel.UIState
 @Immutable
 internal data class CircleCreateUiState(
     val name: String = "",
+    val hasEditedName: Boolean = false,
     @param:StringRes val validationMessageResId: Int? = null,
     val isSubmitEnabled: Boolean = false,
     val isSubmitting: Boolean = false,

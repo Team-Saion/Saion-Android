@@ -1,5 +1,6 @@
 package com.saion.feature.circlecreate.impl.component
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,6 +14,8 @@ import com.saion.feature.circlecreate.impl.R
 
 @Composable
 internal fun CircleCreateBottomAction(
+    nameLength: Int,
+    isNameTooLong: Boolean,
     validationMessage: String?,
     isSubmitEnabled: Boolean,
     isSubmitting: Boolean,
@@ -21,14 +24,15 @@ internal fun CircleCreateBottomAction(
 ) {
     SaionBottomCTA(
         modifier = modifier,
-        upper = validationMessage?.let { message ->
-            {
-                Text(
-                    text = message,
-                    style = SaionTheme.typography.label1Subtle,
-                    color = SaionTheme.colors.status.negative.default,
-                )
-            }
+        upper = {
+            BottomActionUpperText(
+                text = validationMessage ?: "$nameLength/20",
+                color = if (validationMessage != null || isNameTooLong) {
+                    SaionTheme.colors.status.negative.default
+                } else {
+                    SaionTheme.colors.label.subtle
+                },
+            )
         },
     ) {
         SaionButtonArea(
@@ -43,4 +47,18 @@ internal fun CircleCreateBottomAction(
             },
         )
     }
+}
+
+@Composable
+private fun BottomActionUpperText(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = SaionTheme.typography.label1Subtle,
+        color = color,
+    )
 }

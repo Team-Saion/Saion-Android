@@ -86,6 +86,8 @@ private fun CircleCreateScreen(
         },
         bottomBar = {
             CircleCreateBottomAction(
+                nameLength = uiState.name.length,
+                isNameTooLong = uiState.name.trim().length > 20,
                 validationMessage = validationMessage,
                 isSubmitEnabled = uiState.isSubmitEnabled,
                 isSubmitting = uiState.isSubmitting,
