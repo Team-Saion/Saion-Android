@@ -1,6 +1,7 @@
 package com.saion.core.data.repository
 
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -8,6 +9,8 @@ import com.saion.core.network.datasource.AuthRemoteDataSource
 import com.saion.core.network.model.auth.TokenResponse
 import com.saion.core.network.model.common.ApiResponse
 import java.util.Base64
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -144,21 +147,28 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `clearSession clears local tokens`() = runBlocking {
+    fun `clearSession clears local tokens and current circle`() = runBlocking {
         val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("MEMBER"))
-        val repository = createRepository(localDataSource = localDataSource)
+        val currentCircleLocalDataSource = FakeCurrentCircleLocalDataSource()
+        val repository = createRepository(
+            localDataSource = localDataSource,
+            currentCircleLocalDataSource = currentCircleLocalDataSource,
+        )
 
         repository.clearSession()
 
         assertTrue(localDataSource.clearTokensCalled)
+        assertTrue(currentCircleLocalDataSource.clearSelectedCircleIdCalled)
     }
 }
 
 private fun createRepository(
     accessToken: String = jwtWithRoles("MEMBER"),
     localDataSource: FakeAuthLocalDataSource = FakeAuthLocalDataSource(),
+    currentCircleLocalDataSource: FakeCurrentCircleLocalDataSource = FakeCurrentCircleLocalDataSource(),
 ): AuthRepositoryImpl = AuthRepositoryImpl(
     localDataSource = localDataSource,
+    currentCircleLocalDataSource = currentCircleLocalDataSource,
     remoteDataSource = FakeAuthRemoteDataSource(accessToken = accessToken),
 )
 
@@ -206,6 +216,20 @@ private class FakeAuthLocalDataSource(
         clearTokensCalled = true
         accessToken = null
         refreshToken = null
+    }
+}
+
+private class FakeCurrentCircleLocalDataSource : CurrentCircleLocalDataSource {
+    var clearSelectedCircleIdCalled: Boolean = false
+
+    override fun observeSelectedCircleId(): Flow<String?> = flowOf(null)
+
+    override suspend fun getSelectedCircleId(): String? = null
+
+    override suspend fun saveSelectedCircleId(circleId: String?) = Unit
+
+    override suspend fun clearSelectedCircleId() {
+        clearSelectedCircleIdCalled = true
     }
 }
 

@@ -7,6 +7,7 @@ import com.saion.app.navigation.startup.AppStartDestination
 import com.saion.core.domain.usecase.auth.ClearSessionUseCase
 import com.saion.core.domain.usecase.auth.GetStoredMemberRoleUseCase
 import com.saion.core.domain.usecase.auth.IsSignedInUseCase
+import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppResult
 import com.saion.feature.auth.api.key.AuthStartStep
@@ -29,6 +30,7 @@ class AppViewModel @Inject constructor(
     private val isSignedInUseCase: IsSignedInUseCase,
     private val getStoredMemberRoleUseCase: GetStoredMemberRoleUseCase,
     private val clearSessionUseCase: ClearSessionUseCase,
+    private val syncCurrentCircleUseCase: SyncCurrentCircleUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -56,7 +58,10 @@ class AppViewModel @Inject constructor(
 
                 MemberRole.MEMBER,
                 MemberRole.ADMIN,
-                -> AppStartDestination.Main
+                -> {
+                    syncCurrentCircleUseCase()
+                    AppStartDestination.Main
+                }
             }
 
             is AppResult.Failure -> {

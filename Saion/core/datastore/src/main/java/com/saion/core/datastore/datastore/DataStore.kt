@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import com.saion.core.datastore.model.AuthTokens
+import com.saion.core.datastore.model.CurrentCircle
 import java.io.InputStream
 import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
@@ -26,5 +27,24 @@ internal val Context.authDataStore: DataStore<AuthTokens> by dataStore(
         }
 
         override val defaultValue: AuthTokens get() = AuthTokens(accessToken = "", refreshToken = "")
+    },
+)
+
+internal val Context.currentCircleDataStore: DataStore<CurrentCircle> by dataStore(
+    fileName = "current-circle.preferences_pb",
+    serializer = object : Serializer<CurrentCircle> {
+        override suspend fun readFrom(input: InputStream): CurrentCircle =
+            Json.decodeFromString<CurrentCircle>(input.readBytes().decodeToString())
+
+        override suspend fun writeTo(
+            t: CurrentCircle,
+            output: OutputStream,
+        ) {
+            withContext(Dispatchers.IO) {
+                output.write(Json.encodeToString<CurrentCircle>(t).encodeToByteArray())
+            }
+        }
+
+        override val defaultValue: CurrentCircle get() = CurrentCircle(selectedCircleId = "")
     },
 )

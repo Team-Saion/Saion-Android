@@ -2,6 +2,7 @@ package com.saion.core.data.repository
 
 import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
@@ -19,6 +20,7 @@ import javax.inject.Inject
  */
 internal class MemberRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
+    private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
     override suspend fun getMyInfo(): AppResult<MemberInfo> = safeRequest(
@@ -81,6 +83,7 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.logout() },
     ) {
         authLocalDataSource.clearTokens()
+        currentCircleLocalDataSource.clearSelectedCircleId()
         AppResult.Success(Unit)
     }
 
@@ -88,6 +91,7 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.withdraw(reason = reason) },
     ) {
         authLocalDataSource.clearTokens()
+        currentCircleLocalDataSource.clearSelectedCircleId()
         AppResult.Success(Unit)
     }
 }

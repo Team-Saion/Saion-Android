@@ -3,7 +3,9 @@ package com.saion.core.datastore.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import com.saion.core.datastore.datastore.authDataStore
+import com.saion.core.datastore.datastore.currentCircleDataStore
 import com.saion.core.datastore.model.AuthTokens
+import com.saion.core.datastore.model.CurrentCircle
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,4 +20,8 @@ object DatastoreModule {
     @Provides
     @Singleton
     internal fun provideAuthTokenDataStore(@ApplicationContext context: Context): DataStore<AuthTokens> = context.authDataStore
+
+    @Provides
+    @Singleton
+    internal fun provideCurrentCircleDataStore(@ApplicationContext context: Context): DataStore<CurrentCircle> = context.currentCircleDataStore
 }

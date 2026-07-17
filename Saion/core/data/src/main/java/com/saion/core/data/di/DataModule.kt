@@ -3,6 +3,7 @@ package com.saion.core.data.di
 import com.saion.core.data.datasource.AuthTokenStoreImpl
 import com.saion.core.data.repository.AuthRepositoryImpl
 import com.saion.core.data.repository.CircleRepositoryImpl
+import com.saion.core.data.repository.CurrentCircleRepositoryImpl
 import com.saion.core.data.repository.HomeRepositoryImpl
 import com.saion.core.data.repository.InvitationRepositoryImpl
 import com.saion.core.data.repository.MemberRepositoryImpl
@@ -12,6 +13,7 @@ import com.saion.core.data.repository.ScheduleRepositoryImpl
 import com.saion.core.data.repository.TermRepositoryImpl
 import com.saion.core.domain.repository.AuthRepository
 import com.saion.core.domain.repository.CircleRepository
+import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.domain.repository.MemberRepository
@@ -36,6 +38,10 @@ internal abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindCircleRepository(impl: CircleRepositoryImpl): CircleRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCurrentCircleRepository(impl: CurrentCircleRepositoryImpl): CurrentCircleRepository
 
     @Binds
     @Singleton
