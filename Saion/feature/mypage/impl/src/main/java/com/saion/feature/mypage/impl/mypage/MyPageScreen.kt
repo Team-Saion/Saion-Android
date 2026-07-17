@@ -28,12 +28,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.resolveMessage
+import com.saion.core.ui.event.GlobalUiEvent
+import com.saion.core.ui.event.GlobalUiEventBus
 import com.saion.core.ui.ext.CollectWithLifecycle
+import com.saion.ds.component.feedback.SaionConfirmDialog
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.mypage.impl.R
 import com.saion.feature.mypage.impl.mypage.component.MyPageMenuCard
 import com.saion.feature.mypage.impl.mypage.component.MyPageMenuItem
 import com.saion.feature.mypage.impl.mypage.component.ProfileSection
+import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageIntent
 import com.saion.feature.mypage.impl.mypage.component.versionMenuItem
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageEffect
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageSnackbarMessage
@@ -48,7 +52,6 @@ internal fun MyPageScreen(
     onTermsClick: () -> Unit = {},
     onFeedbackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {},
     onWithdrawClick: () -> Unit = {},
     viewModel: MyPageViewModel = viewModel(),
 ) {
@@ -60,6 +63,7 @@ internal fun MyPageScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             is MyPageEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            MyPageEffect.LogoutCompleted -> GlobalUiEventBus.emit(GlobalUiEvent.SessionExpired)
         }
     }
 
@@ -71,7 +75,9 @@ internal fun MyPageScreen(
         onTermsClick = onTermsClick,
         onFeedbackClick = onFeedbackClick,
         onUpdateClick = onUpdateClick,
-        onLogoutClick = onLogoutClick,
+        onLogoutClick = { viewModel.dispatch(MyPageIntent.ClickLogout) },
+        onLogoutDismiss = { viewModel.dispatch(MyPageIntent.DismissLogoutDialog) },
+        onLogoutConfirm = { viewModel.dispatch(MyPageIntent.ConfirmLogout) },
         onWithdrawClick = onWithdrawClick,
         modifier = modifier,
     )
@@ -87,6 +93,8 @@ private fun MyPageScreen(
     onFeedbackClick: () -> Unit,
     onUpdateClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onLogoutDismiss: () -> Unit,
+    onLogoutConfirm: () -> Unit,
     onWithdrawClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -154,6 +162,16 @@ private fun MyPageScreen(
             }
         }
     }
+
+    if (uiState.showLogoutDialog) {
+        SaionConfirmDialog(
+            title = stringResource(R.string.mypage_logout_dialog_title),
+            confirmButtonText = stringResource(R.string.mypage_logout),
+            onConfirm = onLogoutConfirm,
+            dismissButtonText = stringResource(R.string.mypage_logout_dialog_cancel),
+            onDismiss = onLogoutDismiss,
+        )
+    }
 }
 
 private fun MyPageSnackbarMessage.resolve(context: Context): String = when (this) {
@@ -189,6 +207,8 @@ private fun MyPageScreenPreview() {
             onFeedbackClick = {},
             onUpdateClick = {},
             onLogoutClick = {},
+            onLogoutDismiss = {},
+            onLogoutConfirm = {},
             onWithdrawClick = {},
         )
     }

@@ -10,6 +10,8 @@ internal data class MyPageState(
     val avatarColorHex: String = DEFAULT_AVATAR_COLOR_HEX,
     val isLatestVersion: Boolean = true,
     val isLoading: Boolean = true,
+    val showLogoutDialog: Boolean = false,
+    val isLogoutLoading: Boolean = false,
 ) : UIState
 
 internal const val DEFAULT_AVATAR_COLOR_HEX: String = "#E6E6E6"

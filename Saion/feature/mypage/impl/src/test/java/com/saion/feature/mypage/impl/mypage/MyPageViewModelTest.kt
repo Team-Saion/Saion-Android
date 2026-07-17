@@ -2,6 +2,7 @@ package com.saion.feature.mypage.impl.mypage
 
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.domain.usecase.member.GetMyInfoUseCase
+import com.saion.core.domain.usecase.member.LogoutUseCase
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.member.MemberStatus
@@ -10,6 +11,7 @@ import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageEffect
+import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageIntent
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageSnackbarMessage
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageState
 import com.saion.feature.mypage.impl.mypage.viewmodel.MyPageViewModel
@@ -55,6 +57,9 @@ class MyPageViewModelTest {
             getMyInfoUseCase = GetMyInfoUseCase(
                 FakeMemberRepository(myInfoResult = AppResult.Success(memberInfo)),
             ),
+            logoutUseCase = LogoutUseCase(
+                FakeMemberRepository(myInfoResult = AppResult.Success(memberInfo)),
+            ),
         )
 
         advanceUntilIdle()
@@ -78,6 +83,11 @@ class MyPageViewModelTest {
                     myInfoResult = AppResult.Failure(AppError.NetworkUnavailable()),
                 ),
             ),
+            logoutUseCase = LogoutUseCase(
+                FakeMemberRepository(
+                    myInfoResult = AppResult.Failure(AppError.NetworkUnavailable()),
+                ),
+            ),
         )
         val effectDeferred = async { viewModel.uiEffect.first() }
 
@@ -88,9 +98,97 @@ class MyPageViewModelTest {
         assertTrue((effect as MyPageEffect.ShowSnackbar).message is MyPageSnackbarMessage.Error)
         assertTrue(viewModel.uiState.value.isLoading.not())
     }
+
+    @Test
+    fun `로그아웃 메뉴 클릭 시 다이얼로그 상태가 열린다`() = runTest {
+        val repository = FakeMemberRepository(myInfoResult = AppResult.Success(defaultMemberInfo()))
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(MyPageIntent.ClickLogout)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showLogoutDialog)
+    }
+
+    @Test
+    fun `로그아웃 다이얼로그 취소 시 상태가 닫힌다`() = runTest {
+        val repository = FakeMemberRepository(myInfoResult = AppResult.Success(defaultMemberInfo()))
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(MyPageIntent.ClickLogout)
+        viewModel.dispatch(MyPageIntent.DismissLogoutDialog)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showLogoutDialog.not())
+    }
+
+    @Test
+    fun `로그아웃 성공 시 다이얼로그를 닫고 완료 effect를 보낸다`() = runTest {
+        val repository = FakeMemberRepository(
+            myInfoResult = AppResult.Success(defaultMemberInfo()),
+            logoutResult = AppResult.Success(Unit),
+        )
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+        advanceUntilIdle()
+        viewModel.dispatch(MyPageIntent.ClickLogout)
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(MyPageIntent.ConfirmLogout)
+        advanceUntilIdle()
+
+        assertEquals(MyPageEffect.LogoutCompleted, effectDeferred.await())
+        assertTrue(viewModel.uiState.value.showLogoutDialog.not())
+        assertTrue(viewModel.uiState.value.isLogoutLoading.not())
+    }
+
+    @Test
+    fun `로그아웃 실패 시 스낵바 effect를 보내고 다이얼로그를 유지한다`() = runTest {
+        val repository = FakeMemberRepository(
+            myInfoResult = AppResult.Success(defaultMemberInfo()),
+            logoutResult = AppResult.Failure(AppError.NetworkUnavailable()),
+        )
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+        advanceUntilIdle()
+        viewModel.dispatch(MyPageIntent.ClickLogout)
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(MyPageIntent.ConfirmLogout)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is MyPageEffect.ShowSnackbar)
+        assertTrue((effect as MyPageEffect.ShowSnackbar).message is MyPageSnackbarMessage.Error)
+        assertTrue(viewModel.uiState.value.showLogoutDialog)
+        assertTrue(viewModel.uiState.value.isLogoutLoading.not())
+    }
 }
 
-private class FakeMemberRepository(private val myInfoResult: AppResult<MemberInfo>) : MemberRepository {
+private fun defaultMemberInfo(): MemberInfo = MemberInfo(
+    nickname = "수빈",
+    profileImageUrl = "https://example.com/profile.png",
+    avatarColorHex = "#6C757F",
+    role = MemberRole.MEMBER,
+    status = MemberStatus.ACTIVE,
+)
+
+private class FakeMemberRepository(
+    private val myInfoResult: AppResult<MemberInfo>,
+    private val logoutResult: AppResult<Unit> = AppResult.Success(Unit),
+) : MemberRepository {
     override suspend fun getMyInfo(): AppResult<MemberInfo> = myInfoResult
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> {
@@ -116,9 +214,7 @@ private class FakeMemberRepository(private val myInfoResult: AppResult<MemberInf
         throw UnsupportedOperationException()
     }
 
-    override suspend fun logout(): AppResult<Unit> {
-        throw UnsupportedOperationException()
-    }
+    override suspend fun logout(): AppResult<Unit> = logoutResult
 
     override suspend fun withdraw(reason: String): AppResult<Unit> {
         throw UnsupportedOperationException()

@@ -5,6 +5,8 @@ import com.saion.core.ui.viewmodel.UIEffect
 
 internal sealed interface MyPageEffect : UIEffect {
     data class ShowSnackbar(val message: MyPageSnackbarMessage) : MyPageEffect
+
+    data object LogoutCompleted : MyPageEffect
 }
 
 internal sealed interface MyPageSnackbarMessage {
