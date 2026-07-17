@@ -139,11 +139,13 @@ private fun HomeContent(
     ) {
         HomeTitleSection(circleName = uiState.circleTitle)
         HomeDateHeader()
-        HomeHeroCard(
-            state = uiState,
-            onInviteClick = onInviteClick,
-            onCreateCircleClick = onCreateCircleClick,
-        )
+        if (uiState.shouldShowHero) {
+            HomeHeroCard(
+                state = uiState,
+                onInviteClick = onInviteClick,
+                onCreateCircleClick = onCreateCircleClick,
+            )
+        }
 
         when (uiState) {
             HomeState.Loading -> SaionSpinner()

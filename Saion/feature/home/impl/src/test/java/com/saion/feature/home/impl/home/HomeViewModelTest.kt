@@ -3,20 +3,20 @@ package com.saion.feature.home.impl.home
 import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.InvitationRepository
-import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveCurrentCircleUseCase
+import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
 import com.saion.core.domain.usecase.home.GetHomeInviterNameUseCase
 import com.saion.core.domain.usecase.home.GetHomeUseCase
 import com.saion.core.domain.usecase.invitation.IssueInvitationUseCase
 import com.saion.core.model.circle.CircleSummary
+import com.saion.core.model.home.CircleMember
+import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
 import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
-import com.saion.core.model.home.CircleMember
-import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
@@ -28,6 +28,7 @@ import com.saion.feature.home.impl.home.viewmodel.HomeIntent
 import com.saion.feature.home.impl.home.viewmodel.HomeSnackbarMessage
 import com.saion.feature.home.impl.home.viewmodel.HomeState
 import com.saion.feature.home.impl.home.viewmodel.HomeViewModel
+import com.saion.feature.home.impl.home.viewmodel.toUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -115,6 +116,31 @@ class HomeViewModelTest {
         assertTrue(uiState is HomeState.Content)
         assertEquals(overview.circle.name, (uiState as HomeState.Content).circle.name)
         assertEquals(overview.totalScheduleCount, uiState.totalScheduleCount)
+    }
+
+    @Test
+    fun `content 상태에서 나 외의 구성원이 있으면 hero를 숨긴다`() {
+        val uiState = defaultOverview().toUiState()
+
+        assertTrue(uiState.shouldShowHero.not())
+    }
+
+    @Test
+    fun `content 상태에서 나만 있으면 hero를 노출한다`() {
+        val uiState = defaultOverview(
+            members = listOf(
+                CircleMember(
+                    memberId = "member-1",
+                    nickname = "수빈",
+                    avatarColor = "#7DB1FF",
+                    profileImageUrl = null,
+                    isMe = true,
+                    role = "ADMIN",
+                ),
+            ),
+        ).toUiState()
+
+        assertTrue(uiState.shouldShowHero)
     }
 
     @Test
@@ -214,12 +240,11 @@ class HomeViewModelTest {
     }
 }
 
-private fun observeResolvedCurrentCircleUseCase(
-    repository: CurrentCircleRepository,
-): ObserveResolvedCurrentCircleUseCase = ObserveResolvedCurrentCircleUseCase(
-    observeCurrentCircleUseCase = ObserveCurrentCircleUseCase(repository),
-    syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository),
-)
+private fun observeResolvedCurrentCircleUseCase(repository: CurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
+    ObserveResolvedCurrentCircleUseCase(
+        observeCurrentCircleUseCase = ObserveCurrentCircleUseCase(repository),
+        syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository),
+    )
 
 private class FakeCurrentCircleRepository(
     initialCircleId: String?,
@@ -311,9 +336,8 @@ private class FakeInvitationShareClient : InvitationShareClient {
     }
 }
 
-private fun defaultOverview(): HomeOverview = HomeOverview(
-    circle = CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
-    members = listOf(
+private fun defaultOverview(
+    members: List<CircleMember> = listOf(
         CircleMember(
             memberId = "member-1",
             nickname = "수빈",
@@ -331,6 +355,9 @@ private fun defaultOverview(): HomeOverview = HomeOverview(
             role = "MEMBER",
         ),
     ),
+): HomeOverview = HomeOverview(
+    circle = CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
+    members = members,
     canInvite = true,
     mainSchedule = ScheduleSummary(
         scheduleId = "schedule-1",

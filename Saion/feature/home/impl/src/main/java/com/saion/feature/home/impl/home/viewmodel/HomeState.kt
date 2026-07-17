@@ -25,6 +25,13 @@ internal sealed interface HomeState : UIState {
         val schedules: ImmutableList<ScheduleSummary>,
         val totalScheduleCount: Long,
     ) : HomeState
+
+    val shouldShowHero: Boolean
+        get() = when (this) {
+            Loading -> true
+            None -> true
+            is Content -> members.none { member -> member.isMe.not() }
+        }
 }
 
 internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Content = HomeState.Content(
