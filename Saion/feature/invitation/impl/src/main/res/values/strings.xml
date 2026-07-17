@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="invitation_title">초대 확인</string>
+    <string name="invitation_loading">초대 정보를 불러오고 있어요</string>
+    <string name="invitation_accept">초대 수락하기</string>
+    <string name="invitation_close">닫기</string>
+    <string name="invitation_inviter_format">%1$s님이 %2$s 초대장을 보냈어요</string>
+    <string name="invitation_expire_format">만료일 %1$s</string>
+    <string name="invitation_error_load">초대 정보를 불러오지 못했습니다.</string>
+    <string name="invitation_error_accept">초대를 수락하지 못했습니다.</string>
+    <string name="invitation_load_failed">초대장을 확인할 수 없습니다.</string>
+</resources>

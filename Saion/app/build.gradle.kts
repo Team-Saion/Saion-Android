@@ -1,3 +1,6 @@
+import com.android.build.api.variant.BuildConfigField
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     id("com.saion.android.application")
     id("com.saion.android.compose")
@@ -28,6 +31,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.ui)
     implementation(projects.core.auth)
+    implementation(projects.core.share)
     implementation(project(":core:design-system"))
 
     implementation(libs.androidx.activity.compose)
@@ -46,6 +50,8 @@ dependencies {
 
     implementation(projects.feature.home.api)
     implementation(projects.feature.home.impl)
+    implementation(projects.feature.invitation.api)
+    implementation(projects.feature.invitation.impl)
 
     implementation(projects.feature.circleCreate.api)
     implementation(projects.feature.circleCreate.impl)
@@ -57,4 +63,24 @@ dependencies {
     implementation(projects.feature.mypage.impl)
 
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+androidComponents {
+    onVariants { variant ->
+        val properties = gradleLocalProperties(
+            projectRootDir = rootDir,
+            providers = providers,
+        )
+        val kakaoNativeAppKey = properties.getProperty("kakao.native.app.key").orEmpty()
+
+        variant.manifestPlaceholders.put(
+            "kakaoShareScheme",
+            "kakao$kakaoNativeAppKey",
+        )
+
+        variant.buildConfigFields?.put(
+            "KAKAO_SHARE_SCHEME",
+            BuildConfigField("String", "\"kakao$kakaoNativeAppKey\"", null),
+        )
+    }
 }
