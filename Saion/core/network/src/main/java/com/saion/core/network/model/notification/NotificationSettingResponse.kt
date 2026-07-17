@@ -2,6 +2,7 @@ package com.saion.core.network.model.notification
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
 @Serializable
 data class NotificationSettingResponse(
@@ -9,8 +10,9 @@ data class NotificationSettingResponse(
     val d7Enabled: Boolean,
     @SerialName("d1Enabled")
     val d1Enabled: Boolean,
-    @SerialName("dDayEnabled")
-    val dDayEnabled: Boolean,
+    @SerialName("ddayEnabled")
+    @JsonNames("dDayEnabled")
+    val ddayEnabled: Boolean,
     @SerialName("familyScheduleCheckEnabled")
     val familyScheduleCheckEnabled: Boolean,
 )

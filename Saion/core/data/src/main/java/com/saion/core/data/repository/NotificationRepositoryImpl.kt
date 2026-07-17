@@ -142,7 +142,7 @@ private fun NotificationRouteResponse.toDomain(): NotificationRoute? = Notificat
 private fun NotificationSettingResponse.toDomain(): NotificationSetting = NotificationSetting(
     d7Enabled = d7Enabled,
     d1Enabled = d1Enabled,
-    ddayEnabled = dDayEnabled,
+    ddayEnabled = ddayEnabled,
     familyScheduleCheckEnabled = familyScheduleCheckEnabled,
 )
 

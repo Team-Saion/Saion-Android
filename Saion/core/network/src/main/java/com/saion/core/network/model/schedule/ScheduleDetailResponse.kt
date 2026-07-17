@@ -23,6 +23,8 @@ data class ScheduleDetailResponse(
     val needConfirm: Boolean,
     @SerialName("status")
     val status: String,
+    @SerialName("urgencyLevel")
+    val urgencyLevel: String,
     @SerialName("progressRate")
     val progressRate: Int,
     @SerialName("memo")
