@@ -4,6 +4,7 @@
     <string name="error_server_unavailable">현재 서비스가 원활하지 않습니다. 잠시 후 다시 시도해주세요.</string>
     <string name="error_unknown">오류가 발생했습니다. 잠시 후 다시 시도해주세요.</string>
     <string name="error_unauthorized">로그인이 만료되었습니다. 다시 로그인해주세요.</string>
+    <string name="schedule_add">일정 추가하기</string>
     <string name="schedule_summary_detail">일정 상세 보기</string>
     <string name="schedule_summary_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="schedule_summary_dday_default">일정</string>

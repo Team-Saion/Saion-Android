@@ -11,8 +11,6 @@ import kotlinx.collections.immutable.toImmutableList
 internal sealed interface ScheduleState : UIState {
     data object Loading : ScheduleState
 
-    data object Empty : ScheduleState
-
     data object Error : ScheduleState
 
     data class Content(
@@ -24,9 +22,7 @@ internal sealed interface ScheduleState : UIState {
     ) : ScheduleState
 }
 
-internal fun ScheduleListPage.toContentState(isRefreshing: Boolean = false): ScheduleState = if (schedules.isEmpty()) {
-    ScheduleState.Empty
-} else {
+internal fun ScheduleListPage.toContentState(isRefreshing: Boolean = false): ScheduleState =
     ScheduleState.Content(
         schedules = schedules.toImmutableList(),
         isRefreshing = isRefreshing,
@@ -34,4 +30,3 @@ internal fun ScheduleListPage.toContentState(isRefreshing: Boolean = false): Sch
         nextCursor = nextCursor,
         hasNext = hasNext,
     )
-}

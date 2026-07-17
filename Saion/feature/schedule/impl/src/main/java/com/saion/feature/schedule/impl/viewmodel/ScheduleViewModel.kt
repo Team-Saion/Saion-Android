@@ -50,7 +50,15 @@ internal class ScheduleViewModel @Inject constructor(
 
             ResolvedCurrentCircle.Missing -> {
                 currentCircleId = null
-                update { ScheduleState.Empty }
+                update {
+                    ScheduleState.Content(
+                        schedules = emptyList<ScheduleSummary>().toImmutableList(),
+                        isRefreshing = false,
+                        isAppending = false,
+                        nextCursor = null,
+                        hasNext = false,
+                    )
+                }
             }
         }
     }
@@ -83,7 +91,15 @@ internal class ScheduleViewModel @Inject constructor(
 
     private fun refresh() {
         val circleId = currentCircleId ?: run {
-            update { ScheduleState.Empty }
+            update {
+                ScheduleState.Content(
+                    schedules = emptyList<ScheduleSummary>().toImmutableList(),
+                    isRefreshing = false,
+                    isAppending = false,
+                    nextCursor = null,
+                    hasNext = false,
+                )
+            }
             return
         }
         val previousState = currentState
@@ -112,7 +128,6 @@ internal class ScheduleViewModel @Inject constructor(
                             isAppending = false,
                         )
 
-                        is ScheduleState.Empty -> ScheduleState.Empty
                         else -> ScheduleState.Error
                     }
                 }
@@ -172,17 +187,13 @@ internal class ScheduleViewModel @Inject constructor(
         val mergedSchedules: List<ScheduleSummary> = state.schedules + page.schedules
 
         update {
-            if (mergedSchedules.isEmpty()) {
-                ScheduleState.Empty
-            } else {
-                state.copy(
-                    schedules = mergedSchedules.toImmutableList(),
-                    isRefreshing = false,
-                    isAppending = false,
-                    nextCursor = page.nextCursor,
-                    hasNext = page.hasNext,
-                )
-            }
+            state.copy(
+                schedules = mergedSchedules.toImmutableList(),
+                isRefreshing = false,
+                isAppending = false,
+                nextCursor = page.nextCursor,
+                hasNext = page.hasNext,
+            )
         }
     }
 

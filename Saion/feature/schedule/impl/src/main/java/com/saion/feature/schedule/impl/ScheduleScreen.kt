@@ -2,20 +2,18 @@ package com.saion.feature.schedule.impl
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,16 +30,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.ui.component.ScheduleAddCard
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.ScheduleSummaryCard
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.resolveMessage
-import com.saion.ds.component.button.ButtonSize
-import com.saion.ds.component.button.ButtonVariant
-import com.saion.ds.component.button.SaionButton
 import com.saion.ds.component.feedback.SaionSpinner
-import com.saion.ds.component.navigation.SaionTopBar
-import com.saion.ds.component.navigation.TopBarVariant
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.schedule.impl.viewmodel.ScheduleEffect
 import com.saion.feature.schedule.impl.viewmodel.ScheduleIntent
@@ -49,6 +43,7 @@ import com.saion.feature.schedule.impl.viewmodel.ScheduleSnackbarMessage
 import com.saion.feature.schedule.impl.viewmodel.ScheduleState
 import com.saion.feature.schedule.impl.viewmodel.ScheduleViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -58,6 +53,7 @@ import kotlinx.coroutines.flow.map
 @Composable
 internal fun ScheduleScreen(
     modifier: Modifier = Modifier,
+    onAddClick: () -> Unit = {},
     viewModel: ScheduleViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,6 +73,7 @@ internal fun ScheduleScreen(
         snackbarHostState = snackbarHostState,
         onRefresh = { viewModel.dispatch(ScheduleIntent.RefreshRequested) },
         onLoadNextPage = { viewModel.dispatch(ScheduleIntent.LoadNextPageRequested) },
+        onAddClick = onAddClick,
         modifier = modifier,
     )
 }
@@ -88,12 +85,14 @@ private fun ScheduleScreen(
     snackbarHostState: SnackbarHostState,
     onRefresh: () -> Unit,
     onLoadNextPage: () -> Unit,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SaionScaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         systemBarInset = SystemBarInset.None,
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         containerColor = SaionTheme.colors.background.muted,
     ) {
         PullToRefreshBox(
@@ -103,34 +102,16 @@ private fun ScheduleScreen(
         ) {
             when (uiState) {
                 ScheduleState.Loading -> SaionSpinner()
-                ScheduleState.Empty -> EmptyContent(onRefresh = onRefresh)
                 ScheduleState.Error -> PlaceholderContent(text = stringResource(R.string.schedule_error_fallback))
                 is ScheduleState.Content -> ScheduleContent(
                     schedules = uiState.schedules,
                     hasNext = uiState.hasNext,
                     isAppending = uiState.isAppending,
                     onLoadNextPage = onLoadNextPage,
+                    onAddClick = onAddClick,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyContent(
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    PlaceholderContent(
-        text = stringResource(R.string.schedule_empty),
-        modifier = modifier,
-    ) {
-        SaionButton(
-            text = stringResource(R.string.schedule_refresh),
-            onClick = onRefresh,
-            variant = ButtonVariant.PRIMARY,
-            size = ButtonSize.SMALL,
-        )
     }
 }
 
@@ -140,17 +121,17 @@ private fun PlaceholderContent(
     modifier: Modifier = Modifier,
     action: @Composable (() -> Unit)? = null,
 ) {
-    Box(
+    androidx.compose.foundation.layout.Box(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
+        androidx.compose.foundation.layout.Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
+            androidx.compose.material3.Text(
                 text = text,
                 style = SaionTheme.typography.body1,
                 color = SaionTheme.colors.label.subtle,
@@ -166,6 +147,7 @@ private fun ScheduleContent(
     hasNext: Boolean,
     isAppending: Boolean,
     onLoadNextPage: () -> Unit,
+    onAddClick: () -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -175,7 +157,7 @@ private fun ScheduleContent(
         }
             .filterNotNull()
             .map { lastVisibleIndex ->
-                val footerCount = if (isAppending) 1 else 0
+                val footerCount = 1 + if (isAppending) 1 else 0
                 val thresholdIndex = (schedules.lastIndex + footerCount - 2).coerceAtLeast(0)
                 lastVisibleIndex >= thresholdIndex
             }
@@ -202,7 +184,7 @@ private fun ScheduleContent(
 
         if (isAppending) {
             item(key = "append_loading") {
-                Box(
+                androidx.compose.foundation.layout.Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
@@ -211,6 +193,10 @@ private fun ScheduleContent(
                     SaionSpinner()
                 }
             }
+        }
+
+        item(key = "schedule_add") {
+            ScheduleAddCard(onClick = onAddClick)
         }
     }
 }
@@ -254,7 +240,7 @@ private fun ScheduleScreenContentPreview() {
                         needConfirm = false,
                         status = ScheduleStatus.UPCOMING,
                         progressRate = 0,
-                        dday = 3,
+                        dday = 10,
                     ),
                 ).toImmutableList(),
                 isRefreshing = false,
@@ -265,6 +251,7 @@ private fun ScheduleScreenContentPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onLoadNextPage = {},
+            onAddClick = {},
         )
     }
 }
@@ -274,10 +261,17 @@ private fun ScheduleScreenContentPreview() {
 private fun ScheduleScreenEmptyPreview() {
     SaionTheme {
         ScheduleScreen(
-            uiState = ScheduleState.Empty,
+            uiState = ScheduleState.Content(
+                schedules = persistentListOf(),
+                isRefreshing = false,
+                isAppending = false,
+                nextCursor = null,
+                hasNext = false,
+            ),
             snackbarHostState = remember { SnackbarHostState() },
             onRefresh = {},
             onLoadNextPage = {},
+            onAddClick = {},
         )
     }
 }

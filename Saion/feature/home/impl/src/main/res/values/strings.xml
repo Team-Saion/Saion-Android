@@ -13,7 +13,6 @@
     <string name="home_hero_invite_title">써클에 함께할 가족을 초대해주세요</string>
     <string name="home_hero_send_invitation">초대장 보내기</string>
     <string name="home_schedule_title">일정</string>
-    <string name="home_schedule_add">일정 추가</string>
     <string name="home_schedule_detail">일정 상세 보기</string>
     <string name="home_schedule_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="home_schedule_dday_default">일정</string>

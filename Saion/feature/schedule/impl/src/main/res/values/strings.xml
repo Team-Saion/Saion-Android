@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="schedule_title">일정</string>
-    <string name="schedule_empty">등록된 일정이 없습니다.</string>
-    <string name="schedule_refresh">새로고침</string>
     <string name="schedule_error_fallback">일정 목록을 표시할 수 없습니다.</string>
     <string name="schedule_error_load">일정 목록을 불러오지 못했습니다.</string>
     <string name="schedule_error_refresh">일정 목록을 새로고침하지 못했습니다.</string>

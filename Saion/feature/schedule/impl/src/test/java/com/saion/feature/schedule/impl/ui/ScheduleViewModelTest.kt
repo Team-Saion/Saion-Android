@@ -23,6 +23,7 @@ import com.saion.feature.schedule.impl.viewmodel.ScheduleIntent
 import com.saion.feature.schedule.impl.viewmodel.ScheduleSnackbarMessage
 import com.saion.feature.schedule.impl.viewmodel.ScheduleState
 import com.saion.feature.schedule.impl.viewmodel.ScheduleViewModel
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,7 +78,7 @@ class ScheduleViewModelTest {
     }
 
     @Test
-    fun `현재 써클이 없으면 empty 상태가 된다`() = runTest {
+    fun `현재 써클이 없으면 빈 content 상태가 된다`() = runTest {
         val viewModel = ScheduleViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = null)),
             getScheduleListUseCase = GetScheduleListUseCase(FakeScheduleRepository()),
@@ -85,7 +86,16 @@ class ScheduleViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals(ScheduleState.Empty, viewModel.uiState.value)
+        assertEquals(
+            ScheduleState.Content(
+                schedules = persistentListOf(),
+                isRefreshing = false,
+                isAppending = false,
+                nextCursor = null,
+                hasNext = false,
+            ),
+            viewModel.uiState.value,
+        )
     }
 
     @Test
@@ -110,6 +120,29 @@ class ScheduleViewModelTest {
         assertTrue(state.hasNext)
         assertFalse(state.isRefreshing)
         assertFalse(state.isAppending)
+    }
+
+    @Test
+    fun `첫 페이지가 비어 있어도 content 상태를 유지한다`() = runTest {
+        val viewModel = ScheduleViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
+            getScheduleListUseCase = GetScheduleListUseCase(
+                FakeScheduleRepository(results = listOf(AppResult.Success(schedulePage(schedules = emptyList())))),
+            ),
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(
+            ScheduleState.Content(
+                schedules = persistentListOf(),
+                isRefreshing = false,
+                isAppending = false,
+                nextCursor = null,
+                hasNext = false,
+            ),
+            viewModel.uiState.value,
+        )
     }
 
     @Test
