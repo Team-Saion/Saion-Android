@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl.component
+package com.saion.feature.home.impl.home.component
 
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable

@@ -17,7 +17,6 @@ import com.saion.core.ui.component.SystemBarInset
 import com.saion.ds.component.navigation.SaionBottomNavItem
 import com.saion.ds.component.navigation.SaionBottomNavigation
 import com.saion.ds.icon.SaionIcons
-import com.saion.feature.circlecreate.api.key.CircleCreateNavKey
 import com.saion.feature.home.api.key.HomeNavKey
 import com.saion.feature.main.api.key.MainNavKey
 import com.saion.feature.main.api.key.MainTabNavKey
@@ -57,7 +56,8 @@ private fun MainRoute(tabEntryBuilders: ImmutableSet<NavEntryBuilder<MainTabNavK
         TabItem(ScheduleNavKey, stringResource(R.string.main_tab_schedule), SaionIcons.Schedule),
         TabItem(MyPageNavKey, stringResource(R.string.main_tab_mypage), SaionIcons.Person),
     )
-    val shouldShowBottomBar = navigationState.current != CircleCreateNavKey
+    val rootTabs = items.map(TabItem::navKey).toSet()
+    val shouldShowBottomBar = navigationState.current in rootTabs
 
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),

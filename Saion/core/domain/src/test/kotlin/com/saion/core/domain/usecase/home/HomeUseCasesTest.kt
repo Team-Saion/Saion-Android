@@ -7,8 +7,8 @@ import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 class HomeUseCasesTest {
@@ -53,6 +53,42 @@ class HomeUseCasesTest {
             ),
             HomeUseCaseOutcome(result = actual, call = repository.lastCall),
         )
+    }
+
+    @Test
+    fun `초대자 이름은 내 닉네임을 우선 사용한다`() {
+        val actual = GetHomeInviterNameUseCase().invoke(
+            members = listOf(
+                CircleMember(
+                    memberId = "member-1",
+                    nickname = "수빈",
+                    avatarColor = "#FFFFFF",
+                    profileImageUrl = null,
+                    isMe = true,
+                    role = "MEMBER",
+                ),
+            ),
+        )
+
+        assertEquals("수빈", actual)
+    }
+
+    @Test
+    fun `초대자 이름은 내 닉네임이 없으면 기본값을 사용한다`() {
+        val actual = GetHomeInviterNameUseCase().invoke(
+            members = listOf(
+                CircleMember(
+                    memberId = "member-1",
+                    nickname = "민지",
+                    avatarColor = "#FFFFFF",
+                    profileImageUrl = null,
+                    isMe = false,
+                    role = "MEMBER",
+                ),
+            ),
+        )
+
+        assertEquals("가족", actual)
     }
 }
 

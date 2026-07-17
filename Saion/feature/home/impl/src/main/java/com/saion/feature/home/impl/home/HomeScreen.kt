@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl
+package com.saion.feature.home.impl.home
 
 import android.content.Context
 import androidx.compose.foundation.background
@@ -26,25 +26,26 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
-import com.saion.core.model.result.AppError
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
+import com.saion.core.ui.error.resolveMessage
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.theme.SaionTheme
-import com.saion.feature.home.impl.component.HomeDateHeader
-import com.saion.feature.home.impl.component.HomeHeroCard
-import com.saion.feature.home.impl.component.HomeMembersSection
-import com.saion.feature.home.impl.component.HomeScheduleSection
-import com.saion.feature.home.impl.component.HomeTitleSection
-import com.saion.feature.home.impl.component.HomeTopBar
-import com.saion.feature.home.impl.viewmodel.HomeEffect
-import com.saion.feature.home.impl.viewmodel.HomeIntent
-import com.saion.feature.home.impl.viewmodel.HomeState
-import com.saion.feature.home.impl.viewmodel.HomeSnackbarMessage
-import com.saion.feature.home.impl.viewmodel.HomeViewModel
+import com.saion.feature.home.impl.R
+import com.saion.feature.home.impl.home.component.HomeDateHeader
+import com.saion.feature.home.impl.home.component.HomeHeroCard
+import com.saion.feature.home.impl.home.component.HomeMembersSection
+import com.saion.feature.home.impl.home.component.HomeScheduleSection
+import com.saion.feature.home.impl.home.component.HomeTitleSection
+import com.saion.feature.home.impl.home.component.HomeTopBar
+import com.saion.feature.home.impl.home.viewmodel.HomeEffect
+import com.saion.feature.home.impl.home.viewmodel.HomeIntent
+import com.saion.feature.home.impl.home.viewmodel.HomeSnackbarMessage
+import com.saion.feature.home.impl.home.viewmodel.HomeState
+import com.saion.feature.home.impl.home.viewmodel.HomeViewModel
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -183,21 +184,6 @@ private val HomeState.circleTitle: String
 private fun HomeSnackbarMessage.resolve(context: Context): String = when (this) {
     is HomeSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is HomeSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
-}
-
-private fun AppError.resolveMessage(
-    context: Context,
-    defaultMessageResId: Int,
-): String = when (this) {
-    is AppError.Business -> message ?: context.getString(defaultMessageResId)
-
-    is AppError.Unknown -> message ?: context.getString(defaultMessageResId)
-
-    is AppError.NetworkUnavailable,
-    is AppError.Timeout,
-    is AppError.ServerUnavailable,
-    is AppError.Unauthorized,
-    -> context.getString(this)
 }
 
 @Preview

@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl.component
+package com.saion.feature.home.impl.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -78,8 +78,7 @@ private fun HomeMemberItem(
             imageUrl = member.profileImageUrl,
             avatarColorHex = member.avatarColor,
             contentDescription = member.nickname,
-            modifier = Modifier
-                .size(64.dp),
+            modifier = Modifier.size(64.dp),
         )
         ItemTitle(text = member.nickname + if (member.isMe) meSuffix else "")
     }

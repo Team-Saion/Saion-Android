@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl.component
+package com.saion.feature.home.impl.home.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

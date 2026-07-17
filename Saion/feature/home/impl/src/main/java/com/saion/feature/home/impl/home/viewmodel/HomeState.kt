@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl.viewmodel
+package com.saion.feature.home.impl.home.viewmodel
 
 import androidx.compose.runtime.Immutable
 import com.saion.core.model.circle.CircleSummary

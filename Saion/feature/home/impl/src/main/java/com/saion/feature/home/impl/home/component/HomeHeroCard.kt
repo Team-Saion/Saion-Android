@@ -1,4 +1,4 @@
-package com.saion.feature.home.impl.component
+package com.saion.feature.home.impl.home.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,7 +25,7 @@ import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.home.impl.R
-import com.saion.feature.home.impl.viewmodel.HomeState
+import com.saion.feature.home.impl.home.viewmodel.HomeState
 
 @Composable
 internal fun HomeHeroCard(
