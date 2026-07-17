@@ -13,6 +13,8 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.model)
     implementation(projects.feature.main.api)
+    implementation(projects.feature.terms.api)
+    implementation(projects.feature.terms.impl)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 

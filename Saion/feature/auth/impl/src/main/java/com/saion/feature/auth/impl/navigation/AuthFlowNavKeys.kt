@@ -9,7 +9,4 @@ internal sealed interface AuthFlowNavKey : AppNavKey
 internal data object LoginNavKey : AuthFlowNavKey
 
 @Serializable
-internal data object TermsNavKey : AuthFlowNavKey
-
-@Serializable
 internal data object NicknameNavKey : AuthFlowNavKey

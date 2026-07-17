@@ -25,11 +25,4 @@
     <string name="nickname_profile_image_description">프로필 이미지</string>
     <string name="nickname_error_load_onboarding">온보딩 정보를 불러오지 못했습니다.</string>
     <string name="nickname_error_save">닉네임 저장에 실패했습니다. 다시 시도해주세요.</string>
-    <string name="terms_required_prefix">[필수]</string>
-    <string name="terms_optional_prefix">[선택]</string>
-    <string name="terms_close">닫기</string>
-    <string name="terms_agree_and_next">동의하고 다음</string>
-    <string name="terms_error_load">약관 정보를 불러오지 못했습니다.</string>
-    <string name="terms_error_invalid_data">약관 정보를 확인한 뒤 다시 시도해주세요.</string>
-    <string name="terms_error_submit">약관 동의에 실패했습니다. 다시 시도해주세요.</string>
 </resources>

@@ -1,8 +1,8 @@
-package com.saion.feature.auth.impl.terms.viewmodel
+package com.saion.feature.terms.impl.viewmodel
 
 import androidx.compose.runtime.Immutable
 import com.saion.core.ui.viewmodel.UIState
-import com.saion.feature.auth.impl.terms.model.TermsUIModels
+import com.saion.feature.terms.impl.model.TermsUIModels
 
 @Immutable
 internal data class TermsUIState(

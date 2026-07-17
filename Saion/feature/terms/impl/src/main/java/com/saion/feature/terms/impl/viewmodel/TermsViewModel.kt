@@ -1,15 +1,16 @@
-package com.saion.feature.auth.impl.terms.viewmodel
+package com.saion.feature.terms.impl.viewmodel
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.term.AgreeTermsUseCase
 import com.saion.core.domain.usecase.term.GetActiveTermsUseCase
 import com.saion.core.model.result.AppError
+import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
-import com.saion.feature.auth.impl.R
-import com.saion.feature.auth.impl.terms.model.TermsUIModel
-import com.saion.feature.auth.impl.terms.model.TermsUIModels
-import com.saion.feature.auth.impl.ui.AuthSnackbarMessage
+import com.saion.feature.terms.impl.R
+import com.saion.feature.terms.impl.model.TermsUIModel
+import com.saion.feature.terms.impl.model.TermsUIModels
+import com.saion.feature.terms.impl.ui.TermsSnackbarMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
@@ -33,13 +34,9 @@ internal class TermsViewModel @Inject constructor(
                     emitEffect(TermsUIEffect.NavigateBack)
                 }
             }
-
             TermsUIIntent.LoadTerms -> loadTerms()
-
             is TermsUIIntent.OpenTerm -> openTerm(intent.id)
-
             TermsUIIntent.SubmitAgreements -> submitAgreements()
-
             is TermsUIIntent.ToggleTerm -> toggleTerm(intent.id)
         }
     }
@@ -59,7 +56,6 @@ internal class TermsViewModel @Inject constructor(
                         )
                     }.toImmutableList(),
                 )
-
                 update {
                     copy(
                         isLoading = false,
@@ -70,11 +66,7 @@ internal class TermsViewModel @Inject constructor(
             },
             onFailure = { error ->
                 update { copy(isLoading = false) }
-                emitEffect(
-                    TermsUIEffect.ShowSnackbar(
-                        error.toDisplayMessage(R.string.terms_error_load),
-                    ),
-                )
+                emitEffect(TermsUIEffect.ShowSnackbar(error.toDisplayMessage(R.string.terms_error_load)))
             },
             onFinally = { update { copy(isLoading = false) } },
         ) {
@@ -83,37 +75,36 @@ internal class TermsViewModel @Inject constructor(
     }
 
     private fun toggleTerm(id: String) {
-        update {
-            copy(
-                terms = terms.toggle(id),
+        update { copy(terms = terms.toggle(id)) }
+    }
+
+    private fun openTerm(id: String) {
+        val term = currentState.terms.findById(id) ?: return
+        val url = term.contentUrl.takeIf(String::isNotBlank) ?: return
+
+        viewModelScope.launch {
+            emitEffect(
+                TermsUIEffect.NavigateDetail(
+                    title = term.title,
+                    url = url,
+                ),
             )
         }
     }
 
-    private fun openTerm(id: String) {
-        val url = currentState.terms.findContentUrl(id) ?: return
-
-        viewModelScope.launch {
-            emitEffect(TermsUIEffect.OpenBrowser(url))
-        }
-    }
-
     private fun submitAgreements() {
-        if (!currentState.terms.hasAllRequiredChecked) {
-            return
-        }
+        if (!currentState.terms.hasAllRequiredChecked) return
 
         val agreedTermIds = currentState.terms.checkedTermIdsAsLongOrNull()
             ?: run {
                 viewModelScope.launch {
-                    emitEffect(TermsUIEffect.ShowSnackbar(AuthSnackbarMessage.Res(R.string.terms_error_invalid_data)))
+                    emitEffect(TermsUIEffect.ShowSnackbar(TermsSnackbarMessage.Res(R.string.terms_error_invalid_data)))
                 }
                 return
             }
 
-        update { copy(isLoading = true) }
-
         launchSafely(
+            onStart = { update { copy(isLoading = true) } },
             onSuccess = {
                 update {
                     copy(
@@ -121,7 +112,7 @@ internal class TermsViewModel @Inject constructor(
                         isBottomSheetVisible = false,
                     )
                 }
-                emitEffect(TermsUIEffect.NavigateNext)
+                emitEffect(TermsUIEffect.NavigateComplete)
             },
             onFailure = { error ->
                 update {
@@ -130,11 +121,7 @@ internal class TermsViewModel @Inject constructor(
                         isBottomSheetVisible = true,
                     )
                 }
-                emitEffect(
-                    TermsUIEffect.ShowSnackbar(
-                        error.toDisplayMessage(R.string.terms_error_submit),
-                    ),
-                )
+                emitEffect(TermsUIEffect.ShowSnackbar(error.toDisplayMessage(R.string.terms_error_submit)))
             },
             onFinally = { update { copy(isLoading = false) } },
         ) {
@@ -143,5 +130,8 @@ internal class TermsViewModel @Inject constructor(
     }
 }
 
-private fun AppError.toDisplayMessage(defaultMessageResId: Int): AuthSnackbarMessage =
-    AuthSnackbarMessage.Error(error = this, defaultMessageResId = defaultMessageResId)
+private fun AppError.toDisplayMessage(defaultMessageResId: Int): TermsSnackbarMessage = toSnackbarMessage(
+    defaultMessageResId = defaultMessageResId,
+    textMessage = { value, resId -> TermsSnackbarMessage.Text(value, resId) },
+    errorMessage = { error, resId -> TermsSnackbarMessage.Error(error, resId) },
+)

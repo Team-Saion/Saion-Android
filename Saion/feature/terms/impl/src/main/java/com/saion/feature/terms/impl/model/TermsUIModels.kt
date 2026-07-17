@@ -1,4 +1,4 @@
-package com.saion.feature.auth.impl.terms.model
+package com.saion.feature.terms.impl.model
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
@@ -12,17 +12,11 @@ internal data class TermsUIModels(val items: ImmutableList<TermsUIModel> = persi
 
     fun toggle(id: String): TermsUIModels = copy(
         items = items.map { term ->
-            if (term.id == id) {
-                term.toggle()
-            } else {
-                term
-            }
+            if (term.id == id) term.toggle() else term
         }.toImmutableList(),
     )
 
-    fun findContentUrl(id: String): String? = items.firstOrNull { it.id == id }
-        ?.contentUrl
-        ?.takeIf { it.isNotBlank() }
+    fun findById(id: String): TermsUIModel? = items.firstOrNull { it.id == id }
 
     fun checkedTermIdsAsLongOrNull(): List<Long>? = buildList {
         items.filter(TermsUIModel::isChecked).forEach { term ->

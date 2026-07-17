@@ -1,0 +1,12 @@
+<resources>
+    <string name="terms_title_agreement">약관 동의</string>
+    <string name="terms_title_read_only">약관 확인</string>
+    <string name="terms_required_prefix">[필수]</string>
+    <string name="terms_optional_prefix">[선택]</string>
+    <string name="terms_close">닫기</string>
+    <string name="terms_agree_and_next">동의하고 다음</string>
+    <string name="terms_error_load">약관 정보를 불러오지 못했습니다.</string>
+    <string name="terms_error_invalid_data">약관 정보를 확인한 뒤 다시 시도해주세요.</string>
+    <string name="terms_error_submit">약관 동의에 실패했습니다. 다시 시도해주세요.</string>
+    <string name="terms_detail_title_fallback">약관 상세</string>
+</resources>

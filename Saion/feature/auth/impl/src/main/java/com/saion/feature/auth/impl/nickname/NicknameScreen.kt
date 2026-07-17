@@ -8,7 +8,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.member.NicknameValidation
 import com.saion.core.model.member.NicknameValidationResult
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
@@ -46,13 +46,11 @@ internal fun NicknameScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                NicknameEffect.NavigateBack -> onBack()
-                NicknameEffect.NavigateComplete -> onComplete()
-                is NicknameEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    viewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            NicknameEffect.NavigateBack -> onBack()
+            NicknameEffect.NavigateComplete -> onComplete()
+            is NicknameEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 

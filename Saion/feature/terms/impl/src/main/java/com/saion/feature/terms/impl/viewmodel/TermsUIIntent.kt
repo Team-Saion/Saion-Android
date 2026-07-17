@@ -1,4 +1,4 @@
-package com.saion.feature.auth.impl.terms.viewmodel
+package com.saion.feature.terms.impl.viewmodel
 
 import com.saion.core.ui.viewmodel.UIIntent
 

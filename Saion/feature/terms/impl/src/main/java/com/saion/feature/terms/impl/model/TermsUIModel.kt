@@ -1,4 +1,4 @@
-package com.saion.feature.auth.impl.terms.model
+package com.saion.feature.terms.impl.model
 
 import androidx.compose.runtime.Immutable
 
@@ -10,5 +10,5 @@ internal data class TermsUIModel(
     val contentUrl: String,
     val title: String,
 ) {
-    fun toggle(): TermsUIModel = this.copy(isChecked = isChecked.not())
+    fun toggle(): TermsUIModel = copy(isChecked = isChecked.not())
 }

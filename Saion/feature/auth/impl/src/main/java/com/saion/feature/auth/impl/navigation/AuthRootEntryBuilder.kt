@@ -12,8 +12,12 @@ import com.saion.feature.auth.api.key.AuthNavKey
 import com.saion.feature.auth.api.key.AuthStartStep
 import com.saion.feature.auth.impl.login.LoginScreen
 import com.saion.feature.auth.impl.nickname.NicknameScreen
-import com.saion.feature.auth.impl.terms.TermsScreen
 import com.saion.feature.main.api.key.MainNavKey
+import com.saion.feature.terms.api.key.TermDetailNavKey
+import com.saion.feature.terms.api.key.TermsAgreementNavKey
+import com.saion.feature.terms.api.key.TermsMode
+import com.saion.feature.terms.impl.TermDetailScreen
+import com.saion.feature.terms.impl.TermsScreen
 import javax.inject.Inject
 import kotlinx.collections.immutable.persistentSetOf
 
@@ -42,7 +46,7 @@ private fun AuthRoute(
 ) {
     val startKey = when (startStep) {
         AuthStartStep.LOGIN -> LoginNavKey
-        AuthStartStep.TERMS -> TermsNavKey
+        AuthStartStep.TERMS -> TermsAgreementNavKey(mode = TermsMode.AGREEMENT)
     }
     val navigationState = rememberNavigationState(startKey)
     val entryBuilders = remember(onAuthComplete, showIntroTransition) {
@@ -55,21 +59,31 @@ private fun AuthRoute(
                             onNavigateNext = { startStep ->
                                 when (startStep) {
                                     AuthStartStep.LOGIN -> flowNavigator.replace(LoginNavKey)
-                                    AuthStartStep.TERMS -> flowNavigator.push(TermsNavKey)
+                                    AuthStartStep.TERMS -> flowNavigator.push(TermsAgreementNavKey(mode = TermsMode.AGREEMENT))
                                 }
                             },
                             onNavigateMain = onAuthComplete,
                         )
                     }
-                    entry<TermsNavKey> {
+                    entry<TermsAgreementNavKey> { key ->
                         TermsScreen(
+                            mode = key.mode,
                             onBack = { flowNavigator.replace(LoginNavKey) },
-                            onContinue = { flowNavigator.replace(NicknameNavKey) },
+                            onComplete = { flowNavigator.replace(NicknameNavKey) },
+                            onOpenTerm = { _, url ->
+                                flowNavigator.push(TermDetailNavKey(url = url))
+                            },
+                        )
+                    }
+                    entry<TermDetailNavKey> { key ->
+                        TermDetailScreen(
+                            url = key.url,
+                            onBack = { flowNavigator.pop() },
                         )
                     }
                     entry<NicknameNavKey> {
                         NicknameScreen(
-                            onBack = { flowNavigator.replace(TermsNavKey) },
+                            onBack = { flowNavigator.replace(TermsAgreementNavKey(mode = TermsMode.AGREEMENT)) },
                             onComplete = { onAuthComplete() },
                         )
                     }

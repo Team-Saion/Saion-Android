@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.brand.SaionBrandIntroDefaults
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.auth.api.key.AuthStartStep
@@ -46,13 +47,11 @@ internal fun LoginScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(loginViewModel, snackbarHostState) {
-        loginViewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is LoginEffect.NavigateNext -> onNavigateNext(effect.startStep)
-                LoginEffect.NavigateMain -> onNavigateMain()
-                is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    loginViewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            is LoginEffect.NavigateNext -> onNavigateNext(effect.startStep)
+            LoginEffect.NavigateMain -> onNavigateMain()
+            is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 
