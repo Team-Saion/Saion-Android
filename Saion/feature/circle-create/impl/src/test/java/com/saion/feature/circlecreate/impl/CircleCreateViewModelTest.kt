@@ -1,7 +1,9 @@
 package com.saion.feature.circlecreate.impl
 
 import com.saion.core.domain.repository.CircleRepository
+import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.usecase.circle.CreateCircleUseCase
+import com.saion.core.domain.usecase.circle.SelectCurrentCircleUseCase
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -13,6 +15,8 @@ import com.saion.feature.circlecreate.impl.viewmodel.CircleCreateViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -44,6 +48,7 @@ class CircleCreateViewModelTest {
     fun `유효한 이름을 입력하면 생성 버튼이 활성화된다`() = runTest {
         val viewModel = CircleCreateViewModel(
             createCircleUseCase = CreateCircleUseCase(FakeCircleRepository()),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(FakeCurrentCircleRepository()),
         )
 
         viewModel.dispatch(CircleCreateIntent.NameChanged("비니네"))
@@ -57,6 +62,7 @@ class CircleCreateViewModelTest {
     fun `금지 문자가 포함되면 생성 버튼이 비활성화된다`() = runTest {
         val viewModel = CircleCreateViewModel(
             createCircleUseCase = CreateCircleUseCase(FakeCircleRepository()),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(FakeCurrentCircleRepository()),
         )
 
         viewModel.dispatch(CircleCreateIntent.NameChanged("비니<네"))
@@ -68,8 +74,10 @@ class CircleCreateViewModelTest {
 
     @Test
     fun `생성 성공 시 닫기 이펙트를 보낸다`() = runTest {
+        val currentCircleRepository = FakeCurrentCircleRepository()
         val viewModel = CircleCreateViewModel(
             createCircleUseCase = CreateCircleUseCase(FakeCircleRepository()),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(currentCircleRepository),
         )
         viewModel.dispatch(CircleCreateIntent.NameChanged("비니네"))
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -78,6 +86,7 @@ class CircleCreateViewModelTest {
         advanceUntilIdle()
 
         assertEquals(CircleCreateEffect.Close, effectDeferred.await())
+        assertEquals("circle-1", currentCircleRepository.selectedCircleId)
         assertFalse(viewModel.uiState.value.isSubmitting)
     }
 
@@ -95,6 +104,7 @@ class CircleCreateViewModelTest {
                     ),
                 ),
             ),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(FakeCurrentCircleRepository()),
         )
         viewModel.dispatch(CircleCreateIntent.NameChanged("비니네"))
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -126,4 +136,26 @@ private class FakeCircleRepository(
         circleId: String,
         targetMemberId: String,
     ): AppResult<CircleSummary> = error("Not used")
+}
+
+private class FakeCurrentCircleRepository : CurrentCircleRepository {
+    private val flow = MutableStateFlow<String?>(null)
+
+    val selectedCircleId: String?
+        get() = flow.value
+
+    override fun observeCurrentCircleId(): Flow<String?> = flow
+
+    override suspend fun getCurrentCircleId(): String? = flow.value
+
+    override suspend fun selectCircle(circleId: String): AppResult<Unit> {
+        flow.value = circleId
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun syncCurrentCircle(): AppResult<String?> = AppResult.Success(flow.value)
+
+    override suspend fun clearCurrentCircle() {
+        flow.value = null
+    }
 }

@@ -3,8 +3,8 @@ package com.saion.feature.circlecreate.impl.viewmodel
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import com.saion.core.domain.usecase.circle.CreateCircleUseCase
-import com.saion.core.model.result.AppError
-import com.saion.core.ui.event.CircleCreatedEventBus
+import com.saion.core.domain.usecase.circle.SelectCurrentCircleUseCase
+import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.circlecreate.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +14,7 @@ import javax.inject.Inject
 @Stable
 internal class CircleCreateViewModel @Inject constructor(
     private val createCircleUseCase: CreateCircleUseCase,
+    private val selectCurrentCircleUseCase: SelectCurrentCircleUseCase,
 ) : BaseViewModel<CircleCreateUiState, CircleCreateEffect, CircleCreateIntent>(CircleCreateUiState()) {
     override fun handleIntent(intent: CircleCreateIntent) {
         when (intent) {
@@ -54,14 +55,18 @@ internal class CircleCreateViewModel @Inject constructor(
             onStart = {
                 update { copy(isSubmitting = true) }
             },
-            onSuccess = {
-                CircleCreatedEventBus.emit()
+            onSuccess = { circle ->
+                selectCurrentCircleUseCase(circle.circleId)
                 emitEffect(CircleCreateEffect.Close)
             },
             onFailure = { error ->
                 emitEffect(
                     CircleCreateEffect.ShowSnackbar(
-                        error.toSnackbarMessage(R.string.circle_create_error_default),
+                        error.toSnackbarMessage(
+                            defaultMessageResId = R.string.circle_create_error_default,
+                            textMessage = { value, resId -> CircleCreateSnackbarMessage.Text(value, resId) },
+                            errorMessage = { appError, resId -> CircleCreateSnackbarMessage.Error(appError, resId) },
+                        ),
                     ),
                 )
             },
@@ -87,19 +92,6 @@ private fun String.validationMessageResId(showEmptyError: Boolean): Int? {
         BLACKLIST_REGEX.containsMatchIn(this) -> R.string.circle_create_error_invalid_character
         else -> null
     }
-}
-
-private fun AppError.toSnackbarMessage(@StringRes defaultMessageResId: Int): CircleCreateSnackbarMessage = when (this) {
-    is AppError.Business -> CircleCreateSnackbarMessage.Text(message.orEmpty(), defaultMessageResId)
-    is AppError.Unknown -> CircleCreateSnackbarMessage.Text(message.orEmpty(), defaultMessageResId)
-    is AppError.NetworkUnavailable,
-    is AppError.Timeout,
-    is AppError.ServerUnavailable,
-    is AppError.Unauthorized,
-    -> CircleCreateSnackbarMessage.Error(
-        error = this,
-        defaultMessageResId = defaultMessageResId,
-    )
 }
 
 private const val MAX_CIRCLE_NAME_LENGTH = 20

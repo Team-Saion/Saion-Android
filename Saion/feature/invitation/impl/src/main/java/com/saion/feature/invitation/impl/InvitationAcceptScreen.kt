@@ -19,10 +19,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.saion.core.model.result.AppError
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
+import com.saion.core.ui.error.resolveMessage
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
@@ -174,17 +174,4 @@ private fun InvitationFallback(onCloseClick: () -> Unit) {
 private fun InvitationAcceptSnackbarMessage.resolve(context: Context): String = when (this) {
     is InvitationAcceptSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is InvitationAcceptSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
-}
-
-private fun AppError.resolveMessage(
-    context: Context,
-    defaultMessageResId: Int,
-): String = when (this) {
-    is AppError.Business -> message ?: context.getString(defaultMessageResId)
-    is AppError.Unknown -> message ?: context.getString(defaultMessageResId)
-    is AppError.NetworkUnavailable,
-    is AppError.Timeout,
-    is AppError.ServerUnavailable,
-    is AppError.Unauthorized,
-    -> context.getString(this)
 }

@@ -1,10 +1,11 @@
 package com.saion.feature.invitation.impl.viewmodel
 
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
+import com.saion.core.domain.usecase.circle.SelectCurrentCircleUseCase
 import com.saion.core.domain.usecase.invitation.AcceptInvitationUseCase
 import com.saion.core.domain.usecase.invitation.GetInvitationByTokenUseCase
-import com.saion.core.model.result.AppError
+import com.saion.core.model.result.AppResult
+import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.invitation.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +16,7 @@ import javax.inject.Inject
 internal class InvitationAcceptViewModel @Inject constructor(
     private val getInvitationByTokenUseCase: GetInvitationByTokenUseCase,
     private val acceptInvitationUseCase: AcceptInvitationUseCase,
+    private val selectCurrentCircleUseCase: SelectCurrentCircleUseCase,
 ) : BaseViewModel<InvitationAcceptState, InvitationAcceptEffect, InvitationAcceptIntent>(InvitationAcceptState()) {
     private var token: String? = null
 
@@ -62,7 +64,11 @@ internal class InvitationAcceptViewModel @Inject constructor(
                 }
                 emitEffect(
                     InvitationAcceptEffect.ShowSnackbar(
-                        error.toSnackbarMessage(R.string.invitation_error_load),
+                        error.toSnackbarMessage(
+                            defaultMessageResId = R.string.invitation_error_load,
+                            textMessage = { value, resId -> InvitationAcceptSnackbarMessage.Text(value, resId) },
+                            errorMessage = { appError, resId -> InvitationAcceptSnackbarMessage.Error(appError, resId) },
+                        ),
                     ),
                 )
             },
@@ -79,13 +85,18 @@ internal class InvitationAcceptViewModel @Inject constructor(
             onStart = {
                 update { copy(isAccepting = true) }
             },
-            onSuccess = {
+            onSuccess = { invitation ->
+                selectCurrentCircleUseCase(invitation.circleId)
                 emitEffect(InvitationAcceptEffect.Close)
             },
             onFailure = { error ->
                 emitEffect(
                     InvitationAcceptEffect.ShowSnackbar(
-                        error.toSnackbarMessage(R.string.invitation_error_accept),
+                        error.toSnackbarMessage(
+                            defaultMessageResId = R.string.invitation_error_accept,
+                            textMessage = { value, resId -> InvitationAcceptSnackbarMessage.Text(value, resId) },
+                            errorMessage = { appError, resId -> InvitationAcceptSnackbarMessage.Error(appError, resId) },
+                        ),
                     ),
                 )
             },
@@ -103,20 +114,7 @@ internal class InvitationAcceptViewModel @Inject constructor(
                 emitEffect(InvitationAcceptEffect.Close)
             },
         ) {
-            com.saion.core.model.result.AppResult.Success(Unit)
+            AppResult.Success(Unit)
         }
     }
-}
-
-private fun AppError.toSnackbarMessage(@StringRes defaultMessageResId: Int): InvitationAcceptSnackbarMessage = when (this) {
-    is AppError.Business -> InvitationAcceptSnackbarMessage.Text(message.orEmpty(), defaultMessageResId)
-    is AppError.Unknown -> InvitationAcceptSnackbarMessage.Text(message.orEmpty(), defaultMessageResId)
-    is AppError.NetworkUnavailable,
-    is AppError.Timeout,
-    is AppError.ServerUnavailable,
-    is AppError.Unauthorized,
-    -> InvitationAcceptSnackbarMessage.Error(
-        error = this,
-        defaultMessageResId = defaultMessageResId,
-    )
 }

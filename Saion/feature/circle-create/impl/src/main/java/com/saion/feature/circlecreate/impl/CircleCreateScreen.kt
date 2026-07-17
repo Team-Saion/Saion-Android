@@ -19,8 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.saion.core.model.result.AppError
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
@@ -116,22 +116,11 @@ private fun CircleCreateScreen(
 private fun CircleCreateSnackbarMessage.resolve(context: Context): String = when (this) {
     is CircleCreateSnackbarMessage.Res -> context.getString(resId)
     is CircleCreateSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
-    is CircleCreateSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
-}
-
-private fun AppError.resolveMessage(
-    context: Context,
-    defaultMessageResId: Int,
-): String = when (this) {
-    is AppError.Business -> message ?: context.getString(defaultMessageResId)
-
-    is AppError.Unknown -> message ?: context.getString(defaultMessageResId)
-
-    is AppError.NetworkUnavailable,
-    is AppError.Timeout,
-    is AppError.ServerUnavailable,
-    is AppError.Unauthorized,
-    -> context.getString(defaultMessageResId)
+    is CircleCreateSnackbarMessage.Error -> error.resolveMessage(
+        context = context,
+        defaultMessageResId = defaultMessageResId,
+        fallbackToDefaultForSystemErrors = true,
+    )
 }
 
 @Preview(showBackground = true)
