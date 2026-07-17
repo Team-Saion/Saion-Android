@@ -51,6 +51,7 @@ internal fun HomeHeroCard(
             title = stringResource(R.string.home_hero_invite_title),
             buttonText = if (state.canInvite) stringResource(R.string.home_hero_send_invitation) else null,
             onClick = onInviteClick,
+            isEnabled = state.isInviting.not(),
         )
     }
     val shape = RoundedCornerShape(SaionTheme.radius.container.xLarge)
@@ -92,6 +93,7 @@ internal fun HomeHeroCard(
                 modifier = Modifier.fillMaxWidth(),
                 variant = ButtonVariant.PRIMARY,
                 size = ButtonSize.LARGE,
+                enabled = content.isEnabled,
             )
         }
     }
@@ -101,6 +103,7 @@ private data class HeroCardContent(
     val title: String,
     val buttonText: String?,
     val onClick: () -> Unit,
+    val isEnabled: Boolean = true,
 )
 
 @Preview(showBackground = true)

@@ -2,17 +2,27 @@ package com.saion.feature.home.impl
 
 import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.HomeRepository
+import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.domain.usecase.circle.ListCirclesUseCase
 import com.saion.core.domain.usecase.home.GetHomeUseCase
+import com.saion.core.domain.usecase.invitation.IssueInvitationUseCase
 import com.saion.core.model.circle.CircleSummary
+import com.saion.core.model.invitation.AcceptedInvitation
+import com.saion.core.model.invitation.InvitationDetail
+import com.saion.core.model.invitation.InvitationIssuer
+import com.saion.core.model.invitation.InvitationType
+import com.saion.core.model.invitation.IssuedInvitation
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
+import com.saion.core.share.InvitationShareClient
+import com.saion.core.share.InvitationShareResult
 import com.saion.core.ui.event.CircleCreatedEventBus
 import com.saion.feature.home.impl.viewmodel.HomeEffect
+import com.saion.feature.home.impl.viewmodel.HomeIntent
 import com.saion.feature.home.impl.viewmodel.HomeSnackbarMessage
 import com.saion.feature.home.impl.viewmodel.HomeState
 import com.saion.feature.home.impl.viewmodel.HomeViewModel
@@ -62,6 +72,8 @@ class HomeViewModelTest {
         HomeViewModel(
             listCirclesUseCase = ListCirclesUseCase(circleRepository),
             getHomeUseCase = GetHomeUseCase(homeRepository),
+            issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            invitationShareClient = FakeInvitationShareClient(),
         )
 
         advanceUntilIdle()
@@ -76,6 +88,8 @@ class HomeViewModelTest {
                 FakeCircleRepository(result = AppResult.Success(emptyList())),
             ),
             getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Success(defaultOverview()))),
+            issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            invitationShareClient = FakeInvitationShareClient(),
         )
 
         advanceUntilIdle()
@@ -97,6 +111,8 @@ class HomeViewModelTest {
             getHomeUseCase = GetHomeUseCase(
                 FakeHomeRepository(result = AppResult.Success(overview)),
             ),
+            issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            invitationShareClient = FakeInvitationShareClient(),
         )
 
         advanceUntilIdle()
@@ -116,6 +132,8 @@ class HomeViewModelTest {
                 ),
             ),
             getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Success(defaultOverview()))),
+            issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            invitationShareClient = FakeInvitationShareClient(),
         )
 
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -144,6 +162,8 @@ class HomeViewModelTest {
         HomeViewModel(
             listCirclesUseCase = ListCirclesUseCase(circleRepository),
             getHomeUseCase = GetHomeUseCase(homeRepository),
+            issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            invitationShareClient = FakeInvitationShareClient(),
         )
 
         advanceUntilIdle()
@@ -155,6 +175,32 @@ class HomeViewModelTest {
 
         assertEquals(2, circleRepository.listCallCount)
         assertEquals(2, homeRepository.requestCount)
+    }
+
+    @Test
+    fun `초대 클릭 시 초대장을 발급하고 공유를 호출한다`() = runTest {
+        val overview = defaultOverview()
+        val invitationRepository = FakeInvitationRepository()
+        val shareClient = FakeInvitationShareClient()
+        val viewModel = HomeViewModel(
+            listCirclesUseCase = ListCirclesUseCase(
+                FakeCircleRepository(result = AppResult.Success(listOf(overview.circle))),
+            ),
+            getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Success(overview))),
+            issueInvitationUseCase = IssueInvitationUseCase(invitationRepository),
+            invitationShareClient = shareClient,
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.InviteClicked)
+        advanceUntilIdle()
+
+        assertEquals(InvitationType.CIRCLE, invitationRepository.requestedType)
+        assertEquals(overview.circle.circleId, invitationRepository.requestedTargetId)
+        assertEquals("수빈", shareClient.sharedInviterName)
+        assertEquals(overview.circle.name, shareClient.sharedCircleName)
+        assertEquals("invite-token", shareClient.sharedInvitation?.token)
+        assertTrue((viewModel.uiState.value as HomeState.Content).isInviting.not())
     }
 }
 
@@ -190,6 +236,63 @@ private class FakeHomeRepository(private val result: AppResult<HomeOverview>) : 
 
     override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> {
         error("Not used")
+    }
+}
+
+private class FakeInvitationRepository : InvitationRepository {
+    var requestedType: InvitationType? = null
+    var requestedTargetId: String? = null
+
+    override suspend fun issueInvitation(
+        type: InvitationType,
+        targetId: String,
+        inviteToName: String?,
+        message: String?,
+    ): AppResult<IssuedInvitation> {
+        requestedType = type
+        requestedTargetId = targetId
+        return AppResult.Success(
+            IssuedInvitation(
+                invitationId = "invite-1",
+                token = "invite-token",
+                expiresAt = "2026-07-30T00:00:00",
+            ),
+        )
+    }
+
+    override suspend fun getInvitationByToken(token: String): AppResult<InvitationDetail> = AppResult.Success(
+        InvitationDetail(
+            invitationId = "invite-1",
+            circleName = "비니네",
+            inviter = InvitationIssuer(
+                nickname = "초대자",
+                avatarColor = "#FFD35C",
+            ),
+            expiresAt = "2026-07-30T00:00:00",
+        ),
+    )
+
+    override suspend fun acceptInvitation(token: String): AppResult<AcceptedInvitation> = AppResult.Success(
+        AcceptedInvitation(circleId = "circle-1"),
+    )
+}
+
+private class FakeInvitationShareClient(
+    private val result: InvitationShareResult = InvitationShareResult.Success,
+) : InvitationShareClient {
+    var sharedInviterName: String? = null
+    var sharedCircleName: String? = null
+    var sharedInvitation: IssuedInvitation? = null
+
+    override suspend fun shareInvitation(
+        inviterName: String,
+        circleName: String,
+        invitation: IssuedInvitation,
+    ): InvitationShareResult {
+        sharedInviterName = inviterName
+        sharedCircleName = circleName
+        sharedInvitation = invitation
+        return result
     }
 }
 

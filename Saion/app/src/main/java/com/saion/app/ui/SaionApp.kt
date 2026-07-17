@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.saion.app.invitation.PendingInvitationLinkStore
 import com.saion.app.navigation.shared.AppRootNavigationHost
 import com.saion.app.navigation.startup.StartupNavigationCoordinator
 import com.saion.app.navigation.state.rememberSaionAppState
@@ -19,16 +20,20 @@ import com.saion.core.ui.event.GlobalUiEvent
 import com.saion.core.ui.event.GlobalUiEventBus
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.auth.api.key.AuthNavKey
+import com.saion.feature.invitation.api.key.InvitationAcceptNavKey
+import com.saion.feature.main.api.key.MainNavKey
 import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 fun SaionApp(
     appViewModel: AppViewModel,
+    pendingInvitationLinkStore: PendingInvitationLinkStore,
     rootEntryBuilders: ImmutableSet<NavEntryBuilder<AppNavKey>>,
     modifier: Modifier = Modifier,
 ) {
     val appState = rememberSaionAppState()
     val uiState by appViewModel.uiState.collectAsState()
+    val currentDestination = appState.navigationState.current
 
     SaionTheme {
         LaunchedEffect(Unit) {
@@ -37,6 +42,24 @@ fun SaionApp(
                     GlobalUiEvent.SessionExpired -> {
                         appState.navigationState.replaceAll(AuthNavKey())
                     }
+                }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            pendingInvitationLinkStore.events.collect {
+                if (appState.navigationState.current == MainNavKey) {
+                    pendingInvitationLinkStore.consume()?.let { token ->
+                        appState.navigationState.replaceAll(MainNavKey, InvitationAcceptNavKey(token))
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(currentDestination) {
+            if (currentDestination == MainNavKey) {
+                pendingInvitationLinkStore.consume()?.let { token ->
+                    appState.navigationState.replaceAll(MainNavKey, InvitationAcceptNavKey(token))
                 }
             }
         }

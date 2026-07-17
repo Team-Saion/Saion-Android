@@ -20,16 +20,18 @@ internal sealed interface HomeState : UIState {
         val circle: CircleSummary,
         val members: ImmutableList<CircleMember>,
         val canInvite: Boolean,
+        val isInviting: Boolean,
         val mainSchedule: ScheduleSummary?,
         val schedules: ImmutableList<ScheduleSummary>,
         val totalScheduleCount: Long,
     ) : HomeState
 }
 
-internal fun HomeOverview.toUiState(): HomeState.Content = HomeState.Content(
+internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Content = HomeState.Content(
     circle = circle,
     members = members.toImmutableList(),
     canInvite = canInvite,
+    isInviting = isInviting,
     mainSchedule = mainSchedule,
     schedules = schedules.toImmutableList(),
     totalScheduleCount = totalScheduleCount,

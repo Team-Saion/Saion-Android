@@ -40,8 +40,9 @@ import com.saion.feature.home.impl.component.HomeMembersSection
 import com.saion.feature.home.impl.component.HomeScheduleSection
 import com.saion.feature.home.impl.component.HomeTitleSection
 import com.saion.feature.home.impl.component.HomeTopBar
-import com.saion.feature.home.impl.viewmodel.HomeState
 import com.saion.feature.home.impl.viewmodel.HomeEffect
+import com.saion.feature.home.impl.viewmodel.HomeIntent
+import com.saion.feature.home.impl.viewmodel.HomeState
 import com.saion.feature.home.impl.viewmodel.HomeSnackbarMessage
 import com.saion.feature.home.impl.viewmodel.HomeViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -49,7 +50,6 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 internal fun HomeScreen(
     onNotificationClick: () -> Unit = {},
-    onInviteClick: () -> Unit = {},
     onCreateCircleClick: () -> Unit = {},
     onScheduleAddClick: () -> Unit = {},
     onScheduleListClick: () -> Unit = {},
@@ -73,7 +73,7 @@ internal fun HomeScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onNotificationClick = onNotificationClick,
-        onInviteClick = onInviteClick,
+        onInviteClick = { viewModel.dispatch(HomeIntent.InviteClicked) },
         onCreateCircleClick = onCreateCircleClick,
         onScheduleAddClick = onScheduleAddClick,
         onScheduleListClick = onScheduleListClick,
@@ -163,6 +163,7 @@ private fun HomeContent(
                 HomeMembersSection(
                     members = uiState.members,
                     canInvite = uiState.canInvite,
+                    isInviteEnabled = uiState.isInviting.not(),
                     onInviteClick = onInviteClick,
                     onViewAllClick = onMemberListClick,
                     modifier = Modifier.fillMaxWidth(),
@@ -245,6 +246,7 @@ private fun HomeScreenContentPreview() {
                     ),
                 ).toImmutableList(),
                 canInvite = true,
+                isInviting = false,
                 mainSchedule = ScheduleSummary(
                     scheduleId = "schedule-1",
                     title = "가족 식사",

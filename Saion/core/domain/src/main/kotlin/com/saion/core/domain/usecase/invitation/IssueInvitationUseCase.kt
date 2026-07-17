@@ -11,14 +11,12 @@ import javax.inject.Inject
  *
  * 성공하면 공유에 사용할 토큰과 만료 시각을 반환합니다.
  */
-class IssueInvitationUseCase @Inject constructor(
-    private val invitationRepository: InvitationRepository,
-) {
+class IssueInvitationUseCase @Inject constructor(private val invitationRepository: InvitationRepository) {
     suspend operator fun invoke(
-        type: InvitationType,
         targetId: String,
         inviteToName: String? = null,
         message: String? = null,
+        type: InvitationType = InvitationType.CIRCLE,
     ): AppResult<IssuedInvitation> = invitationRepository.issueInvitation(
         type = type,
         targetId = targetId,

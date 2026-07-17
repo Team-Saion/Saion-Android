@@ -9,6 +9,7 @@ android {
 dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.model)
+    implementation(projects.core.share)
     implementation(projects.feature.circleCreate.api)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)

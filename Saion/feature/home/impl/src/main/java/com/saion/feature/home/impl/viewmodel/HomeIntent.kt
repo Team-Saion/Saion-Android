@@ -4,4 +4,6 @@ import com.saion.core.ui.viewmodel.UIIntent
 
 internal sealed interface HomeIntent : UIIntent {
     data object Load : HomeIntent
+
+    data object InviteClicked : HomeIntent
 }

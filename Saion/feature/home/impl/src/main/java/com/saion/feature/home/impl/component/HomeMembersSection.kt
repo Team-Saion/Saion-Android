@@ -34,6 +34,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal fun HomeMembersSection(
     members: ImmutableList<CircleMember>,
     canInvite: Boolean,
+    isInviteEnabled: Boolean,
     onInviteClick: () -> Unit,
     onViewAllClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -56,7 +57,7 @@ internal fun HomeMembersSection(
             }
 
             if (canInvite.not()) return@LazyRow
-            item { HomeInviteMemberItem(onClick = onInviteClick) }
+            item { HomeInviteMemberItem(onClick = if (isInviteEnabled) onInviteClick else ({}) ) }
         }
     }
 }
@@ -145,6 +146,7 @@ private fun HomeMembersSectionPreview() {
                 ),
             ).toImmutableList(),
             canInvite = true,
+            isInviteEnabled = true,
             onInviteClick = {},
             onViewAllClick = {},
         )
