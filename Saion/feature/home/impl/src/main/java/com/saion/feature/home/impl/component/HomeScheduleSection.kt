@@ -77,7 +77,7 @@ private fun HomeEmptyScheduleCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(SaionTheme.colors.background.default)
+            .background(SaionTheme.colors.background.subtle)
             .noRippleClickable(onClick = onClick)
             .dashBorder(
                 width = 1.5.dp,

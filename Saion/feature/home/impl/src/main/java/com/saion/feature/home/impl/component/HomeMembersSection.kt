@@ -99,6 +99,7 @@ private fun HomeInviteMemberItem(
             modifier = Modifier
                 .size(64.dp)
                 .clip(shape = shape)
+                .background(color = SaionTheme.colors.background.subtle)
                 .dashBorder(
                     width = 1.5.dp,
                     color = dashColor,
@@ -119,9 +120,7 @@ private fun HomeInviteMemberItem(
 }
 
 @Composable
-private fun ItemTitle(
-    text : String,
-) {
+private fun ItemTitle(text: String) {
     Text(
         text = text,
         style = SaionTheme.typography.label1Subtle,
