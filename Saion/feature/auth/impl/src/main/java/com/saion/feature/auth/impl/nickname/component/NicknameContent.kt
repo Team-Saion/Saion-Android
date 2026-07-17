@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.saion.core.model.member.NicknameValidationResult
+import com.saion.core.ui.component.SaionProfile
 import com.saion.ds.component.input.SaionTextArea
 import com.saion.ds.component.input.SaionTextAreaVariant
 import com.saion.ds.theme.SaionTheme
@@ -39,10 +41,15 @@ internal fun NicknameContent(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
-        NicknameProfileImage(
+        SaionProfile(
+            nickname = nickname,
+            textStyle = SaionTheme.typography.display2,
             imageUrl = imageUrl,
             avatarColorHex = avatarColorHex,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+            contentDescription = stringResource(R.string.nickname_profile_image_description),
+            modifier = Modifier
+                .size(80.dp)
+                .align(Alignment.CenterHorizontally),
         )
 
         Spacer(modifier = Modifier.height(40.dp))

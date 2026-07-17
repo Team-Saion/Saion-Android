@@ -307,6 +307,7 @@ private fun defaultOverview(): HomeOverview = HomeOverview(
             memberId = "member-1",
             nickname = "수빈 (나)",
             avatarColor = "#FFD35C",
+            profileImageUrl = null,
             isMe = true,
             role = "MEMBER",
         ),

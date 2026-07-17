@@ -15,12 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import com.saion.core.model.home.CircleMember
+import com.saion.core.ui.component.SaionProfile
 import com.saion.core.ui.ext.dashBorder
 import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.icon.SaionIcons
@@ -57,7 +56,7 @@ internal fun HomeMembersSection(
             }
 
             if (canInvite.not()) return@LazyRow
-            item { HomeInviteMemberItem(onClick = if (isInviteEnabled) onInviteClick else ({}) ) }
+            item { HomeInviteMemberItem(onClick = if (isInviteEnabled) onInviteClick else ({})) }
         }
     }
 }
@@ -73,11 +72,14 @@ private fun HomeMemberItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
+        SaionProfile(
+            nickname = member.nickname,
+            textStyle = SaionTheme.typography.heading1,
+            imageUrl = member.profileImageUrl,
+            avatarColorHex = member.avatarColor,
+            contentDescription = member.nickname,
             modifier = Modifier
-                .size(64.dp)
-                .clip(SaionTheme.radius.component.full.toRoundedCornerShape())
-                .background(member.avatarColor.toColorOrDefault()),
+                .size(64.dp),
         )
         ItemTitle(text = member.nickname + if (member.isMe) meSuffix else "")
     }
@@ -129,8 +131,6 @@ private fun ItemTitle(text: String) {
     )
 }
 
-private fun String.toColorOrDefault(): Color = runCatching { Color(toColorInt()) }.getOrElse { Color(0xFFE6E6E6) }
-
 @Preview(showBackground = true)
 @Composable
 private fun HomeMembersSectionPreview() {
@@ -141,6 +141,7 @@ private fun HomeMembersSectionPreview() {
                     memberId = "1",
                     nickname = "수빈",
                     avatarColor = "#FFD35C",
+                    profileImageUrl = null,
                     isMe = true,
                     role = "MEMBER",
                 ),

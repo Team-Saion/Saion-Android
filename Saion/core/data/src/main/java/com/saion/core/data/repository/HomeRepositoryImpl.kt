@@ -62,6 +62,7 @@ private fun CircleMemberResponse.toDomain(): CircleMember = CircleMember(
     memberId = memberId,
     nickname = nickname,
     avatarColor = avatarColor.hex,
+    profileImageUrl = profileImageUrl,
     isMe = isMe,
     role = role,
 )
