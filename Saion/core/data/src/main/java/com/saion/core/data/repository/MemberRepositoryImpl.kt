@@ -53,6 +53,18 @@ internal class MemberRepositoryImpl @Inject constructor(
         AppResult.Success(Unit)
     }
 
+    override suspend fun changeState(
+        status: MemberStatus?,
+        role: MemberRole?,
+    ): AppResult<MemberInfo> = safeRequest(
+        request = {
+            memberRemoteDataSource.changeState(
+                status = status?.value,
+                role = role?.value,
+            )
+        },
+    ) { response -> response.toMemberInfoResult() }
+
     override suspend fun uploadProfileImage(image: ProfileImageUpload): AppResult<Unit> = safeRequest(
         request = {
             memberRemoteDataSource.uploadProfileImage(
@@ -72,8 +84,8 @@ internal class MemberRepositoryImpl @Inject constructor(
         AppResult.Success(Unit)
     }
 
-    override suspend fun withdraw(): AppResult<Unit> = safeRequest(
-        request = { memberRemoteDataSource.withdraw() },
+    override suspend fun withdraw(reason: String): AppResult<Unit> = safeRequest(
+        request = { memberRemoteDataSource.withdraw(reason = reason) },
     ) {
         authLocalDataSource.clearTokens()
         AppResult.Success(Unit)

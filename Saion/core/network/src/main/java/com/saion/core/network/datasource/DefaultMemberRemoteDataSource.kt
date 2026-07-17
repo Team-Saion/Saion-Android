@@ -21,6 +21,14 @@ class DefaultMemberRemoteDataSource @Inject constructor(private val service: Mem
 
     override suspend fun updateProfile(nickname: String): ApiResponse<MemberInfoResponse> = service.updateProfile(nickname = nickname)
 
+    override suspend fun changeState(
+        status: String?,
+        role: String?,
+    ): ApiResponse<MemberInfoResponse> = service.changeState(
+        status = status,
+        role = role,
+    )
+
     override suspend fun uploadProfileImage(
         imageBytes: ByteArray,
         fileName: String,
@@ -33,5 +41,5 @@ class DefaultMemberRemoteDataSource @Inject constructor(private val service: Mem
 
     override suspend fun logout(): ApiResponse<Unit> = service.logout()
 
-    override suspend fun withdraw(): ApiResponse<Unit> = service.withdraw()
+    override suspend fun withdraw(reason: String): ApiResponse<Unit> = service.withdraw(reason = reason)
 }

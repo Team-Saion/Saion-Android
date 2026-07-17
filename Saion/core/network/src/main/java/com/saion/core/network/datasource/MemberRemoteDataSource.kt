@@ -30,6 +30,14 @@ interface MemberRemoteDataSource {
     suspend fun updateProfile(nickname: String): ApiResponse<MemberInfoResponse>
 
     /**
+     * 현재 인증된 멤버의 상태나 역할을 개발 편의용으로 변경합니다.
+     */
+    suspend fun changeState(
+        status: String?,
+        role: String?,
+    ): ApiResponse<MemberInfoResponse>
+
+    /**
      * 현재 인증된 멤버의 프로필 이미지를 업로드합니다.
      */
     suspend fun uploadProfileImage(
@@ -46,5 +54,5 @@ interface MemberRemoteDataSource {
     /**
      * 현재 인증된 멤버를 소프트 삭제 처리합니다.
      */
-    suspend fun withdraw(): ApiResponse<Unit>
+    suspend fun withdraw(reason: String): ApiResponse<Unit>
 }

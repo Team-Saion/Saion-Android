@@ -7,6 +7,7 @@ import com.saion.core.network.model.member.CompleteOnboardingRequest
 import com.saion.core.network.model.member.MemberInfoResponse
 import com.saion.core.network.model.member.OnboardingInfoResponse
 import com.saion.core.network.model.member.UpdateProfileRequest
+import com.saion.core.network.model.member.WithdrawRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -14,6 +15,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
@@ -59,6 +61,20 @@ class MemberService(private val client: HttpClient) {
         }.toApiResponse()
 
     /**
+     * 현재 인증된 멤버의 상태나 역할을 개발 편의용으로 변경합니다.
+     *
+     * 쿼리로 전달하지 않은 필드는 유지됩니다.
+     */
+    suspend fun changeState(
+        status: String?,
+        role: String?,
+    ): ApiResponse<MemberInfoResponse> = client
+        .patch("/api/v1/members/me/state") {
+            status?.let { parameter("status", it) }
+            role?.let { parameter("role", it) }
+        }.toApiResponse()
+
+    /**
      * 현재 인증된 멤버의 프로필 이미지를 업로드합니다.
      *
      * 파일은 `image` 파트로 전송하며 허용 포맷은 JPEG, PNG, WebP이고 최대 용량은 20MB입니다.
@@ -99,7 +115,9 @@ class MemberService(private val client: HttpClient) {
      *
      * 탈퇴 시 refresh token도 함께 무효화됩니다.
      */
-    suspend fun withdraw(): ApiResponse<Unit> = client
-        .delete("/api/v1/members/me")
+    suspend fun withdraw(reason: String): ApiResponse<Unit> = client
+        .delete("/api/v1/members/me") {
+            setBody(WithdrawRequest(reason = reason))
+        }
         .toApiResponse()
 }
