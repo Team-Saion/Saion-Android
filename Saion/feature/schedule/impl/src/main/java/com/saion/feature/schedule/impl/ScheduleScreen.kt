@@ -35,6 +35,7 @@ import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.ScheduleSummaryCard
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.resolveMessage
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.schedule.impl.viewmodel.ScheduleEffect
@@ -60,11 +61,9 @@ internal fun ScheduleScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is ScheduleEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    viewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            is ScheduleEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 

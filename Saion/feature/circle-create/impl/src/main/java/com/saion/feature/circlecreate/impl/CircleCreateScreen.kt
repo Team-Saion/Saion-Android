@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,8 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
-import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.error.resolveMessage
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
@@ -44,12 +44,10 @@ internal fun CircleCreateScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                CircleCreateEffect.Close -> onClose()
-                is CircleCreateEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    viewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            CircleCreateEffect.Close -> onClose()
+            is CircleCreateEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 

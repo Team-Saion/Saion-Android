@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -32,6 +31,7 @@ import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
 import com.saion.core.ui.error.resolveMessage
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.home.impl.R
@@ -62,11 +62,9 @@ internal fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is HomeEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    viewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            is HomeEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 

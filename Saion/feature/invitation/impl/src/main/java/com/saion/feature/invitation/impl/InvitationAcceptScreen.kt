@@ -23,6 +23,7 @@ import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
 import com.saion.core.ui.error.resolveMessage
+import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
@@ -50,12 +51,10 @@ internal fun InvitationAcceptScreen(
         viewModel.bind(token)
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                InvitationAcceptEffect.Close -> onClose()
-                is InvitationAcceptEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
-            }
+    viewModel.uiEffect.CollectWithLifecycle { effect ->
+        when (effect) {
+            InvitationAcceptEffect.Close -> onClose()
+            is InvitationAcceptEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
         }
     }
 
