@@ -125,7 +125,7 @@ private fun ScheduleCreateScreen(
                     onBack = onBack,
                     navigationIcon = SaionIcons.Close,
                 ),
-                containerColor = SaionTheme.colors.background.muted,
+                containerColor = SaionTheme.colors.background.default,
             )
         },
         bottomBar = {
@@ -141,7 +141,7 @@ private fun ScheduleCreateScreen(
             }
         },
         systemBarInset = SystemBarInset.None,
-        containerColor = SaionTheme.colors.background.muted,
+        containerColor = SaionTheme.colors.background.default,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -247,6 +247,7 @@ private fun ScheduleDateTimeCard(
             .border(
                 width = 1.dp,
                 color = SaionTheme.colors.line.subtle,
+                shape = SaionTheme.radius.component.xxLarge.toRoundedCornerShape()
             )
             .padding(vertical = 14.dp)
             .padding(start = 8.dp, end = 16.dp),

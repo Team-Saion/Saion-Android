@@ -2,7 +2,6 @@ package com.saion.feature.schedule.impl
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ScaffoldDefaults
@@ -24,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,6 +55,7 @@ import com.saion.ds.component.selection.ChipShape
 import com.saion.ds.component.selection.SaionChip
 import com.saion.ds.icon.SaionIcons
 import com.saion.ds.theme.SaionTheme
+import com.saion.ds.token.radius.toRoundedCornerShape
 import com.saion.feature.schedule.impl.viewmodel.ScheduleConfirmationUiModel
 import com.saion.feature.schedule.impl.viewmodel.ScheduleDetailEffect
 import com.saion.feature.schedule.impl.viewmodel.ScheduleDetailIntent
@@ -125,7 +125,7 @@ private fun ScheduleDetailScreen(
                 }
             }
         },
-        containerColor = Color(0xFFF7F7F4),
+        containerColor = SaionTheme.colors.background.muted,
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -251,9 +251,9 @@ private fun ProgressCard(progress: Float) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SaionTheme.colors.background.default, RoundedCornerShape(24.dp))
+            .clip(shape = SaionTheme.radius.component.xLarge.toRoundedCornerShape())
+            .background(color = SaionTheme.colors.background.default)
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         ScheduleProgressSection(progressRate = (progress.coerceIn(0f, 1f) * 100).toInt())
     }
