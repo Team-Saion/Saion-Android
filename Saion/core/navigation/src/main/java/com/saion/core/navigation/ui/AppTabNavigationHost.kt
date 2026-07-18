@@ -48,5 +48,8 @@ fun <K : AppNavKey> AppTabNavigationHost(
     NavDisplay(
         entries = checkNotNull(entriesByTab[navigationState.selectedTab]),
         onBack = { navigationState.pop() },
+        transitionSpec = defaultNavigationTransitionSpec(),
+        popTransitionSpec = defaultNavigationPopTransitionSpec(),
+        predictivePopTransitionSpec = defaultNavigationPredictivePopTransitionSpec(),
     )
 }

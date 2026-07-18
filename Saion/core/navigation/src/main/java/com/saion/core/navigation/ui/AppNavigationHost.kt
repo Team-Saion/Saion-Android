@@ -27,6 +27,13 @@ fun <K : AppNavKey> AppNavigationHost(
 ) {
     if (navigationState.backStack.isEmpty()) return
 
+    val resolvedTransitionSpec = transitionSpec ?: defaultNavigationTransitionSpec()
+    val resolvedPopTransitionSpec = popTransitionSpec ?: defaultNavigationPopTransitionSpec()
+    val resolvedPredictivePopTransitionSpec:
+        AnimatedContentTransitionScope<Scene<K>>.(@androidx.navigationevent.NavigationEvent.SwipeEdge Int) -> ContentTransform = {
+            resolvedPopTransitionSpec()
+        }
+
     val entryDecorators = listOf<NavEntryDecorator<K>>(
         rememberSaveableStateHolderNavEntryDecorator(),
         rememberViewModelStoreNavEntryDecorator(),
@@ -43,23 +50,14 @@ fun <K : AppNavKey> AppNavigationHost(
         }
     }
 
-    if (transitionSpec != null && popTransitionSpec != null) {
-        NavDisplay(
-            backStack = navigationState.backStack as List<K>,
-            onBack = { navigationState.pop() },
-            entryDecorators = entryDecorators,
-            sharedTransitionScope = sharedTransitionScope,
-            transitionSpec = transitionSpec,
-            popTransitionSpec = popTransitionSpec,
-            entryProvider = provider,
-        )
-    } else {
-        NavDisplay(
-            backStack = navigationState.backStack as List<K>,
-            onBack = { navigationState.pop() },
-            entryDecorators = entryDecorators,
-            sharedTransitionScope = sharedTransitionScope,
-            entryProvider = provider,
-        )
-    }
+    NavDisplay(
+        backStack = navigationState.backStack as List<K>,
+        onBack = { navigationState.pop() },
+        entryDecorators = entryDecorators,
+        sharedTransitionScope = sharedTransitionScope,
+        transitionSpec = resolvedTransitionSpec,
+        popTransitionSpec = resolvedPopTransitionSpec,
+        predictivePopTransitionSpec = resolvedPredictivePopTransitionSpec,
+        entryProvider = provider,
+    )
 }
