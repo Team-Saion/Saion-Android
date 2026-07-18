@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +30,7 @@ import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
+import com.saion.ds.component.selection.SaionSwitch
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.mypage.impl.R
 import com.saion.feature.mypage.impl.notificationsetting.viewmodel.NotificationSettingsEffect
@@ -175,18 +173,9 @@ private fun NotificationToggleRow(
             color = SaionTheme.colors.label.default,
         )
 
-        Switch(
+        SaionSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = SaionTheme.colors.background.default,
-                checkedTrackColor = SaionTheme.colors.status.positive.default,
-                checkedBorderColor = SaionTheme.colors.status.positive.default,
-                uncheckedThumbColor = SaionTheme.colors.background.default,
-                uncheckedTrackColor = SaionTheme.colors.fill.disabled,
-                uncheckedBorderColor = SaionTheme.colors.fill.disabled,
-            ),
-            modifier = Modifier.height(28.dp)
         )
     }
 }

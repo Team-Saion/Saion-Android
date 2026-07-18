@@ -24,6 +24,7 @@ fun SaionTextArea(
     modifier: Modifier = Modifier,
     variant: SaionTextAreaVariant = SaionTextAreaVariant.NONE,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     label: String? = null,
     placeholder: String? = null,
     supportingText: String? = null,
@@ -39,6 +40,7 @@ fun SaionTextArea(
         onValueChange = onValueChange,
         modifier = modifier,
         enabled = enabled,
+        readOnly = readOnly,
         label = label.takeIf { spec.showsLabel },
         placeholder = placeholder,
         supportingText = supportingText.takeIf { spec.showsSupportingText },
@@ -246,6 +248,25 @@ private fun SaionTextAreaBoxDisabledPreview() {
             placeholder = "입력해 주세요",
             supportingText = "비활성 상태",
             enabled = false,
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Box Read Only")
+@Composable
+private fun SaionTextAreaBoxReadOnlyPreview() {
+    SaionTheme {
+        SaionTextArea(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            variant = SaionTextAreaVariant.BOX,
+            value = "사이온\n텍스트",
+            onValueChange = {},
+            label = "제목",
+            placeholder = "입력해 주세요",
+            supportingText = "읽기 전용 상태",
+            readOnly = true,
         )
     }
 }

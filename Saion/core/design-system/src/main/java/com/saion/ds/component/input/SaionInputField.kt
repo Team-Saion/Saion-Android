@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.semantics
@@ -86,6 +87,7 @@ internal fun SaionInputField(
     spec: SaionInputSpec,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     label: String? = null,
     placeholder: String? = null,
     supportingText: String? = null,
@@ -161,8 +163,11 @@ internal fun SaionInputField(
                     onValueChange(updatedValue.text)
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusProperties { canFocus = !readOnly },
             enabled = enabled,
+            readOnly = readOnly,
             minLines = minLines,
             maxLines = maxLines,
             singleLine = maxLines == 1,
@@ -521,7 +526,7 @@ private sealed interface SaionInputState {
                 labelColor = colors.label.strong,
                 placeholderColor = colors.label.disabled,
                 supportingTextColor = colors.label.subtle,
-                borderColor = colors.label.strong,
+                borderColor = colors.line.strong,
                 containerColor = if (context.containerVariant == SaionInputContainerVariant.LINE) {
                     Color.Transparent
                 } else {
@@ -593,10 +598,7 @@ private sealed interface SaionInputState {
                 labelColor = colors.label.strong,
                 placeholderColor = colors.label.disabled,
                 supportingTextColor = colors.label.subtle,
-                borderColor = when (context.containerVariant) {
-                    SaionInputContainerVariant.LINE -> colors.line.subtle
-                    SaionInputContainerVariant.BOX -> colors.line.default
-                },
+                borderColor = colors.line.subtle,
                 containerColor = if (context.containerVariant == SaionInputContainerVariant.LINE) {
                     Color.Transparent
                 } else {
