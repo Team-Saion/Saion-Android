@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -34,7 +32,6 @@ import com.saion.core.model.member.MemberRole
 import com.saion.core.ui.component.SaionProfile
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
-import com.saion.core.ui.error.getString
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -158,19 +155,19 @@ private fun HomeMemberListItem(
 
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = if (member.isMe) member.nickname + meSuffix else member.nickname,
                 style = SaionTheme.typography.title3Strong,
                 color = SaionTheme.colors.label.default,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 text = member.role.toRoleLabel(),
                 style = SaionTheme.typography.body2,
                 color = SaionTheme.colors.label.subtle,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -184,8 +181,7 @@ private fun HomeMemberListPlaceholder(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .navigationBarsPadding(),
+            .padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
