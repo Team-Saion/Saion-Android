@@ -42,6 +42,7 @@ class PushTokenUseCasesTest {
             PushTokenUseCaseOutcome(result = actual, call = repository.lastCall),
         )
     }
+
 }
 
 private data class PushTokenUseCaseOutcome<T>(

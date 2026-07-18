@@ -6,6 +6,7 @@ plugins {
     id("com.saion.android.compose")
     id("com.saion.android.hilt")
     id("com.saion.android.testing")
+    alias(libs.plugins.google.services)
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
@@ -31,6 +32,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.ui)
     implementation(projects.core.auth)
+    implementation(projects.core.notification)
     implementation(projects.core.share)
     implementation(project(":core:design-system"))
 

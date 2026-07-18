@@ -12,6 +12,7 @@ import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.notification.NotificationLifecycleManager
 import com.saion.feature.auth.api.key.AuthStartStep
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +59,7 @@ class AppViewModelTest {
         assertEquals(AppStartDestination.SplashThenLogin, viewModel.uiState.value.startDestination)
         assertFalse(repository.clearSessionCalled)
         assertEquals(0, repository.syncCurrentCircleCallCount)
+        assertEquals(0, repository.pushTokenSyncCallCount)
     }
 
     @Test
@@ -77,6 +79,7 @@ class AppViewModelTest {
         )
         assertFalse(repository.clearSessionCalled)
         assertEquals(0, repository.syncCurrentCircleCallCount)
+        assertEquals(1, repository.pushTokenSyncCallCount)
     }
 
     @Test
@@ -93,6 +96,7 @@ class AppViewModelTest {
         assertEquals(AppStartDestination.Main, viewModel.uiState.value.startDestination)
         assertFalse(repository.clearSessionCalled)
         assertEquals(1, repository.syncCurrentCircleCallCount)
+        assertEquals(1, repository.pushTokenSyncCallCount)
     }
 
     @Test
@@ -109,6 +113,7 @@ class AppViewModelTest {
         assertEquals(AppStartDestination.Main, viewModel.uiState.value.startDestination)
         assertFalse(repository.clearSessionCalled)
         assertEquals(1, repository.syncCurrentCircleCallCount)
+        assertEquals(1, repository.pushTokenSyncCallCount)
     }
 
     @Test
@@ -125,6 +130,7 @@ class AppViewModelTest {
         assertEquals(AppStartDestination.SplashThenLogin, viewModel.uiState.value.startDestination)
         assertTrue(repository.clearSessionCalled)
         assertEquals(0, repository.syncCurrentCircleCallCount)
+        assertEquals(0, repository.pushTokenSyncCallCount)
     }
 }
 
@@ -133,14 +139,16 @@ private fun createViewModel(repository: FakeRepository): AppViewModel = AppViewM
     getStoredMemberRoleUseCase = GetStoredMemberRoleUseCase(authRepository = repository),
     clearSessionUseCase = ClearSessionUseCase(authRepository = repository),
     syncCurrentCircleUseCase = SyncCurrentCircleUseCase(currentCircleRepository = repository, circleRepository = repository),
+    notificationLifecycleManager = repository,
 )
 
 private class FakeRepository(
     private val isSignedIn: Boolean,
     private val storedMemberRole: AppResult<MemberRole>,
-) : AuthRepository, CurrentCircleRepository, CircleRepository {
+) : AuthRepository, CurrentCircleRepository, CircleRepository, NotificationLifecycleManager {
     var clearSessionCalled: Boolean = false
     var syncCurrentCircleCallCount: Int = 0
+    var pushTokenSyncCallCount: Int = 0
     private val currentCircleId = MutableStateFlow<String?>(null)
 
     override suspend fun loginWithKakao(idToken: String): AppResult<MemberRole> {
@@ -185,6 +193,16 @@ private class FakeRepository(
     override suspend fun clearCurrentCircle() {
         currentCircleId.value = null
     }
+
+    override suspend fun syncOnAppLaunchIfSignedIn() {
+        pushTokenSyncCallCount += 1
+    }
+
+    override suspend fun syncOnLoginSuccess() = error("Not required for this test")
+
+    override suspend fun syncOnNotificationPermissionGranted() = error("Not required for this test")
+
+    override suspend fun syncOnNewToken(token: String) = error("Not required for this test")
 }
 
 private fun sampleCircle(): CircleSummary = CircleSummary(

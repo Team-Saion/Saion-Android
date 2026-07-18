@@ -1,6 +1,17 @@
 package com.saion.feature.mypage.impl.notificationsetting
 
+import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,13 +61,34 @@ internal fun NotificationSettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val pendingPermissionSetting = remember { mutableStateOf<NotificationSetting?>(null) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        pendingPermissionSetting.value = null
+        viewModel.dispatch(
+            NotificationSettingsIntent.NotificationPermissionResolved(
+                granted = granted,
+                canRequestAgain = context.canRequestNotificationPermissionAgain(granted = granted),
+            ),
+        )
+    }
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
+            NotificationSettingsEffect.RequestNotificationPermission -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    viewModel.dispatch(NotificationSettingsIntent.NotificationPermissionResolved(granted = true))
+                }
+            }
             is NotificationSettingsEffect.ShowSnackbar -> {
                 snackbarHostState.showSaionSnackbar(
                     message = effect.message.resolve(context),
                     variant = effect.message.variant(),
+                    actionLabel = effect.message.actionLabel(context),
+                    onActionPerform = effect.message.actionHandler(context),
                 )
             }
         }
@@ -66,7 +99,13 @@ internal fun NotificationSettingsScreen(
         snackbarHostState = snackbarHostState,
         onBack = onBack,
         onSettingChanged = { setting ->
-            viewModel.dispatch(NotificationSettingsIntent.UpdateSetting(setting))
+            pendingPermissionSetting.value = setting
+            viewModel.dispatch(
+                NotificationSettingsIntent.UpdateSetting(
+                    setting = setting,
+                    osPermissionGranted = context.isNotificationPermissionGranted(),
+                ),
+            )
         },
     )
 }
@@ -187,12 +226,65 @@ private fun NotificationToggleRow(
 
 private fun NotificationSettingsSnackbarMessage.resolve(context: Context): String = when (this) {
     is NotificationSettingsSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
+    is NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied -> context.getString(defaultMessageResId)
     is NotificationSettingsSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
 }
 
 private fun NotificationSettingsSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
     is NotificationSettingsSnackbarMessage.Error -> SaionSnackbarVariant.Negative
-    is NotificationSettingsSnackbarMessage.Text -> null
+    is NotificationSettingsSnackbarMessage.Text,
+    is NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied,
+    -> null
+}
+
+private fun NotificationSettingsSnackbarMessage.actionLabel(context: Context): String? = when (this) {
+    is NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied -> context.getString(R.string.notification_settings_action_open_system_settings)
+    is NotificationSettingsSnackbarMessage.Text,
+    is NotificationSettingsSnackbarMessage.Error,
+    -> null
+}
+
+private fun NotificationSettingsSnackbarMessage.actionHandler(context: Context): (() -> Unit)? = when (this) {
+    is NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied -> {
+        { context.openNotificationSettings() }
+    }
+
+    is NotificationSettingsSnackbarMessage.Text,
+    is NotificationSettingsSnackbarMessage.Error,
+    -> null
+}
+
+private fun Context.isNotificationPermissionGranted(): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+private fun Context.canRequestNotificationPermissionAgain(granted: Boolean): Boolean {
+    if (granted || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+
+    val activity = findActivity() ?: return true
+    return activity.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+}
+
+private fun Context.openNotificationSettings() {
+    val notificationIntent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+        putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+    }
+    val appDetailsIntent = Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", packageName, null),
+    )
+
+    try {
+        startActivity(notificationIntent)
+    } catch (_: ActivityNotFoundException) {
+        startActivity(appDetailsIntent)
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 @Preview(showBackground = true)

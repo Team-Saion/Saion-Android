@@ -3,6 +3,7 @@
 agp = "9.2.1"
 kotlin = "2.3.21"
 hilt = "2.60"
+googleServices = "4.4.4"
 ksp = "2.3.8"
 ktlint = "14.2.0"
 
@@ -39,6 +40,7 @@ lifecycleViewmodelNav3 = "2.11.0"
 kakao = "2.24.0"
 lottieCompose = "6.7.1"
 coilCompose = "2.7.0"
+firebaseMessaging = "25.0.1"
 
 [libraries]
 # Build tooling
@@ -104,6 +106,7 @@ androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecy
 # Animation
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 
 # Logging
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
@@ -121,5 +124,6 @@ jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin"
 
 # Tooling
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

@@ -8,6 +8,8 @@ import com.saion.core.model.notification.NotificationInboxPage
 import com.saion.core.model.notification.NotificationSetting
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.notification.NotificationLifecycleManager
+import com.saion.feature.mypage.impl.R
 import com.saion.feature.mypage.impl.notificationsetting.viewmodel.NotificationSettingsEffect
 import com.saion.feature.mypage.impl.notificationsetting.viewmodel.NotificationSettingsIntent
 import com.saion.feature.mypage.impl.notificationsetting.viewmodel.NotificationSettingsSnackbarMessage
@@ -85,6 +87,7 @@ class NotificationSettingsViewModelTest {
                     ddayEnabled = false,
                     familyScheduleCheckEnabled = true,
                 ),
+                osPermissionGranted = true,
             ),
         )
         runCurrent()
@@ -96,6 +99,7 @@ class NotificationSettingsViewModelTest {
                     ddayEnabled = false,
                     familyScheduleCheckEnabled = true,
                 ),
+                osPermissionGranted = true,
             ),
         )
         runCurrent()
@@ -134,6 +138,7 @@ class NotificationSettingsViewModelTest {
         viewModel.dispatch(
             NotificationSettingsIntent.UpdateSetting(
                 initialSetting.copy(d7Enabled = false),
+                osPermissionGranted = true,
             ),
         )
         runCurrent()
@@ -145,12 +150,146 @@ class NotificationSettingsViewModelTest {
         assertTrue(effect is NotificationSettingsEffect.ShowSnackbar)
         assertTrue((effect as NotificationSettingsEffect.ShowSnackbar).message is NotificationSettingsSnackbarMessage.Error)
     }
+
+    @Test
+    fun `권한이 없는 상태에서 off to on 변경은 저장하지 않고 권한 요청 effect를 보낸다`() = runTest {
+        val initialSetting = defaultNotificationSetting().copy(d7Enabled = false)
+        val viewModel = createViewModel(
+            repository = FakeNotificationRepository(
+                getSettingResult = AppResult.Success(initialSetting),
+            ),
+        )
+        advanceUntilIdle()
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(
+            NotificationSettingsIntent.UpdateSetting(
+                setting = initialSetting.copy(d7Enabled = true),
+                osPermissionGranted = false,
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(NotificationSettingsEffect.RequestNotificationPermission, effectDeferred.await())
+    }
+
+    @Test
+    fun `권한 허용 후에는 대기 중이던 설정을 저장하고 토큰을 재동기화한다`() = runTest {
+        val initialSetting = defaultNotificationSetting().copy(d7Enabled = false)
+        val repository = FakeNotificationRepository(
+            getSettingResult = AppResult.Success(initialSetting),
+            updateSettingResult = AppResult.Success(initialSetting.copy(d7Enabled = true)),
+        )
+        val notificationManager = FakeNotificationLifecycleManager()
+        val viewModel = createViewModel(
+            repository = repository,
+            notificationLifecycleManager = notificationManager,
+        )
+        advanceUntilIdle()
+
+        viewModel.dispatch(
+            NotificationSettingsIntent.UpdateSetting(
+                setting = initialSetting.copy(d7Enabled = true),
+                osPermissionGranted = false,
+            ),
+        )
+        runCurrent()
+        viewModel.dispatch(
+            NotificationSettingsIntent.NotificationPermissionResolved(
+                granted = true,
+                canRequestAgain = true,
+            ),
+        )
+        runCurrent()
+        advanceTimeBy(300)
+        advanceUntilIdle()
+
+        assertEquals(listOf(initialSetting.copy(d7Enabled = true)), repository.updatedSettings)
+        assertEquals(1, notificationManager.syncOnNotificationPermissionGrantedCallCount)
+    }
+
+    @Test
+    fun `권한 거부 시 설정을 저장하지 않고 안내 스낵바 effect를 보낸다`() = runTest {
+        val initialSetting = defaultNotificationSetting().copy(d7Enabled = false)
+        val repository = FakeNotificationRepository(
+            getSettingResult = AppResult.Success(initialSetting),
+        )
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.dispatch(
+            NotificationSettingsIntent.UpdateSetting(
+                setting = initialSetting.copy(d7Enabled = true),
+                osPermissionGranted = false,
+            ),
+        )
+        runCurrent()
+        val effectDeferred = async { viewModel.uiEffect.first { it is NotificationSettingsEffect.ShowSnackbar } }
+
+        viewModel.dispatch(
+            NotificationSettingsIntent.NotificationPermissionResolved(
+                granted = false,
+                canRequestAgain = true,
+            ),
+        )
+        advanceUntilIdle()
+
+        assertTrue(repository.updatedSettings.isEmpty())
+        assertEquals(initialSetting, viewModel.uiState.value.setting)
+        val effect = effectDeferred.await() as NotificationSettingsEffect.ShowSnackbar
+        assertEquals(
+            NotificationSettingsSnackbarMessage.Text(
+                value = "",
+                defaultMessageResId = R.string.notification_settings_error_permission_required,
+            ),
+            effect.message,
+        )
+    }
+
+    @Test
+    fun `권한을 더 이상 요청할 수 없으면 설정 이동 스낵바 effect를 보낸다`() = runTest {
+        val initialSetting = defaultNotificationSetting().copy(d7Enabled = false)
+        val repository = FakeNotificationRepository(
+            getSettingResult = AppResult.Success(initialSetting),
+        )
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.dispatch(
+            NotificationSettingsIntent.UpdateSetting(
+                setting = initialSetting.copy(d7Enabled = true),
+                osPermissionGranted = false,
+            ),
+        )
+        runCurrent()
+        val effectDeferred = async { viewModel.uiEffect.first { it is NotificationSettingsEffect.ShowSnackbar } }
+
+        viewModel.dispatch(
+            NotificationSettingsIntent.NotificationPermissionResolved(
+                granted = false,
+                canRequestAgain = false,
+            ),
+        )
+        advanceUntilIdle()
+
+        assertTrue(repository.updatedSettings.isEmpty())
+        assertEquals(initialSetting, viewModel.uiState.value.setting)
+        val effect = effectDeferred.await() as NotificationSettingsEffect.ShowSnackbar
+        assertEquals(
+            NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied(
+                defaultMessageResId = R.string.notification_settings_error_permission_permanently_denied,
+            ),
+            effect.message,
+        )
+    }
 }
 
-private fun createViewModel(repository: FakeNotificationRepository): NotificationSettingsViewModel =
+private fun createViewModel(
+    repository: FakeNotificationRepository,
+    notificationLifecycleManager: NotificationLifecycleManager = FakeNotificationLifecycleManager(),
+): NotificationSettingsViewModel =
     NotificationSettingsViewModel(
         getNotificationSettingUseCase = GetNotificationSettingUseCase(repository),
         updateNotificationSettingUseCase = UpdateNotificationSettingUseCase(repository),
+        notificationLifecycleManager = notificationLifecycleManager,
     )
 
 private class FakeNotificationRepository(
@@ -180,6 +319,20 @@ private class FakeNotificationRepository(
         updatedSettings += setting
         return updateSettingResult
     }
+}
+
+private class FakeNotificationLifecycleManager : NotificationLifecycleManager {
+    var syncOnNotificationPermissionGrantedCallCount: Int = 0
+
+    override suspend fun syncOnAppLaunchIfSignedIn() = error("Not required for this test")
+
+    override suspend fun syncOnLoginSuccess() = error("Not required for this test")
+
+    override suspend fun syncOnNotificationPermissionGranted() {
+        syncOnNotificationPermissionGrantedCallCount += 1
+    }
+
+    override suspend fun syncOnNewToken(token: String) = error("Not required for this test")
 }
 
 private fun defaultNotificationSetting(): NotificationSetting = NotificationSetting(

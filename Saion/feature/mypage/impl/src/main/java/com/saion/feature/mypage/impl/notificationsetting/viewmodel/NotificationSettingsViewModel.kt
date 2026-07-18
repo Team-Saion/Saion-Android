@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.notification.GetNotificationSettingUseCase
 import com.saion.core.domain.usecase.notification.UpdateNotificationSettingUseCase
 import com.saion.core.model.notification.NotificationSetting
+import com.saion.core.notification.NotificationLifecycleManager
 import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.mypage.impl.R
@@ -24,14 +25,16 @@ import kotlinx.coroutines.launch
 internal class NotificationSettingsViewModel @Inject constructor(
     private val getNotificationSettingUseCase: GetNotificationSettingUseCase,
     private val updateNotificationSettingUseCase: UpdateNotificationSettingUseCase,
+    private val notificationLifecycleManager: NotificationLifecycleManager,
 ) : BaseViewModel<NotificationSettingsState, NotificationSettingsEffect, NotificationSettingsIntent>(
     NotificationSettingsState(),
 ) {
-    private val pendingSettingUpdates = MutableSharedFlow<NotificationSetting>(
+    private val pendingSettingUpdates = MutableSharedFlow<PendingSettingUpdate>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     private var lastSyncedSetting: NotificationSetting? = null
+    private var pendingPermissionSetting: NotificationSetting? = null
 
     init {
         observeSettingUpdates()
@@ -40,7 +43,14 @@ internal class NotificationSettingsViewModel @Inject constructor(
 
     override fun handleIntent(intent: NotificationSettingsIntent) {
         when (intent) {
-            is NotificationSettingsIntent.UpdateSetting -> updateSetting(intent.setting)
+            is NotificationSettingsIntent.NotificationPermissionResolved -> handleNotificationPermissionResolved(
+                granted = intent.granted,
+                canRequestAgain = intent.canRequestAgain,
+            )
+            is NotificationSettingsIntent.UpdateSetting -> updateSetting(
+                setting = intent.setting,
+                osPermissionGranted = intent.osPermissionGranted,
+            )
         }
     }
 
@@ -48,9 +58,9 @@ internal class NotificationSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             pendingSettingUpdates
                 .debounce(300)
-                .filter { setting -> setting != lastSyncedSetting }
-                .collect { setting ->
-                    persistSetting(setting)
+                .filter { update -> update.setting != lastSyncedSetting }
+                .collect { update ->
+                    persistSetting(update)
                 }
         }
     }
@@ -101,25 +111,89 @@ internal class NotificationSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun updateSetting(setting: NotificationSetting) {
-        if (currentState.setting == null || currentState.setting == setting) return
+    private fun updateSetting(
+        setting: NotificationSetting,
+        osPermissionGranted: Boolean,
+    ) {
+        val currentSetting = currentState.setting ?: return
+        if (currentSetting == setting) return
+        if (currentSetting.requiresNotificationPermissionFor(setting) && !osPermissionGranted) {
+            pendingPermissionSetting = setting
+            viewModelScope.launch {
+                emitEffect(NotificationSettingsEffect.RequestNotificationPermission)
+            }
+            return
+        }
 
+        queueSettingUpdate(
+            setting = setting,
+            syncPermissionStateAfterSuccess = false,
+        )
+    }
+
+    private fun handleNotificationPermissionResolved(
+        granted: Boolean,
+        canRequestAgain: Boolean,
+    ) {
+        val setting = pendingPermissionSetting ?: return
+        pendingPermissionSetting = null
+
+        if (!granted) {
+            viewModelScope.launch {
+                emitEffect(
+                    NotificationSettingsEffect.ShowSnackbar(
+                        if (canRequestAgain) {
+                            NotificationSettingsSnackbarMessage.Text(
+                                value = "",
+                                defaultMessageResId = R.string.notification_settings_error_permission_required,
+                            )
+                        } else {
+                            NotificationSettingsSnackbarMessage.PermissionPermanentlyDenied(
+                                defaultMessageResId = R.string.notification_settings_error_permission_permanently_denied,
+                            )
+                        },
+                    ),
+                )
+            }
+            return
+        }
+
+        queueSettingUpdate(
+            setting = setting,
+            syncPermissionStateAfterSuccess = true,
+        )
+    }
+
+    private fun queueSettingUpdate(
+        setting: NotificationSetting,
+        syncPermissionStateAfterSuccess: Boolean,
+    ) {
         update {
             copy(
                 setting = setting,
                 isLoadFailed = false,
             )
         }
-        pendingSettingUpdates.tryEmit(setting)
+        pendingSettingUpdates.tryEmit(
+            PendingSettingUpdate(
+                setting = setting,
+                syncPermissionStateAfterSuccess = syncPermissionStateAfterSuccess,
+            ),
+        )
     }
 
-    private suspend fun persistSetting(setting: NotificationSetting) {
+    private suspend fun persistSetting(updateRequest: PendingSettingUpdate) {
         launchSafely(
             onStart = {
                 update { copy(isSaving = true) }
             },
             onSuccess = { savedSetting ->
                 lastSyncedSetting = savedSetting
+                if (updateRequest.syncPermissionStateAfterSuccess) {
+                    viewModelScope.launch {
+                        notificationLifecycleManager.syncOnNotificationPermissionGranted()
+                    }
+                }
                 update {
                     copy(
                         setting = savedSetting,
@@ -152,7 +226,18 @@ internal class NotificationSettingsViewModel @Inject constructor(
                 )
             },
         ) {
-            updateNotificationSettingUseCase(setting)
+            updateNotificationSettingUseCase(updateRequest.setting)
         }.join()
     }
+
+    private data class PendingSettingUpdate(
+        val setting: NotificationSetting,
+        val syncPermissionStateAfterSuccess: Boolean,
+    )
 }
+
+private fun NotificationSetting.requiresNotificationPermissionFor(updated: NotificationSetting): Boolean =
+    !d7Enabled && updated.d7Enabled ||
+        !d1Enabled && updated.d1Enabled ||
+        !ddayEnabled && updated.ddayEnabled ||
+        !familyScheduleCheckEnabled && updated.familyScheduleCheckEnabled

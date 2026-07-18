@@ -31,4 +31,7 @@
     <string name="notification_settings_family_schedule_check">가족 반응 알림</string>
     <string name="notification_settings_error_load">알림 설정을 불러오지 못했어요</string>
     <string name="notification_settings_error_save">알림 설정을 저장하지 못했어요</string>
+    <string name="notification_settings_error_permission_required">알림을 켜려면 기기 알림 권한이 필요해요</string>
+    <string name="notification_settings_error_permission_permanently_denied">시스템 설정에서 권한을 허용해 주세요</string>
+    <string name="notification_settings_action_open_system_settings">이동</string>
 </resources>

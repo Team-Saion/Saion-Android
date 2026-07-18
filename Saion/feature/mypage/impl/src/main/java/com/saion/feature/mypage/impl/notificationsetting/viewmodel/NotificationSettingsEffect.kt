@@ -5,11 +5,17 @@ import com.saion.core.ui.viewmodel.UIEffect
 
 internal sealed interface NotificationSettingsEffect : UIEffect {
     data class ShowSnackbar(val message: NotificationSettingsSnackbarMessage) : NotificationSettingsEffect
+
+    data object RequestNotificationPermission : NotificationSettingsEffect
 }
 
 internal sealed interface NotificationSettingsSnackbarMessage {
     data class Text(
         val value: String,
+        val defaultMessageResId: Int,
+    ) : NotificationSettingsSnackbarMessage
+
+    data class PermissionPermanentlyDenied(
         val defaultMessageResId: Int,
     ) : NotificationSettingsSnackbarMessage
 

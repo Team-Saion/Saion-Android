@@ -12,6 +12,7 @@ import com.saion.core.domain.usecase.auth.LoginWithKakaoUseCase
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.notification.NotificationLifecycleManager
 import com.saion.core.ui.event.GlobalUiEvent
 import com.saion.core.ui.event.GlobalUiEventBus
 import com.saion.core.ui.viewmodel.BaseViewModel
@@ -43,6 +44,7 @@ internal sealed interface LoginEffect : UIEffect {
 internal class LoginViewModel @Inject constructor(
     private val socialAuthClient: SocialAuthClient,
     private val loginWithKakaoUseCase: LoginWithKakaoUseCase,
+    private val notificationLifecycleManager: NotificationLifecycleManager,
 ) : BaseViewModel<LoginUiState, LoginEffect, LoginIntent>(LoginUiState()) {
     override fun handleIntent(intent: LoginIntent) = Unit
 
@@ -76,6 +78,7 @@ internal class LoginViewModel @Inject constructor(
                     }
 
                     is AppResult.Success -> {
+                        launch { notificationLifecycleManager.syncOnLoginSuccess() }
                         update { copy(isLoading = false) }
                         when (loginResult.data) {
                             MemberRole.PENDING -> emitEffect(LoginEffect.NavigateNext(AuthStartStep.TERMS))
