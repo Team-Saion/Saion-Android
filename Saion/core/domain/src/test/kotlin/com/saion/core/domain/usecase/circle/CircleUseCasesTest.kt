@@ -3,6 +3,8 @@ package com.saion.core.domain.usecase.circle
 import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.result.AppResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -129,10 +131,14 @@ private class FakeCircleRepository(
 ) : CircleRepository {
     var lastCall: CircleRepositoryCall? = null
 
+    override fun observeCircles(): Flow<List<CircleSummary>> = flowOf(emptyList())
+
     override suspend fun listCircles(): AppResult<List<CircleSummary>> {
         lastCall = CircleRepositoryCall.ListCircles
         return listResult
     }
+
+    override suspend fun refreshCircles(): AppResult<List<CircleSummary>> = listCircles()
 
     override suspend fun createCircle(name: String): AppResult<CircleSummary> {
         lastCall = CircleRepositoryCall.CreateCircle(name = name)

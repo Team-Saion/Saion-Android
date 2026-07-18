@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ResolvedCurrentCircle
 import com.saion.core.domain.usecase.schedule.GetScheduleListUseCase
+import com.saion.core.domain.usecase.schedule.ObserveScheduleListUseCase
+import com.saion.core.domain.usecase.schedule.RefreshScheduleListUseCase
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.ui.error.toSnackbarMessage
@@ -13,6 +15,8 @@ import com.saion.feature.schedule.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 private const val DEFAULT_PAGE_SIZE: Int = 20
@@ -21,9 +25,13 @@ private const val DEFAULT_PAGE_SIZE: Int = 20
 @Stable
 internal class ScheduleViewModel @Inject constructor(
     private val observeResolvedCurrentCircleUseCase: ObserveResolvedCurrentCircleUseCase,
+    private val observeScheduleListUseCase: ObserveScheduleListUseCase,
+    private val refreshScheduleListUseCase: RefreshScheduleListUseCase,
     private val getScheduleListUseCase: GetScheduleListUseCase,
 ) : BaseViewModel<ScheduleState, ScheduleEffect, ScheduleIntent>(ScheduleState.Loading) {
     private var currentCircleId: String? = null
+    private var scheduleListJob: Job? = null
+    private var latestSchedulePage: ScheduleListPage? = null
 
     init {
         viewModelScope.launch {
@@ -44,12 +52,16 @@ internal class ScheduleViewModel @Inject constructor(
             is ResolvedCurrentCircle.Available -> {
                 if (currentCircleId != resolvedCurrentCircle.circleId) {
                     currentCircleId = resolvedCurrentCircle.circleId
-                    loadInitial(circleId = resolvedCurrentCircle.circleId)
+                    observeScheduleList(circleId = resolvedCurrentCircle.circleId)
+                    refreshInitial(circleId = resolvedCurrentCircle.circleId)
                 }
             }
 
             ResolvedCurrentCircle.Missing -> {
+                scheduleListJob?.cancel()
+                scheduleListJob = null
                 currentCircleId = null
+                latestSchedulePage = null
                 update {
                     ScheduleState.Content(
                         schedules = emptyList<ScheduleSummary>().toImmutableList(),
@@ -63,11 +75,25 @@ internal class ScheduleViewModel @Inject constructor(
         }
     }
 
-    private fun loadInitial(circleId: String) {
+    private fun observeScheduleList(circleId: String) {
+        scheduleListJob?.cancel()
+        scheduleListJob = viewModelScope.launch {
+            observeScheduleListUseCase(circleId)
+                .filterNotNull()
+                .collect { page ->
+                    latestSchedulePage = page
+                    update { page.toContentState(isRefreshing = false, isAppending = false) }
+                }
+        }
+    }
+
+    private fun refreshInitial(circleId: String) {
         launchSafely(
             onStart = { update { ScheduleState.Loading } },
-            onSuccess = { page ->
-                update { page.toContentState() }
+            onSuccess = {
+                latestSchedulePage?.let { page ->
+                    update { page.toContentState(isRefreshing = false, isAppending = false) }
+                }
             },
             onFailure = { error ->
                 update { ScheduleState.Error }
@@ -82,7 +108,7 @@ internal class ScheduleViewModel @Inject constructor(
                 )
             },
         ) {
-            getScheduleListUseCase(
+            refreshScheduleListUseCase(
                 circleId = circleId,
                 size = DEFAULT_PAGE_SIZE,
             )
@@ -117,8 +143,8 @@ internal class ScheduleViewModel @Inject constructor(
                     update { ScheduleState.Loading }
                 }
             },
-            onSuccess = { page ->
-                update { page.toContentState() }
+            onSuccess = {
+                updateCurrentContent { copy(isRefreshing = false, isAppending = false) }
             },
             onFailure = { error ->
                 update {
@@ -142,7 +168,7 @@ internal class ScheduleViewModel @Inject constructor(
                 )
             },
         ) {
-            getScheduleListUseCase(
+            refreshScheduleListUseCase(
                 circleId = circleId,
                 size = DEFAULT_PAGE_SIZE,
             )
@@ -158,8 +184,8 @@ internal class ScheduleViewModel @Inject constructor(
             onStart = {
                 updateCurrentContent { copy(isAppending = true) }
             },
-            onSuccess = { page ->
-                appendPage(page = page)
+            onSuccess = {
+                updateCurrentContent { copy(isAppending = false) }
             },
             onFailure = { error ->
                 updateCurrentContent { copy(isAppending = false) }
@@ -178,21 +204,6 @@ internal class ScheduleViewModel @Inject constructor(
                 circleId = circleId,
                 cursor = state.nextCursor,
                 size = DEFAULT_PAGE_SIZE,
-            )
-        }
-    }
-
-    private fun appendPage(page: ScheduleListPage) {
-        val state = currentState as? ScheduleState.Content ?: return
-        val mergedSchedules: List<ScheduleSummary> = state.schedules + page.schedules
-
-        update {
-            state.copy(
-                schedules = mergedSchedules.toImmutableList(),
-                isRefreshing = false,
-                isAppending = false,
-                nextCursor = page.nextCursor,
-                hasNext = page.hasNext,
             )
         }
     }

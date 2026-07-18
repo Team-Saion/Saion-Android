@@ -4,8 +4,9 @@ import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ResolvedCurrentCircle
-import com.saion.core.domain.usecase.home.GetHomeUseCase
 import com.saion.core.domain.usecase.home.GetHomeInviterNameUseCase
+import com.saion.core.domain.usecase.home.ObserveHomeUseCase
+import com.saion.core.domain.usecase.home.RefreshHomeUseCase
 import com.saion.core.domain.usecase.invitation.IssueInvitationUseCase
 import com.saion.core.share.InvitationShareClient
 import com.saion.core.share.InvitationShareResult
@@ -14,17 +15,23 @@ import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.home.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 @Stable
 internal class HomeViewModel @Inject constructor(
     private val observeResolvedCurrentCircleUseCase: ObserveResolvedCurrentCircleUseCase,
-    private val getHomeUseCase: GetHomeUseCase,
+    private val observeHomeUseCase: ObserveHomeUseCase,
+    private val refreshHomeUseCase: RefreshHomeUseCase,
     private val getHomeInviterNameUseCase: GetHomeInviterNameUseCase,
     private val issueInvitationUseCase: IssueInvitationUseCase,
     private val invitationShareClient: InvitationShareClient,
 ) : BaseViewModel<HomeState, HomeEffect, HomeIntent>(HomeState.Loading) {
+    private var currentCircleId: String? = null
+    private var homeJob: Job? = null
+
     init {
         viewModelScope.launch {
             observeResolvedCurrentCircleUseCase()
@@ -43,17 +50,37 @@ internal class HomeViewModel @Inject constructor(
 
     private fun handleResolvedCurrentCircle(resolvedCurrentCircle: ResolvedCurrentCircle) {
         when (resolvedCurrentCircle) {
-            is ResolvedCurrentCircle.Available -> loadHomeOverview(resolvedCurrentCircle.circleId)
-            ResolvedCurrentCircle.Missing -> update { HomeState.None }
+            is ResolvedCurrentCircle.Available -> {
+                if (currentCircleId != resolvedCurrentCircle.circleId) {
+                    currentCircleId = resolvedCurrentCircle.circleId
+                    observeHome(circleId = resolvedCurrentCircle.circleId)
+                    refreshHomeOverview(circleId = resolvedCurrentCircle.circleId)
+                }
+            }
+            ResolvedCurrentCircle.Missing -> {
+                homeJob?.cancel()
+                homeJob = null
+                currentCircleId = null
+                update { HomeState.None }
+            }
         }
     }
 
-    private fun loadHomeOverview(circleId: String) {
+    private fun observeHome(circleId: String) {
+        homeJob?.cancel()
+        homeJob = viewModelScope.launch {
+            observeHomeUseCase(circleId)
+                .filterNotNull()
+                .collect { overview ->
+                    val isInviting = (currentState as? HomeState.Content)?.isInviting ?: false
+                    update { overview.toUiState(isInviting = isInviting) }
+                }
+        }
+    }
+
+    private fun refreshHomeOverview(circleId: String) {
         launchSafely(
-            onSuccess = { overview ->
-                val isInviting = (currentState as? HomeState.Content)?.isInviting ?: false
-                update { overview.toUiState(isInviting = isInviting) }
-            },
+            onSuccess = {},
             onFailure = { error ->
                 update { HomeState.None }
                 emitEffect(
@@ -67,7 +94,7 @@ internal class HomeViewModel @Inject constructor(
                 )
             },
         ) {
-            getHomeUseCase(circleId = circleId)
+            refreshHomeUseCase(circleId = circleId)
         }
     }
 

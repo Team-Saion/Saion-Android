@@ -16,7 +16,9 @@ import com.saion.core.model.result.AppResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -229,6 +231,8 @@ private class AuthFakeMemberRepository(
         private set
     val submitCallLog: MutableList<String> = mutableListOf()
 
+    override fun observeMyInfo(): Flow<MemberInfo?> = flowOf(null)
+
     override suspend fun getMyInfo(): AppResult<MemberInfo> = AppResult.Success(
         MemberInfo(
             memberId = "member-1",
@@ -239,6 +243,8 @@ private class AuthFakeMemberRepository(
             status = MemberStatus.ACTIVE,
         ),
     )
+
+    override suspend fun refreshMyInfo(): AppResult<MemberInfo> = getMyInfo()
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = onboardingInfoResult
 

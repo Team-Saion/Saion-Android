@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import com.saion.core.datastore.model.AuthTokens
+import com.saion.core.datastore.model.CircleListCache
 import com.saion.core.datastore.model.CurrentCircle
 import com.saion.core.datastore.model.MemberProfileCache
 import com.saion.core.datastore.model.NotificationSettingCache
@@ -48,6 +49,25 @@ internal val Context.currentCircleDataStore: DataStore<CurrentCircle> by dataSto
         }
 
         override val defaultValue: CurrentCircle get() = CurrentCircle(selectedCircleId = "")
+    },
+)
+
+internal val Context.circleListDataStore: DataStore<CircleListCache> by dataStore(
+    fileName = "circle-list.preferences_pb",
+    serializer = object : Serializer<CircleListCache> {
+        override suspend fun readFrom(input: InputStream): CircleListCache =
+            Json.decodeFromString<CircleListCache>(input.readBytes().decodeToString())
+
+        override suspend fun writeTo(
+            t: CircleListCache,
+            output: OutputStream,
+        ) {
+            withContext(Dispatchers.IO) {
+                output.write(Json.encodeToString<CircleListCache>(t).encodeToByteArray())
+            }
+        }
+
+        override val defaultValue: CircleListCache get() = CircleListCache()
     },
 )
 

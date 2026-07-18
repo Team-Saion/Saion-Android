@@ -19,13 +19,16 @@ import com.saion.core.network.model.notification.NotificationInboxPageResponse
 import com.saion.core.network.model.notification.NotificationRouteResponse
 import com.saion.core.network.model.notification.NotificationSettingResponse
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 internal class NotificationRepositoryImpl @Inject constructor(
     private val notificationRemoteDataSource: NotificationRemoteDataSource,
     private val notificationSettingRemoteDataSource: NotificationSettingRemoteDataSource,
     private val notificationSettingLocalDataSource: NotificationSettingLocalDataSource,
 ) : NotificationRepository {
-    private var hasFetchedNotificationSetting: Boolean = false
+    private val notificationSettingState = MutableStateFlow<NotificationSetting?>(null)
 
     override suspend fun getInbox(
         cursor: Long?,
@@ -42,28 +45,26 @@ internal class NotificationRepositoryImpl @Inject constructor(
         response.toDomain()
     }
 
-    override suspend fun getSetting(): AppResult<NotificationSetting> {
-        if (hasFetchedNotificationSetting) {
-            notificationSettingLocalDataSource.getSetting()?.let { cached ->
-                return AppResult.Success(cached.toDomain())
-            }
-        }
+    override fun observeSetting(): Flow<NotificationSetting?> = notificationSettingState.asStateFlow()
 
-        val remoteResult = fetchNotificationSetting()
-        return when (remoteResult) {
-            is AppResult.Success -> {
-                hasFetchedNotificationSetting = true
+    override suspend fun getSetting(): AppResult<NotificationSetting> = notificationSettingState.value
+        ?.let { AppResult.Success(it) }
+        ?: notificationSettingLocalDataSource.getSetting()
+            ?.toDomain()
+            ?.also { notificationSettingState.value = it }
+            ?.let { AppResult.Success(it) }
+        ?: refreshSetting()
+
+    override suspend fun refreshSetting(): AppResult<NotificationSetting> = when (val remoteResult = fetchNotificationSetting()) {
+        is AppResult.Success -> remoteResult
+        is AppResult.Failure -> {
+            val cachedSetting = notificationSettingState.value
+                ?: notificationSettingLocalDataSource.getSetting()?.toDomain()
+            if (cachedSetting != null) {
+                notificationSettingState.value = cachedSetting
+                AppResult.Success(cachedSetting)
+            } else {
                 remoteResult
-            }
-
-            is AppResult.Failure -> {
-                val cachedSetting = notificationSettingLocalDataSource.getSetting()?.toDomain()
-                if (cachedSetting != null) {
-                    hasFetchedNotificationSetting = true
-                    AppResult.Success(cachedSetting)
-                } else {
-                    remoteResult
-                }
             }
         }
     }
@@ -79,8 +80,7 @@ internal class NotificationRepositoryImpl @Inject constructor(
         },
     ) { response ->
         val updatedSetting = response.toDomain()
-        notificationSettingLocalDataSource.saveSetting(updatedSetting.toCache())
-        hasFetchedNotificationSetting = true
+        persistNotificationSetting(updatedSetting)
         AppResult.Success(updatedSetting)
     }
 
@@ -88,8 +88,13 @@ internal class NotificationRepositoryImpl @Inject constructor(
         request = { notificationSettingRemoteDataSource.getSetting() },
     ) { response ->
         val setting = response.toDomain()
-        notificationSettingLocalDataSource.saveSetting(setting.toCache())
+        persistNotificationSetting(setting)
         AppResult.Success(setting)
+    }
+
+    private suspend fun persistNotificationSetting(setting: NotificationSetting) {
+        notificationSettingLocalDataSource.saveSetting(setting.toCache())
+        notificationSettingState.value = setting
     }
 }
 

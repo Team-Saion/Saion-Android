@@ -1,11 +1,15 @@
 package com.saion.feature.schedule.impl.ui
 
+import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.repository.ScheduleRepository
 import com.saion.core.domain.usecase.circle.ObserveCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
 import com.saion.core.domain.usecase.schedule.GetScheduleListUseCase
+import com.saion.core.domain.usecase.schedule.ObserveScheduleListUseCase
+import com.saion.core.domain.usecase.schedule.RefreshScheduleListUseCase
+import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ConfirmationOption
@@ -29,9 +33,11 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -65,10 +71,7 @@ class ScheduleViewModelTest {
             results = listOf(AppResult.Success(schedulePage(schedules = listOf(defaultSchedule("schedule-1"))))),
         )
 
-        ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        createViewModel(currentCircleRepository, scheduleRepository)
 
         advanceUntilIdle()
 
@@ -80,9 +83,9 @@ class ScheduleViewModelTest {
 
     @Test
     fun `현재 써클이 없으면 빈 content 상태가 된다`() = runTest {
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = null)),
-            getScheduleListUseCase = GetScheduleListUseCase(FakeScheduleRepository()),
+        val viewModel = createViewModel(
+            FakeCurrentCircleRepository(initialCircleId = null),
+            FakeScheduleRepository(),
         )
 
         advanceUntilIdle()
@@ -106,11 +109,9 @@ class ScheduleViewModelTest {
             nextCursor = "next-1",
             hasNext = true,
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(
-                FakeScheduleRepository(results = listOf(AppResult.Success(firstPage))),
-            ),
+        val viewModel = createViewModel(
+            FakeCurrentCircleRepository(initialCircleId = "circle-1"),
+            FakeScheduleRepository(results = listOf(AppResult.Success(firstPage))),
         )
 
         advanceUntilIdle()
@@ -125,11 +126,9 @@ class ScheduleViewModelTest {
 
     @Test
     fun `첫 페이지가 비어 있어도 content 상태를 유지한다`() = runTest {
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(
-                FakeScheduleRepository(results = listOf(AppResult.Success(schedulePage(schedules = emptyList())))),
-            ),
+        val viewModel = createViewModel(
+            FakeCurrentCircleRepository(initialCircleId = "circle-1"),
+            FakeScheduleRepository(results = listOf(AppResult.Success(schedulePage(schedules = emptyList())))),
         )
 
         advanceUntilIdle()
@@ -154,10 +153,7 @@ class ScheduleViewModelTest {
                 AppResult.Success(schedulePage(schedules = listOf(defaultSchedule("schedule-2")), nextCursor = null, hasNext = false)),
             ),
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        val viewModel = createViewModel(FakeCurrentCircleRepository(initialCircleId = "circle-1"), scheduleRepository)
 
         advanceUntilIdle()
         viewModel.dispatch(ScheduleIntent.RefreshRequested)
@@ -182,10 +178,7 @@ class ScheduleViewModelTest {
                 AppResult.Success(schedulePage(schedules = listOf(defaultSchedule("schedule-2")), nextCursor = null, hasNext = false)),
             ),
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        val viewModel = createViewModel(FakeCurrentCircleRepository(initialCircleId = "circle-1"), scheduleRepository)
 
         advanceUntilIdle()
         viewModel.dispatch(ScheduleIntent.LoadNextPageRequested)
@@ -208,10 +201,7 @@ class ScheduleViewModelTest {
         val scheduleRepository = FakeScheduleRepository(
             results = listOf(AppResult.Success(schedulePage(schedules = listOf(defaultSchedule("schedule-1"))))),
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        val viewModel = createViewModel(FakeCurrentCircleRepository(initialCircleId = "circle-1"), scheduleRepository)
 
         advanceUntilIdle()
         viewModel.dispatch(ScheduleIntent.LoadNextPageRequested)
@@ -222,11 +212,9 @@ class ScheduleViewModelTest {
 
     @Test
     fun `첫 페이지 실패 시 오류 상태와 스낵바 effect를 보낸다`() = runTest {
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(
-                FakeScheduleRepository(results = listOf(AppResult.Failure(AppError.NetworkUnavailable()))),
-            ),
+        val viewModel = createViewModel(
+            FakeCurrentCircleRepository(initialCircleId = "circle-1"),
+            FakeScheduleRepository(results = listOf(AppResult.Failure(AppError.NetworkUnavailable()))),
         )
 
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -247,10 +235,7 @@ class ScheduleViewModelTest {
                 AppResult.Failure(AppError.Timeout()),
             ),
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        val viewModel = createViewModel(FakeCurrentCircleRepository(initialCircleId = "circle-1"), scheduleRepository)
 
         advanceUntilIdle()
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -273,10 +258,7 @@ class ScheduleViewModelTest {
                 AppResult.Success(schedulePage(schedules = listOf(defaultSchedule("schedule-2")))),
             ),
         )
-        val viewModel = ScheduleViewModel(
-            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
-            getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
-        )
+        val viewModel = createViewModel(currentCircleRepository, scheduleRepository)
 
         advanceUntilIdle()
         currentCircleRepository.update("circle-2")
@@ -294,15 +276,25 @@ class ScheduleViewModelTest {
     }
 }
 
-private fun observeResolvedCurrentCircleUseCase(repository: CurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
+private fun createViewModel(
+    currentCircleRepository: FakeCurrentCircleRepository,
+    scheduleRepository: FakeScheduleRepository,
+): ScheduleViewModel = ScheduleViewModel(
+    observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+    observeScheduleListUseCase = ObserveScheduleListUseCase(scheduleRepository),
+    refreshScheduleListUseCase = RefreshScheduleListUseCase(scheduleRepository),
+    getScheduleListUseCase = GetScheduleListUseCase(scheduleRepository),
+)
+
+private fun observeResolvedCurrentCircleUseCase(repository: FakeCurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
     ObserveResolvedCurrentCircleUseCase(
         observeCurrentCircleUseCase = ObserveCurrentCircleUseCase(repository),
-        syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository),
+        syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository, FakeResolvedCircleRepository(repository)),
     )
 
 private class FakeCurrentCircleRepository(
     initialCircleId: String?,
-    private val syncedCircleId: String? = initialCircleId,
+    val syncedCircleId: String? = initialCircleId,
 ) : CurrentCircleRepository {
     private val flow = MutableStateFlow(initialCircleId)
 
@@ -314,16 +306,32 @@ private class FakeCurrentCircleRepository(
 
     override suspend fun getCurrentCircleId(): String? = flow.value
 
-    override suspend fun selectCircle(circleId: String): AppResult<Unit> = AppResult.Success(Unit)
-
-    override suspend fun syncCurrentCircle(): AppResult<String?> {
-        flow.value = syncedCircleId
-        return AppResult.Success(flow.value)
+    override suspend fun selectCircle(circleId: String): AppResult<Unit> {
+        flow.value = circleId
+        return AppResult.Success(Unit)
     }
 
     override suspend fun clearCurrentCircle() {
         flow.value = null
     }
+}
+
+private class FakeResolvedCircleRepository(
+    private val repository: FakeCurrentCircleRepository,
+) : CircleRepository {
+    override fun observeCircles(): Flow<List<CircleSummary>> = flowOf(emptyList())
+
+    override suspend fun listCircles(): AppResult<List<CircleSummary>> = AppResult.Success(emptyList())
+
+    override suspend fun refreshCircles(): AppResult<List<CircleSummary>> = AppResult.Success(
+        repository.syncedCircleId?.let { listOf(CircleSummary(circleId = it, name = "circle", ownerId = "owner")) }.orEmpty(),
+    )
+
+    override suspend fun createCircle(name: String): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun transferInitiator(circleId: String, targetMemberId: String): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun leave(circleId: String): AppResult<Unit> = error("Not used")
 }
 
 private data class ScheduleListRequest(
@@ -336,6 +344,13 @@ private class FakeScheduleRepository(private val results: List<AppResult<Schedul
     ScheduleRepository {
     val requests = mutableListOf<ScheduleListRequest>()
     private var resultIndex = 0
+    private val listState = MutableStateFlow<ScheduleListPage?>(null)
+
+    override fun observeScheduleList(circleId: String): Flow<ScheduleListPage?> = listState
+
+    override fun observeScheduleDetail(circleId: String, scheduleId: String): Flow<ScheduleDetail?> = flowOf(null)
+
+    override suspend fun getCachedScheduleList(circleId: String): ScheduleListPage? = null
 
     override suspend fun getScheduleList(
         circleId: String,
@@ -343,7 +358,32 @@ private class FakeScheduleRepository(private val results: List<AppResult<Schedul
         size: Int?,
     ): AppResult<ScheduleListPage> {
         requests += ScheduleListRequest(circleId = circleId, cursor = cursor, size = size)
-        return results.getOrElse(resultIndex++) { results.last() }
+        val result = results.getOrElse(resultIndex++) { results.last() }
+        if (result is AppResult.Success && cursor != null) {
+            val current = listState.value
+            listState.value = if (current == null) {
+                result.data
+            } else {
+                current.copy(
+                    schedules = (current.schedules + result.data.schedules).distinctBy { it.scheduleId },
+                    nextCursor = result.data.nextCursor,
+                    hasNext = result.data.hasNext,
+                )
+            }
+        }
+        return result
+    }
+
+    override suspend fun refreshScheduleList(
+        circleId: String,
+        cursor: String?,
+        size: Int?,
+    ): AppResult<ScheduleListPage> {
+        val result = getScheduleList(circleId, cursor, size)
+        if (result is AppResult.Success) {
+            listState.value = result.data
+        }
+        return result
     }
 
     override suspend fun createSchedule(
@@ -359,6 +399,13 @@ private class FakeScheduleRepository(private val results: List<AppResult<Schedul
     ): AppResult<ScheduleDetail> {
         throw UnsupportedOperationException()
     }
+
+    override suspend fun getCachedScheduleDetail(circleId: String, scheduleId: String): ScheduleDetail? = null
+
+    override suspend fun refreshScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): AppResult<ScheduleDetail> = getScheduleDetail(circleId, scheduleId)
 
     override suspend fun updateSchedule(
         circleId: String,

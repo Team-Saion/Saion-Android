@@ -22,11 +22,14 @@ internal sealed interface ScheduleState : UIState {
     ) : ScheduleState
 }
 
-internal fun ScheduleListPage.toContentState(isRefreshing: Boolean = false): ScheduleState =
+internal fun ScheduleListPage.toContentState(
+    isRefreshing: Boolean = false,
+    isAppending: Boolean = false,
+): ScheduleState =
     ScheduleState.Content(
         schedules = schedules.toImmutableList(),
         isRefreshing = isRefreshing,
-        isAppending = false,
+        isAppending = isAppending,
         nextCursor = nextCursor,
         hasNext = hasNext,
     )

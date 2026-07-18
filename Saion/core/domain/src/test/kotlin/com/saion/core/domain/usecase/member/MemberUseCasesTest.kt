@@ -1,6 +1,9 @@
 package com.saion.core.domain.usecase.member
 
 import com.saion.core.domain.repository.MemberRepository
+import com.saion.core.domain.repository.CurrentCircleRepository
+import com.saion.core.domain.repository.HomeRepository
+import com.saion.core.domain.usecase.home.SyncHomeProfileUseCase
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.member.MemberStatus
@@ -8,6 +11,9 @@ import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -183,10 +189,7 @@ class MemberUseCasesTest {
     fun `프로필 수정 합성 유즈케이스는 이미지가 있으면 업로드 후 수정을 호출한다`() = runBlocking {
         val repository = FakeMemberRepository()
         val profileImage = sampleProfileImageUpload()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = "새닉네임",
@@ -211,10 +214,7 @@ class MemberUseCasesTest {
     @Test
     fun `프로필 수정 합성 유즈케이스는 이미지가 없으면 수정만 호출한다`() = runBlocking {
         val repository = FakeMemberRepository()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = "새닉네임",
@@ -238,10 +238,7 @@ class MemberUseCasesTest {
         val failure = AppResult.Failure(AppError.NetworkUnavailable())
         val repository = FakeMemberRepository(uploadProfileImageResult = failure)
         val profileImage = sampleProfileImageUpload()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = "새닉네임",
@@ -264,10 +261,7 @@ class MemberUseCasesTest {
     fun `프로필 수정 합성 유즈케이스는 이미지만 변경되면 업로드만 호출한다`() = runBlocking {
         val repository = FakeMemberRepository()
         val profileImage = sampleProfileImageUpload()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = null,
@@ -289,10 +283,7 @@ class MemberUseCasesTest {
     @Test
     fun `프로필 수정 합성 유즈케이스는 변경사항이 없으면 아무것도 호출하지 않는다`() = runBlocking {
         val repository = FakeMemberRepository()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = null,
@@ -316,10 +307,7 @@ class MemberUseCasesTest {
         val failure = AppResult.Failure(AppError.ServerUnavailable())
         val repository = FakeMemberRepository(updateProfileResult = failure)
         val profileImage = sampleProfileImageUpload()
-        val useCase = UpdateMyProfileWithProfileImageUseCase(
-            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
-            updateProfileUseCase = UpdateProfileUseCase(repository),
-        )
+        val useCase = updateMyProfileWithProfileImageUseCase(repository)
 
         val actual = useCase(
             nickname = "새닉네임",
@@ -341,6 +329,18 @@ class MemberUseCasesTest {
         )
     }
 }
+
+private fun updateMyProfileWithProfileImageUseCase(
+    repository: FakeMemberRepository,
+): UpdateMyProfileWithProfileImageUseCase = UpdateMyProfileWithProfileImageUseCase(
+    uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+    updateProfileUseCase = UpdateProfileUseCase(repository),
+    syncHomeProfileUseCase = SyncHomeProfileUseCase(
+        currentCircleRepository = FakeCurrentCircleRepository(),
+        memberRepository = repository,
+        homeRepository = FakeHomeRepository(),
+    ),
+)
 
 private data class MemberUseCaseOutcome<T>(
     val result: AppResult<T>,
@@ -398,7 +398,11 @@ private class FakeMemberRepository(
 ) : MemberRepository {
     val calls: MutableList<MemberRepositoryCall> = mutableListOf()
 
+    override fun observeMyInfo(): Flow<MemberInfo?> = flowOf(null)
+
     override suspend fun getMyInfo(): AppResult<MemberInfo> = myInfoResult
+
+    override suspend fun refreshMyInfo(): AppResult<MemberInfo> = getMyInfo()
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = onboardingInfoResult
 
@@ -431,6 +435,40 @@ private class FakeMemberRepository(
         calls += MemberRepositoryCall.Withdraw(reason = reason)
         return withdrawResult
     }
+}
+
+private class FakeCurrentCircleRepository : CurrentCircleRepository {
+    private val flow = MutableStateFlow<String?>(null)
+
+    override fun observeCurrentCircleId(): Flow<String?> = flow
+
+    override suspend fun getCurrentCircleId(): String? = flow.value
+
+    override suspend fun selectCircle(circleId: String): AppResult<Unit> {
+        flow.value = circleId
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun clearCurrentCircle() {
+        flow.value = null
+    }
+}
+
+private class FakeHomeRepository : HomeRepository {
+    override fun observeHome(circleId: String): Flow<com.saion.core.model.home.HomeOverview?> = flowOf(null)
+
+    override fun observeMembers(circleId: String): Flow<List<com.saion.core.model.home.CircleMember>> = flowOf(emptyList())
+
+    override suspend fun getHome(circleId: String): AppResult<com.saion.core.model.home.HomeOverview> = error("Not used")
+
+    override suspend fun refreshHome(circleId: String): AppResult<com.saion.core.model.home.HomeOverview> = error("Not used")
+
+    override suspend fun getMembers(circleId: String): AppResult<List<com.saion.core.model.home.CircleMember>> = error("Not used")
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: MemberInfo,
+    ) = Unit
 }
 
 private fun sampleProfileImageUpload(): ProfileImageUpload = ProfileImageUpload(

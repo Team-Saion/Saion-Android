@@ -8,7 +8,8 @@ import com.saion.core.domain.usecase.member.GetMyInfoUseCase
 import com.saion.core.domain.usecase.schedule.CancelConfirmationUseCase
 import com.saion.core.domain.usecase.schedule.DeleteScheduleUseCase
 import com.saion.core.domain.usecase.schedule.GetConfirmationTypesUseCase
-import com.saion.core.domain.usecase.schedule.GetScheduleDetailUseCase
+import com.saion.core.domain.usecase.schedule.ObserveScheduleDetailUseCase
+import com.saion.core.domain.usecase.schedule.RefreshScheduleDetailUseCase
 import com.saion.core.domain.usecase.schedule.RegisterConfirmationUseCase
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -21,14 +22,18 @@ import com.saion.feature.schedule.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 @Stable
 internal class ScheduleDetailViewModel @Inject constructor(
     private val observeResolvedCurrentCircleUseCase: ObserveResolvedCurrentCircleUseCase,
-    private val getScheduleDetailUseCase: GetScheduleDetailUseCase,
+    private val observeScheduleDetailUseCase: ObserveScheduleDetailUseCase,
+    private val refreshScheduleDetailUseCase: RefreshScheduleDetailUseCase,
     private val getConfirmationTypesUseCase: GetConfirmationTypesUseCase,
     private val registerConfirmationUseCase: RegisterConfirmationUseCase,
     private val cancelConfirmationUseCase: CancelConfirmationUseCase,
@@ -37,14 +42,21 @@ internal class ScheduleDetailViewModel @Inject constructor(
 ) : BaseViewModel<ScheduleDetailState, ScheduleDetailEffect, ScheduleDetailIntent>(ScheduleDetailState()) {
     private var scheduleId: String? = null
     private var currentCircleId: String? = null
+    private var latestDetail: ScheduleDetail? = null
     private var myMemberId: String? = null
+    private var confirmationOptions: List<ConfirmationOption> = emptyList()
+    private var scheduleDetailJob: Job? = null
 
     init {
         viewModelScope.launch {
             observeResolvedCurrentCircleUseCase().collect { resolved ->
                 currentCircleId = (resolved as? ResolvedCurrentCircle.Available)?.circleId
                 if (resolved is ResolvedCurrentCircle.Available && scheduleId != null) {
+                    observeScheduleDetail(circleId = resolved.circleId, scheduleId = scheduleId.orEmpty())
                     load()
+                } else if (resolved is ResolvedCurrentCircle.Missing) {
+                    latestDetail = null
+                    rebuildUiState()
                 }
             }
         }
@@ -54,6 +66,7 @@ internal class ScheduleDetailViewModel @Inject constructor(
         when (intent) {
             is ScheduleDetailIntent.Load -> {
                 scheduleId = intent.scheduleId
+                currentCircleId?.let { observeScheduleDetail(circleId = it, scheduleId = intent.scheduleId) }
                 load()
             }
             is ScheduleDetailIntent.ConfirmationClicked -> updateConfirmation(intent.type)
@@ -63,12 +76,30 @@ internal class ScheduleDetailViewModel @Inject constructor(
         }
     }
 
+    private fun observeScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ) {
+        scheduleDetailJob?.cancel()
+        scheduleDetailJob = viewModelScope.launch {
+            observeScheduleDetailUseCase(circleId = circleId, scheduleId = scheduleId)
+                .filterNotNull()
+                .collect { detail ->
+                    latestDetail = detail
+                    rebuildUiState()
+                }
+        }
+    }
+
     private fun load() {
         val circleId = currentCircleId ?: return
         val scheduleId = scheduleId ?: return
         launchSafely(
             onStart = { update { copy(isLoading = true) } },
-            onSuccess = { loaded -> update { loaded } },
+            onSuccess = { detail ->
+                latestDetail = detail
+                rebuildUiState(isLoading = false, isSubmitting = false)
+            },
             onFailure = { error ->
                 update { copy(isLoading = false) }
                 emitEffect(
@@ -82,7 +113,7 @@ internal class ScheduleDetailViewModel @Inject constructor(
                 )
             },
         ) {
-            val detailDeferred = async { getScheduleDetailUseCase(circleId = circleId, scheduleId = scheduleId) }
+            val detailDeferred = async { refreshScheduleDetailUseCase(circleId = circleId, scheduleId = scheduleId) }
             val optionDeferred = async { getConfirmationTypesUseCase(circleId = circleId) }
             val myInfoDeferred = async { getMyInfoUseCase() }
 
@@ -92,8 +123,9 @@ internal class ScheduleDetailViewModel @Inject constructor(
                     val optionsResult = optionDeferred.await()
                     val myInfoResult = myInfoDeferred.await()
                     myMemberId = (myInfoResult as? AppResult.Success)?.data?.memberId
-                    val options = (optionsResult as? AppResult.Success)?.data.orEmpty()
-                    AppResult.Success(detailResult.data.toUiState(options = options, myMemberId = myMemberId))
+                    confirmationOptions = (optionsResult as? AppResult.Success)?.data.orEmpty()
+                    rebuildUiState()
+                    AppResult.Success(detailResult.data)
                 }
             }
         }
@@ -117,7 +149,6 @@ internal class ScheduleDetailViewModel @Inject constructor(
             onStart = { update { copy(isSubmitting = true) } },
             onSuccess = {
                 update { copy(isSubmitting = false) }
-                load()
             },
             onFailure = { error ->
                 update { copy(isSubmitting = false) }
@@ -159,14 +190,50 @@ internal class ScheduleDetailViewModel @Inject constructor(
             deleteScheduleUseCase(circleId = circleId, scheduleId = scheduleId)
         }
     }
+
+    private fun updateCurrentDetailContent(block: ScheduleDetailState.() -> ScheduleDetailState) {
+        val state = currentState
+        update { block(state) }
+    }
+
+    private fun rebuildUiState(
+        isLoading: Boolean = currentState.isLoading,
+        isSubmitting: Boolean = currentState.isSubmitting,
+    ) {
+        val detail = latestDetail
+        val deleteDialogVisible = currentState.isDeleteDialogVisible
+        update {
+            if (detail == null) {
+                ScheduleDetailState(
+                    isLoading = isLoading,
+                    isSubmitting = isSubmitting,
+                    detail = null,
+                    confirmationOptions = persistentListOf(),
+                    canDelete = false,
+                    isDeleteDialogVisible = deleteDialogVisible,
+                )
+            } else {
+                detail.toUiState(
+                    options = this@ScheduleDetailViewModel.confirmationOptions,
+                    myMemberId = myMemberId,
+                    isLoading = isLoading,
+                    isSubmitting = isSubmitting,
+                    isDeleteDialogVisible = deleteDialogVisible,
+                )
+            }
+        }
+    }
 }
 
 private fun ScheduleDetail.toUiState(
     options: List<ConfirmationOption>,
     myMemberId: String?,
+    isLoading: Boolean = false,
+    isSubmitting: Boolean = false,
+    isDeleteDialogVisible: Boolean = false,
 ): ScheduleDetailState = ScheduleDetailState(
-    isLoading = false,
-    isSubmitting = false,
+    isLoading = isLoading,
+    isSubmitting = isSubmitting,
     detail = this,
     confirmationOptions = options.map { option ->
         ScheduleConfirmationUiModel(
@@ -177,7 +244,7 @@ private fun ScheduleDetail.toUiState(
         )
     }.toImmutableList(),
     canDelete = myMemberId != null && createdBy == myMemberId,
-    isDeleteDialogVisible = false,
+    isDeleteDialogVisible = isDeleteDialogVisible,
 )
 
 private fun AppResult<*>.toUnitResult(): AppResult<Unit> = when (this) {

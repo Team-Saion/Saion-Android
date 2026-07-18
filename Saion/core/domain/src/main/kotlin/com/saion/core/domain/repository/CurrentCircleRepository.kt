@@ -10,7 +10,5 @@ interface CurrentCircleRepository {
 
     suspend fun selectCircle(circleId: String): AppResult<Unit>
 
-    suspend fun syncCurrentCircle(): AppResult<String?>
-
     suspend fun clearCurrentCircle()
 }

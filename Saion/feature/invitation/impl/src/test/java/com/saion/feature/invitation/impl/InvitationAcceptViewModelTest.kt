@@ -1,10 +1,12 @@
 package com.saion.feature.invitation.impl
 
+import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.domain.usecase.circle.SelectCurrentCircleUseCase
 import com.saion.core.domain.usecase.invitation.AcceptInvitationUseCase
 import com.saion.core.domain.usecase.invitation.GetInvitationByTokenUseCase
+import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
@@ -20,6 +22,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -51,7 +54,10 @@ class InvitationAcceptViewModelTest {
         val viewModel = InvitationAcceptViewModel(
             getInvitationByTokenUseCase = GetInvitationByTokenUseCase(invitationRepository),
             acceptInvitationUseCase = AcceptInvitationUseCase(invitationRepository),
-            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(currentCircleRepository),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(
+                currentCircleRepository = currentCircleRepository,
+                circleRepository = FakeResolvedCircleRepository(),
+            ),
         )
 
         viewModel.bind("invite-token")
@@ -105,9 +111,29 @@ private class FakeCurrentCircleRepository : CurrentCircleRepository {
         return AppResult.Success(Unit)
     }
 
-    override suspend fun syncCurrentCircle(): AppResult<String?> = AppResult.Success(flow.value)
-
     override suspend fun clearCurrentCircle() {
         flow.value = null
     }
+}
+
+private class FakeResolvedCircleRepository(
+) : CircleRepository {
+    private val circles = listOf(
+        CircleSummary(circleId = "circle-1", name = "비니네", ownerId = "owner-1"),
+    )
+
+    override fun observeCircles(): Flow<List<CircleSummary>> = flowOf(emptyList())
+
+    override suspend fun listCircles(): AppResult<List<CircleSummary>> = AppResult.Success(circles)
+
+    override suspend fun refreshCircles(): AppResult<List<CircleSummary>> = AppResult.Success(circles)
+
+    override suspend fun createCircle(name: String): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun transferInitiator(
+        circleId: String,
+        targetMemberId: String,
+    ): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun leave(circleId: String): AppResult<Unit> = error("Not used")
 }

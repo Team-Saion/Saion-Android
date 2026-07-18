@@ -19,7 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -255,9 +257,13 @@ private class FakeNotificationRepository(
         return markReadResult
     }
 
+    override fun observeSetting(): Flow<NotificationSetting?> = flowOf(null)
+
     override suspend fun getSetting(): AppResult<NotificationSetting> {
         throw UnsupportedOperationException("Not required for this test")
     }
+
+    override suspend fun refreshSetting(): AppResult<NotificationSetting> = getSetting()
 
     override suspend fun updateSetting(setting: NotificationSetting): AppResult<NotificationSetting> {
         throw UnsupportedOperationException("Not required for this test")

@@ -6,15 +6,20 @@ import com.saion.core.model.member.MemberStatus
 import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppResult
+import kotlinx.coroutines.flow.Flow
 
 /**
  * 멤버 도메인 경계를 정의합니다.
  */
 interface MemberRepository {
+    fun observeMyInfo(): Flow<MemberInfo?>
+
     /**
      * 현재 로그인한 멤버의 프로필을 조회합니다.
      */
     suspend fun getMyInfo(): AppResult<MemberInfo>
+
+    suspend fun refreshMyInfo(): AppResult<MemberInfo>
 
     /**
      * 현재 로그인한 멤버의 온보딩 사전정보를 조회합니다.

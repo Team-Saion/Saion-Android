@@ -32,16 +32,55 @@ import com.saion.core.network.model.schedule.ScheduleSummaryResponse
 import com.saion.core.network.model.schedule.UpdateScheduleRequest
 import com.saion.core.network.model.schedule.UpdateScheduleRequestValue
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRemoteDataSource: ScheduleRemoteDataSource) : ScheduleRepository {
+    private val cacheMutex = Mutex()
+    private val scheduleListState = MutableStateFlow<Map<String, ScheduleListPage>>(emptyMap())
+    private val scheduleDetailState = MutableStateFlow<Map<String, ScheduleDetail>>(emptyMap())
+
+    override fun observeScheduleList(circleId: String): Flow<ScheduleListPage?> = scheduleListState.map { it[circleId] }.distinctUntilChanged()
+
+    override fun observeScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): Flow<ScheduleDetail?> = scheduleDetailState.map { it[scheduleCacheKey(circleId, scheduleId)] }.distinctUntilChanged()
+
+    override suspend fun getCachedScheduleList(circleId: String): ScheduleListPage? = cacheMutex.withLock {
+        scheduleListState.value[circleId]
+    }
+
     override suspend fun getScheduleList(
+        circleId: String,
+        cursor: String?,
+        size: Int?,
+    ): AppResult<ScheduleListPage> {
+        if (cursor == null) {
+            getCachedScheduleList(circleId)?.let { return AppResult.Success(it) }
+        }
+        return refreshScheduleList(circleId = circleId, cursor = cursor, size = size)
+    }
+
+    override suspend fun refreshScheduleList(
         circleId: String,
         cursor: String?,
         size: Int?,
     ): AppResult<ScheduleListPage> = safeRequest(
         request = { scheduleRemoteDataSource.getScheduleList(circleId = circleId, cursor = cursor, size = size) },
     ) { response ->
-        response.toDomain()
+        when (val page = response.toDomain()) {
+            is AppResult.Success -> {
+                cacheScheduleList(circleId = circleId, page = page.data, append = cursor != null)
+                page
+            }
+
+            is AppResult.Failure -> page
+        }
     }
 
     override suspend fun createSchedule(
@@ -63,16 +102,41 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
             )
         },
     ) { response ->
-        AppResult.Success(response.toDomain())
+        val createdSchedule = response.toDomain()
+        if (getCachedScheduleList(circleId) != null) {
+            refreshScheduleList(circleId = circleId)
+        }
+        AppResult.Success(createdSchedule)
+    }
+
+    override suspend fun getCachedScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): ScheduleDetail? = cacheMutex.withLock {
+        scheduleDetailState.value[scheduleCacheKey(circleId, scheduleId)]
     }
 
     override suspend fun getScheduleDetail(
         circleId: String,
         scheduleId: String,
+    ): AppResult<ScheduleDetail> = getCachedScheduleDetail(circleId, scheduleId)
+        ?.let { AppResult.Success(it) }
+        ?: refreshScheduleDetail(circleId, scheduleId)
+
+    override suspend fun refreshScheduleDetail(
+        circleId: String,
+        scheduleId: String,
     ): AppResult<ScheduleDetail> = safeRequest(
         request = { scheduleRemoteDataSource.getScheduleDetail(circleId = circleId, scheduleId = scheduleId) },
     ) { response ->
-        response.toDomain()
+        when (val detail = response.toDomain()) {
+            is AppResult.Success -> {
+                cacheScheduleDetail(circleId = circleId, detail = detail.data)
+                detail
+            }
+
+            is AppResult.Failure -> detail
+        }
     }
 
     override suspend fun updateSchedule(
@@ -88,6 +152,10 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
             )
         },
     ) {
+        refreshScheduleDetail(circleId = circleId, scheduleId = scheduleId)
+        if (containsScheduleInList(circleId = circleId, scheduleId = scheduleId)) {
+            refreshScheduleList(circleId = circleId)
+        }
         AppResult.Success(Unit)
     }
 
@@ -97,6 +165,7 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
     ): AppResult<Unit> = safeRequest(
         request = { scheduleRemoteDataSource.deleteSchedule(circleId = circleId, scheduleId = scheduleId) },
     ) {
+        removeScheduleFromCache(circleId = circleId, scheduleId = scheduleId)
         AppResult.Success(Unit)
     }
 
@@ -119,7 +188,16 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
             )
         },
     ) { response ->
-        response.toDomain()
+        when (val registeredConfirmation = response.toDomain()) {
+            is AppResult.Failure -> registeredConfirmation
+            is AppResult.Success -> {
+                refreshScheduleDetail(circleId = circleId, scheduleId = scheduleId)
+                if (containsScheduleInList(circleId = circleId, scheduleId = scheduleId)) {
+                    refreshScheduleList(circleId = circleId)
+                }
+                registeredConfirmation
+            }
+        }
     }
 
     override suspend fun cancelConfirmation(
@@ -135,9 +213,77 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
             )
         },
     ) {
+        refreshScheduleDetail(circleId = circleId, scheduleId = scheduleId)
+        if (containsScheduleInList(circleId = circleId, scheduleId = scheduleId)) {
+            refreshScheduleList(circleId = circleId)
+        }
         AppResult.Success(Unit)
     }
+
+    private suspend fun cacheScheduleList(
+        circleId: String,
+        page: ScheduleListPage,
+        append: Boolean,
+    ) {
+        cacheMutex.withLock {
+            val updatedPage = if (append) {
+                val cachedPage = scheduleListState.value[circleId]
+                if (cachedPage == null) {
+                    page
+                } else {
+                    val mergedSchedules = (cachedPage.schedules + page.schedules)
+                        .distinctBy(ScheduleSummary::scheduleId)
+                    cachedPage.copy(
+                        schedules = mergedSchedules,
+                        nextCursor = page.nextCursor,
+                        hasNext = page.hasNext,
+                    )
+                }
+            } else {
+                page
+            }
+            scheduleListState.value = scheduleListState.value + (circleId to updatedPage)
+        }
+    }
+
+    private suspend fun cacheScheduleDetail(
+        circleId: String,
+        detail: ScheduleDetail,
+    ) {
+        cacheMutex.withLock {
+            scheduleDetailState.value = scheduleDetailState.value + (scheduleCacheKey(circleId, detail.scheduleId) to detail)
+        }
+    }
+
+    private suspend fun containsScheduleInList(
+        circleId: String,
+        scheduleId: String,
+    ): Boolean = cacheMutex.withLock {
+        scheduleListState.value[circleId]?.schedules?.any { it.scheduleId == scheduleId } == true
+    }
+
+    private suspend fun removeScheduleFromCache(
+        circleId: String,
+        scheduleId: String,
+    ) {
+        cacheMutex.withLock {
+            val cachedPage = scheduleListState.value[circleId]
+            if (cachedPage != null) {
+                scheduleListState.value = scheduleListState.value + (
+                    circleId to cachedPage.copy(
+                        schedules = cachedPage.schedules.filterNot { it.scheduleId == scheduleId },
+                    )
+                )
+            }
+            scheduleDetailState.value = scheduleDetailState.value - scheduleCacheKey(circleId, scheduleId)
+        }
+    }
 }
+
+private fun scheduleCacheKey(
+    circleId: String,
+    scheduleId: String,
+): String = "$circleId::$scheduleId"
 
 private fun ScheduleIdResponse.toDomain(): CreatedSchedule = CreatedSchedule(scheduleId = scheduleId)
 

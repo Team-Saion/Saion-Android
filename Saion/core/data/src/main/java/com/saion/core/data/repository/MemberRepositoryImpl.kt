@@ -2,6 +2,7 @@ package com.saion.core.data.repository
 
 import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.datastore.datasource.CircleLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.datastore.datasource.MemberProfileLocalDataSource
 import com.saion.core.datastore.model.MemberProfileCache
@@ -16,31 +17,35 @@ import com.saion.core.model.result.AppResult
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import com.saion.core.network.model.member.MemberInfoResponse
 import javax.inject.Inject
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * 멤버 원격 응답을 도메인 결과로 변환하는 기본 구현입니다.
  */
 internal class MemberRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
+    private val circleLocalDataSource: CircleLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
     private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
-    private val hasFetchedMyInfoThisRun = AtomicBoolean(false)
+    private val myInfoState = MutableStateFlow<MemberInfo?>(null)
+
+    override fun observeMyInfo(): Flow<MemberInfo?> = myInfoState.asStateFlow()
 
     override suspend fun getMyInfo(): AppResult<MemberInfo> {
-        if (!hasFetchedMyInfoThisRun.get()) {
-            return fetchMyInfoFromRemote()
+        myInfoState.value?.let { return AppResult.Success(it) }
+        val cachedProfile = memberProfileLocalDataSource.getProfile()?.toMemberInfo()
+        if (cachedProfile != null) {
+            myInfoState.value = cachedProfile
+            return AppResult.Success(cachedProfile)
         }
-
-        val cachedProfile = memberProfileLocalDataSource.getProfile()
-        return if (cachedProfile != null) {
-            cachedProfile.toMemberInfoResult()
-        } else {
-            fetchMyInfoFromRemote()
-        }
+        return refreshMyInfo()
     }
+
+    override suspend fun refreshMyInfo(): AppResult<MemberInfo> = fetchMyInfoFromRemote()
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = safeRequest(
         request = { memberRemoteDataSource.getOnboardingInfo() },
@@ -68,7 +73,6 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.updateProfile(nickname = nickname) },
     ) { response ->
         syncProfileCache(response.toMemberInfo())
-        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(Unit)
     }
 
@@ -85,7 +89,6 @@ internal class MemberRepositoryImpl @Inject constructor(
     ) { response ->
         val memberInfo = response.toMemberInfo()
         syncProfileCache(memberInfo)
-        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(memberInfo)
     }
 
@@ -99,7 +102,6 @@ internal class MemberRepositoryImpl @Inject constructor(
         },
     ) { response ->
         syncProfileCache(response.toMemberInfo())
-        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(Unit)
     }
 
@@ -107,9 +109,10 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.logout() },
     ) {
         authLocalDataSource.clearTokens()
+        circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()
-        hasFetchedMyInfoThisRun.set(false)
+        myInfoState.value = null
         AppResult.Success(Unit)
     }
 
@@ -117,9 +120,10 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.withdraw(reason = reason) },
     ) {
         authLocalDataSource.clearTokens()
+        circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()
-        hasFetchedMyInfoThisRun.set(false)
+        myInfoState.value = null
         AppResult.Success(Unit)
     }
 
@@ -128,17 +132,14 @@ internal class MemberRepositoryImpl @Inject constructor(
     ) { response ->
         val memberInfo = response.toMemberInfo()
         syncProfileCache(memberInfo)
-        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(memberInfo)
     }
 
     private suspend fun syncProfileCache(memberInfo: MemberInfo) {
         memberProfileLocalDataSource.saveProfile(memberInfo.toCache())
+        myInfoState.value = memberInfo
     }
 }
-
-private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> = toMemberInfo()
-    .let { AppResult.Success(it) }
 
 private fun MemberInfoResponse.toMemberInfo(): MemberInfo {
     val memberRole = MemberRole.from(role)
@@ -156,25 +157,19 @@ private fun MemberInfoResponse.toMemberInfo(): MemberInfo {
     )
 }
 
-private fun MemberProfileCache.toMemberInfoResult(): AppResult<MemberInfo> {
+private fun MemberProfileCache.toMemberInfo(): MemberInfo? {
     val memberRole = MemberRole.from(role)
-        ?: return AppResult.Failure(
-            AppError.Unknown(message = "Member role is missing or invalid."),
-        )
+        ?: return null
     val memberStatus = MemberStatus.from(status)
-        ?: return AppResult.Failure(
-            AppError.Unknown(message = "Member status is missing or invalid."),
-        )
+        ?: return null
 
-    return AppResult.Success(
-        MemberInfo(
-            memberId = memberId,
-            nickname = nickname,
-            profileImageUrl = profileImageUrl.ifBlank { null }?.normalizeProfileImageUrl(),
-            avatarColorHex = avatarColorHex,
-            role = memberRole,
-            status = memberStatus,
-        ),
+    return MemberInfo(
+        memberId = memberId,
+        nickname = nickname,
+        profileImageUrl = profileImageUrl.ifBlank { null }?.normalizeProfileImageUrl(),
+        avatarColorHex = avatarColorHex,
+        role = memberRole,
+        status = memberStatus,
     )
 }
 

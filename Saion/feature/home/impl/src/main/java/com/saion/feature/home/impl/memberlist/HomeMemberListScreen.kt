@@ -112,7 +112,13 @@ private fun HomeMemberListScreen(
             }
 
             is HomeMemberListState.Content -> {
-                HomeMemberListContent(members = uiState.members)
+                if (uiState.members.isEmpty()) {
+                    HomeMemberListPlaceholder(
+                        text = stringResource(R.string.home_member_list_empty),
+                    )
+                } else {
+                    HomeMemberListContent(members = uiState.members)
+                }
             }
         }
     }

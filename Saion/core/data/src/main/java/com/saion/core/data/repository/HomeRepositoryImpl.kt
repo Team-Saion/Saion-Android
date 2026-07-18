@@ -5,6 +5,7 @@ import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.home.HomeOverview
+import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
@@ -15,20 +16,82 @@ import com.saion.core.network.model.home.CircleHomeResponse
 import com.saion.core.network.model.home.CircleMemberResponse
 import com.saion.core.network.model.schedule.ScheduleSummaryResponse
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 internal class HomeRepositoryImpl @Inject constructor(
     private val homeRemoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository {
-    override suspend fun getHome(circleId: String): AppResult<HomeOverview> = safeRequest(
+    private val homeCache = MutableStateFlow<Map<String, HomeOverview>>(emptyMap())
+
+    override fun observeHome(circleId: String): Flow<HomeOverview?> = homeCache.map { it[circleId] }
+
+    override fun observeMembers(circleId: String): Flow<List<CircleMember>> = homeCache
+        .map { it[circleId]?.members.orEmpty() }
+        .distinctUntilChanged()
+
+    override suspend fun getHome(circleId: String): AppResult<HomeOverview> = homeCache.value[circleId]
+        ?.let { AppResult.Success(it) }
+        ?: refreshHome(circleId)
+
+    override suspend fun refreshHome(circleId: String): AppResult<HomeOverview> = safeRequest(
         request = { homeRemoteDataSource.getHome(circleId = circleId) },
     ) { response ->
-        response.toDomain()
+        when (val domain = response.toDomain()) {
+            is AppResult.Success -> {
+                cacheHome(circleId = circleId, overview = domain.data)
+                domain
+            }
+
+            is AppResult.Failure -> domain
+        }
     }
 
-    override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> = safeRequest(
+    override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> = homeCache.value[circleId]
+        ?.let { AppResult.Success(it.members) }
+        ?: safeRequest(
         request = { homeRemoteDataSource.getMembers(circleId = circleId) },
     ) { response ->
-        AppResult.Success(response.map(CircleMemberResponse::toDomain))
+        val members = response.map(CircleMemberResponse::toDomain)
+        val cachedOverview = homeCache.value[circleId]
+        if (cachedOverview != null) {
+            cacheHome(
+                circleId = circleId,
+                overview = cachedOverview.copy(members = members),
+            )
+        }
+        AppResult.Success(members)
+    }
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: MemberInfo,
+    ) {
+        val cachedOverview = homeCache.value[circleId] ?: return
+        val updatedMembers = cachedOverview.members.map { member ->
+            if (member.isMe && member.memberId == memberInfo.memberId) {
+                member.copy(
+                    nickname = memberInfo.nickname,
+                    avatarColor = memberInfo.avatarColorHex,
+                    profileImageUrl = memberInfo.profileImageUrl,
+                )
+            } else {
+                member
+            }
+        }
+        cacheHome(
+            circleId = circleId,
+            overview = cachedOverview.copy(members = updatedMembers),
+        )
+    }
+
+    private fun cacheHome(
+        circleId: String,
+        overview: HomeOverview,
+    ) {
+        homeCache.value = homeCache.value + (circleId to overview)
     }
 }
 

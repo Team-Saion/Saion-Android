@@ -1,8 +1,10 @@
 package com.saion.core.datastore.di
 
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.datastore.datasource.CircleLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.datastore.datasource.DefaultAuthLocalDataSource
+import com.saion.core.datastore.datasource.DefaultCircleLocalDataSource
 import com.saion.core.datastore.datasource.DefaultCurrentCircleLocalDataSource
 import com.saion.core.datastore.datasource.DefaultMemberProfileLocalDataSource
 import com.saion.core.datastore.datasource.DefaultNotificationSettingLocalDataSource
@@ -24,6 +26,10 @@ abstract class DataSourceModule {
     @Binds
     @Singleton
     internal abstract fun bindCurrentCircleLocalDataSource(impl: DefaultCurrentCircleLocalDataSource): CurrentCircleLocalDataSource
+
+    @Binds
+    @Singleton
+    internal abstract fun bindCircleLocalDataSource(impl: DefaultCircleLocalDataSource): CircleLocalDataSource
 
     @Binds
     @Singleton

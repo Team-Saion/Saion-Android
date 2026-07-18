@@ -17,7 +17,9 @@ import com.saion.feature.mypage.impl.withdraw.viewmodel.WithdrawViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -189,9 +191,13 @@ private class FakeMemberRepository(
     var lastWithdrawReason: String? = null
         private set
 
+    override fun observeMyInfo(): Flow<MemberInfo?> = flowOf(null)
+
     override suspend fun getMyInfo(): AppResult<MemberInfo> {
         throw UnsupportedOperationException()
     }
+
+    override suspend fun refreshMyInfo(): AppResult<MemberInfo> = getMyInfo()
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> {
         throw UnsupportedOperationException()

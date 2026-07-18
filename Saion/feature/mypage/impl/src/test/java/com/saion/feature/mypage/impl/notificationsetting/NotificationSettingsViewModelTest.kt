@@ -15,7 +15,9 @@ import com.saion.feature.mypage.impl.notificationsetting.viewmodel.NotificationS
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -168,7 +170,11 @@ private class FakeNotificationRepository(
         throw UnsupportedOperationException("Not required for this test")
     }
 
+    override fun observeSetting(): Flow<NotificationSetting?> = flowOf(null)
+
     override suspend fun getSetting(): AppResult<NotificationSetting> = getSettingResult
+
+    override suspend fun refreshSetting(): AppResult<NotificationSetting> = getSetting()
 
     override suspend fun updateSetting(setting: NotificationSetting): AppResult<NotificationSetting> {
         updatedSettings += setting

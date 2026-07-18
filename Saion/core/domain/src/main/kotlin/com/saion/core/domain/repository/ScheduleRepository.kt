@@ -9,9 +9,25 @@ import com.saion.core.model.schedule.RegisteredConfirmation
 import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.UpdateScheduleCommand
+import kotlinx.coroutines.flow.Flow
 
 interface ScheduleRepository {
+    fun observeScheduleList(circleId: String): Flow<ScheduleListPage?>
+
+    fun observeScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): Flow<ScheduleDetail?>
+
+    suspend fun getCachedScheduleList(circleId: String): ScheduleListPage?
+
     suspend fun getScheduleList(
+        circleId: String,
+        cursor: String? = null,
+        size: Int? = null,
+    ): AppResult<ScheduleListPage>
+
+    suspend fun refreshScheduleList(
         circleId: String,
         cursor: String? = null,
         size: Int? = null,
@@ -23,6 +39,16 @@ interface ScheduleRepository {
     ): AppResult<CreatedSchedule>
 
     suspend fun getScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): AppResult<ScheduleDetail>
+
+    suspend fun getCachedScheduleDetail(
+        circleId: String,
+        scheduleId: String,
+    ): ScheduleDetail?
+
+    suspend fun refreshScheduleDetail(
         circleId: String,
         scheduleId: String,
     ): AppResult<ScheduleDetail>

@@ -4,12 +4,15 @@ import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.home.HomeOverview
+import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUrgencyLevel
-import org.junit.Assert.assertEquals
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class HomeUseCasesTest {
@@ -110,15 +113,26 @@ private class FakeHomeRepository(
 ) : HomeRepository {
     var lastCall: HomeRepositoryCall? = null
 
+    override fun observeHome(circleId: String): Flow<HomeOverview?> = flowOf(null)
+
+    override fun observeMembers(circleId: String): Flow<List<CircleMember>> = flowOf(emptyList())
+
     override suspend fun getHome(circleId: String): AppResult<HomeOverview> {
         lastCall = HomeRepositoryCall.GetHome(circleId = circleId)
         return homeResult
     }
 
+    override suspend fun refreshHome(circleId: String): AppResult<HomeOverview> = getHome(circleId)
+
     override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> {
         lastCall = HomeRepositoryCall.GetMembers(circleId = circleId)
         return membersResult
     }
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: MemberInfo,
+    ) = Unit
 }
 
 private fun defaultHomeOverview(): HomeOverview = HomeOverview(

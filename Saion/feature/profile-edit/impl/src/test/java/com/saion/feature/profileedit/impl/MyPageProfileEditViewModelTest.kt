@@ -1,6 +1,9 @@
 package com.saion.feature.profileedit.impl
 
+import com.saion.core.domain.repository.CurrentCircleRepository
+import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.MemberRepository
+import com.saion.core.domain.usecase.home.SyncHomeProfileUseCase
 import com.saion.core.domain.usecase.member.GetMyInfoUseCase
 import com.saion.core.domain.usecase.member.UpdateMyProfileWithProfileImageUseCase
 import com.saion.core.domain.usecase.member.UpdateProfileUseCase
@@ -16,7 +19,10 @@ import com.saion.core.model.result.AppResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -217,6 +223,11 @@ private fun createMyPageProfileEditViewModel(
     updateMyProfileWithProfileImageUseCase = UpdateMyProfileWithProfileImageUseCase(
         uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
         updateProfileUseCase = UpdateProfileUseCase(repository),
+        syncHomeProfileUseCase = SyncHomeProfileUseCase(
+            currentCircleRepository = FakeCurrentCircleRepository(),
+            memberRepository = repository,
+            homeRepository = FakeHomeRepository(),
+        ),
     ),
     validateNicknameUseCase = ValidateNicknameUseCase(),
     profileImageReader = profileImageReader,
@@ -238,7 +249,11 @@ private class MyPageProfileEditFakeMemberRepository(
 ) : MemberRepository {
     val submitCallLog: MutableList<String> = mutableListOf()
 
+    override fun observeMyInfo(): Flow<MemberInfo?> = flowOf(null)
+
     override suspend fun getMyInfo(): AppResult<MemberInfo> = myInfoResult
+
+    override suspend fun refreshMyInfo(): AppResult<MemberInfo> = getMyInfo()
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> {
         throw UnsupportedOperationException()
@@ -272,6 +287,40 @@ private class MyPageProfileEditFakeMemberRepository(
     override suspend fun withdraw(reason: String): AppResult<Unit> {
         throw UnsupportedOperationException()
     }
+}
+
+private class FakeCurrentCircleRepository : CurrentCircleRepository {
+    private val flow = MutableStateFlow<String?>(null)
+
+    override fun observeCurrentCircleId(): Flow<String?> = flow
+
+    override suspend fun getCurrentCircleId(): String? = flow.value
+
+    override suspend fun selectCircle(circleId: String): AppResult<Unit> {
+        flow.value = circleId
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun clearCurrentCircle() {
+        flow.value = null
+    }
+}
+
+private class FakeHomeRepository : HomeRepository {
+    override fun observeHome(circleId: String): Flow<com.saion.core.model.home.HomeOverview?> = flowOf(null)
+
+    override fun observeMembers(circleId: String): Flow<List<com.saion.core.model.home.CircleMember>> = flowOf(emptyList())
+
+    override suspend fun getHome(circleId: String): AppResult<com.saion.core.model.home.HomeOverview> = error("Not used")
+
+    override suspend fun refreshHome(circleId: String): AppResult<com.saion.core.model.home.HomeOverview> = error("Not used")
+
+    override suspend fun getMembers(circleId: String): AppResult<List<com.saion.core.model.home.CircleMember>> = error("Not used")
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: MemberInfo,
+    ) = Unit
 }
 
 private class LoggingProfileImageReader(

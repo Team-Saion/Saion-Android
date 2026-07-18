@@ -16,9 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.saion.core.model.invitation.InvitationDetail
+import com.saion.core.model.invitation.InvitationIssuer
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.error.getString
@@ -173,4 +176,28 @@ private fun InvitationFallback(onCloseClick: () -> Unit) {
 private fun InvitationAcceptSnackbarMessage.resolve(context: Context): String = when (this) {
     is InvitationAcceptSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is InvitationAcceptSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun InvitationAcceptScreenPreview() {
+    SaionTheme {
+        InvitationAcceptScreen(
+            uiState = InvitationAcceptState(
+                isLoading = false,
+                detail = InvitationDetail(
+                    invitationId = "invite-1",
+                    circleName = "비니네",
+                    inviter = InvitationIssuer(
+                        nickname = "수빈",
+                        avatarColor = "#FFFFFF",
+                    ),
+                    expiresAt = "2026-07-30T00:00:00",
+                ),
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            onCloseClick = {},
+            onAcceptClick = {},
+        )
+    }
 }

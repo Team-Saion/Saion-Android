@@ -2,6 +2,7 @@ package com.saion.core.domain.usecase.member
 
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppResult
+import com.saion.core.domain.usecase.home.SyncHomeProfileUseCase
 import javax.inject.Inject
 
 /**
@@ -12,6 +13,7 @@ import javax.inject.Inject
 class UpdateMyProfileWithProfileImageUseCase @Inject constructor(
     private val uploadProfileImageUseCase: UploadProfileImageUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
+    private val syncHomeProfileUseCase: SyncHomeProfileUseCase,
 ) {
     suspend operator fun invoke(
         nickname: String?,
@@ -24,10 +26,15 @@ class UpdateMyProfileWithProfileImageUseCase @Inject constructor(
             }
         }
 
-        return if (nickname != null) {
+        val result = if (nickname != null) {
             updateProfileUseCase(nickname)
         } else {
             AppResult.Success(Unit)
+        }
+
+        return when (result) {
+            is AppResult.Success -> syncHomeProfileUseCase()
+            is AppResult.Failure -> result
         }
     }
 }

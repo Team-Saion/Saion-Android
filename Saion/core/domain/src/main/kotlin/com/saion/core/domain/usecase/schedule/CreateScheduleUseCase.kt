@@ -1,5 +1,6 @@
 package com.saion.core.domain.usecase.schedule
 
+import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.ScheduleRepository
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.CreateScheduleCommand
@@ -13,12 +14,21 @@ import javax.inject.Inject
  */
 class CreateScheduleUseCase @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
+    private val homeRepository: HomeRepository,
 ) {
     suspend operator fun invoke(
         circleId: String,
         command: CreateScheduleCommand,
-    ): AppResult<CreatedSchedule> = scheduleRepository.createSchedule(
-        circleId = circleId,
-        command = command,
-    )
+    ): AppResult<CreatedSchedule> = when (
+        val result = scheduleRepository.createSchedule(
+            circleId = circleId,
+            command = command,
+        )
+    ) {
+        is AppResult.Failure -> result
+        is AppResult.Success -> {
+            homeRepository.refreshHome(circleId = circleId)
+            result
+        }
+    }
 }

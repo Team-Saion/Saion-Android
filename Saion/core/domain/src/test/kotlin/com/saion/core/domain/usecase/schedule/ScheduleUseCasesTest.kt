@@ -1,6 +1,9 @@
 package com.saion.core.domain.usecase.schedule
 
+import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.ScheduleRepository
+import com.saion.core.model.home.CircleMember
+import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ConfirmationOption
 import com.saion.core.model.schedule.ConfirmationType
@@ -13,6 +16,8 @@ import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUpdateValue
 import com.saion.core.model.schedule.UpdateScheduleCommand
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -47,8 +52,9 @@ class ScheduleUseCasesTest {
         )
         val expected = AppResult.Success(CreatedSchedule(scheduleId = "schedule-1"))
         val repository = FakeScheduleRepository(createResult = expected)
+        val homeRepository = FakeHomeRepository()
 
-        val actual = CreateScheduleUseCase(repository).invoke(circleId = "circle-1", command = command)
+        val actual = CreateScheduleUseCase(repository, homeRepository).invoke(circleId = "circle-1", command = command)
 
         assertEquals(
             ScheduleUseCaseOutcome(
@@ -109,8 +115,9 @@ class ScheduleUseCasesTest {
     fun `일정 삭제는 식별자를 그대로 저장소에 전달한다`() = runBlocking {
         val expected = AppResult.Success(Unit)
         val repository = FakeScheduleRepository(deleteResult = expected)
+        val homeRepository = FakeHomeRepository()
 
-        val actual = DeleteScheduleUseCase(repository).invoke(circleId = "circle-1", scheduleId = "schedule-1")
+        val actual = DeleteScheduleUseCase(repository, homeRepository).invoke(circleId = "circle-1", scheduleId = "schedule-1")
 
         assertEquals(
             ScheduleUseCaseOutcome(
@@ -186,6 +193,41 @@ class ScheduleUseCasesTest {
             ScheduleUseCaseOutcome(result = actual, call = repository.lastCall),
         )
     }
+
+    @Test
+    fun `일정 생성 실패 시 홈은 새로고침하지 않는다`() = runBlocking {
+        val repository = FakeScheduleRepository(
+            createResult = AppResult.Failure(com.saion.core.model.result.AppError.NetworkUnavailable()),
+        )
+        val homeRepository = FakeHomeRepository()
+
+        CreateScheduleUseCase(repository, homeRepository).invoke(
+            circleId = "circle-1",
+            command = CreateScheduleCommand(
+                title = "여행",
+                startDate = "2026-07-08",
+                endDate = "2026-07-09",
+                startTime = "09:00",
+                endTime = "10:00",
+                needConfirm = true,
+                memo = "메모",
+            ),
+        )
+
+        assertEquals(emptyList<String>(), homeRepository.refreshedCircleIds)
+    }
+
+    @Test
+    fun `일정 삭제 실패 시 홈은 새로고침하지 않는다`() = runBlocking {
+        val repository = FakeScheduleRepository(
+            deleteResult = AppResult.Failure(com.saion.core.model.result.AppError.NetworkUnavailable()),
+        )
+        val homeRepository = FakeHomeRepository()
+
+        DeleteScheduleUseCase(repository, homeRepository).invoke(circleId = "circle-1", scheduleId = "schedule-1")
+
+        assertEquals(emptyList<String>(), homeRepository.refreshedCircleIds)
+    }
 }
 
 private data class ScheduleUseCaseOutcome<T>(
@@ -233,10 +275,22 @@ private class FakeScheduleRepository(
 ) : ScheduleRepository {
     var lastCall: ScheduleRepositoryCall? = null
 
+    override fun observeScheduleList(circleId: String): Flow<ScheduleListPage?> = flowOf(null)
+
+    override fun observeScheduleDetail(circleId: String, scheduleId: String): Flow<ScheduleDetail?> = flowOf(null)
+
+    override suspend fun getCachedScheduleList(circleId: String): ScheduleListPage? = null
+
     override suspend fun getScheduleList(circleId: String, cursor: String?, size: Int?): AppResult<ScheduleListPage> {
         lastCall = ScheduleRepositoryCall.GetScheduleList(circleId = circleId, cursor = cursor, size = size)
         return listResult
     }
+
+    override suspend fun refreshScheduleList(
+        circleId: String,
+        cursor: String?,
+        size: Int?,
+    ): AppResult<ScheduleListPage> = getScheduleList(circleId, cursor, size)
 
     override suspend fun createSchedule(circleId: String, command: CreateScheduleCommand): AppResult<CreatedSchedule> {
         lastCall = ScheduleRepositoryCall.CreateSchedule(circleId = circleId, command = command)
@@ -247,6 +301,11 @@ private class FakeScheduleRepository(
         lastCall = ScheduleRepositoryCall.GetScheduleDetail(circleId = circleId, scheduleId = scheduleId)
         return detailResult
     }
+
+    override suspend fun getCachedScheduleDetail(circleId: String, scheduleId: String): ScheduleDetail? = null
+
+    override suspend fun refreshScheduleDetail(circleId: String, scheduleId: String): AppResult<ScheduleDetail> =
+        getScheduleDetail(circleId, scheduleId)
 
     override suspend fun updateSchedule(
         circleId: String,
@@ -288,6 +347,28 @@ private class FakeScheduleRepository(
         )
         return cancelResult
     }
+}
+
+private class FakeHomeRepository : HomeRepository {
+    val refreshedCircleIds = mutableListOf<String>()
+
+    override fun observeHome(circleId: String): Flow<HomeOverview?> = flowOf(null)
+
+    override fun observeMembers(circleId: String): Flow<List<CircleMember>> = flowOf(emptyList())
+
+    override suspend fun getHome(circleId: String): AppResult<HomeOverview> = error("Not used")
+
+    override suspend fun refreshHome(circleId: String): AppResult<HomeOverview> {
+        refreshedCircleIds += circleId
+        return AppResult.Failure(com.saion.core.model.result.AppError.NetworkUnavailable())
+    }
+
+    override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> = error("Not used")
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: com.saion.core.model.member.MemberInfo,
+    ) = Unit
 }
 
 private fun defaultScheduleDetail(): ScheduleDetail = ScheduleDetail(

@@ -2,11 +2,13 @@ package com.saion.app.viewmodel
 
 import com.saion.app.navigation.startup.AppStartDestination
 import com.saion.core.domain.repository.AuthRepository
+import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.usecase.auth.ClearSessionUseCase
 import com.saion.core.domain.usecase.auth.GetStoredMemberRoleUseCase
 import com.saion.core.domain.usecase.auth.IsSignedInUseCase
 import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
+import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -14,6 +16,7 @@ import com.saion.feature.auth.api.key.AuthStartStep
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -129,15 +132,16 @@ private fun createViewModel(repository: FakeRepository): AppViewModel = AppViewM
     isSignedInUseCase = IsSignedInUseCase(authRepository = repository),
     getStoredMemberRoleUseCase = GetStoredMemberRoleUseCase(authRepository = repository),
     clearSessionUseCase = ClearSessionUseCase(authRepository = repository),
-    syncCurrentCircleUseCase = SyncCurrentCircleUseCase(currentCircleRepository = repository),
+    syncCurrentCircleUseCase = SyncCurrentCircleUseCase(currentCircleRepository = repository, circleRepository = repository),
 )
 
 private class FakeRepository(
     private val isSignedIn: Boolean,
     private val storedMemberRole: AppResult<MemberRole>,
-) : AuthRepository, CurrentCircleRepository {
+) : AuthRepository, CurrentCircleRepository, CircleRepository {
     var clearSessionCalled: Boolean = false
     var syncCurrentCircleCallCount: Int = 0
+    private val currentCircleId = MutableStateFlow<String?>(null)
 
     override suspend fun loginWithKakao(idToken: String): AppResult<MemberRole> {
         throw UnsupportedOperationException("Not required for this test")
@@ -151,18 +155,40 @@ private class FakeRepository(
         clearSessionCalled = true
     }
 
-    override fun observeCurrentCircleId(): Flow<String?> = flowOf(null)
+    override fun observeCurrentCircleId(): Flow<String?> = currentCircleId
 
-    override suspend fun getCurrentCircleId(): String? = null
+    override suspend fun getCurrentCircleId(): String? = currentCircleId.value
 
     override suspend fun selectCircle(circleId: String): AppResult<Unit> {
-        throw UnsupportedOperationException("Not required for this test")
+        currentCircleId.value = circleId
+        return AppResult.Success(Unit)
     }
 
-    override suspend fun syncCurrentCircle(): AppResult<String?> {
+    override fun observeCircles(): Flow<List<CircleSummary>> = flowOf(listOf(sampleCircle()))
+
+    override suspend fun listCircles(): AppResult<List<CircleSummary>> {
         syncCurrentCircleCallCount += 1
-        return AppResult.Success("circle-1")
+        return AppResult.Success(listOf(sampleCircle()))
     }
 
-    override suspend fun clearCurrentCircle() = Unit
+    override suspend fun refreshCircles(): AppResult<List<CircleSummary>> {
+        return AppResult.Success(listOf(sampleCircle()))
+    }
+
+    override suspend fun createCircle(name: String): AppResult<CircleSummary> = error("Not required for this test")
+
+    override suspend fun transferInitiator(circleId: String, targetMemberId: String): AppResult<CircleSummary> =
+        error("Not required for this test")
+
+    override suspend fun leave(circleId: String): AppResult<Unit> = error("Not required for this test")
+
+    override suspend fun clearCurrentCircle() {
+        currentCircleId.value = null
+    }
 }
+
+private fun sampleCircle(): CircleSummary = CircleSummary(
+    circleId = "circle-1",
+    name = "circle",
+    ownerId = "owner-1",
+)

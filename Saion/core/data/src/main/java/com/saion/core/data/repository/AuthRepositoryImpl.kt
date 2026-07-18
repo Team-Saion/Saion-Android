@@ -2,6 +2,7 @@ package com.saion.core.data.repository
 
 import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
+import com.saion.core.datastore.datasource.CircleLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
 import com.saion.core.datastore.datasource.MemberProfileLocalDataSource
 import com.saion.core.domain.repository.AuthRepository
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 internal class AuthRepositoryImpl @Inject constructor(
     private val localDataSource: AuthLocalDataSource,
+    private val circleLocalDataSource: CircleLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
     private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
     private val remoteDataSource: AuthRemoteDataSource,
@@ -44,6 +46,7 @@ internal class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun clearSession() {
         localDataSource.clearTokens()
+        circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()
     }

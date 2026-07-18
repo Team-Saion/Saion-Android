@@ -8,6 +8,8 @@ import com.saion.core.model.notification.NotificationRouteType
 import com.saion.core.model.notification.NotificationSetting
 import com.saion.core.model.notification.NotificationType
 import com.saion.core.model.result.AppResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -118,10 +120,14 @@ private class FakeNotificationRepository(
         return markReadResult
     }
 
+    override fun observeSetting(): Flow<NotificationSetting?> = flowOf(null)
+
     override suspend fun getSetting(): AppResult<NotificationSetting> {
         lastCall = NotificationRepositoryCall.GetSetting
         return getSettingResult
     }
+
+    override suspend fun refreshSetting(): AppResult<NotificationSetting> = getSetting()
 
     override suspend fun updateSetting(setting: NotificationSetting): AppResult<NotificationSetting> {
         lastCall = NotificationRepositoryCall.UpdateSetting(setting = setting)

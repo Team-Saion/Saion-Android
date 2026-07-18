@@ -1,13 +1,16 @@
 package com.saion.feature.home.impl.home
 
 import com.saion.core.domain.repository.CurrentCircleRepository
+import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.HomeRepository
 import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.domain.usecase.circle.ObserveCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
 import com.saion.core.domain.usecase.home.GetHomeInviterNameUseCase
-import com.saion.core.domain.usecase.home.GetHomeUseCase
+import com.saion.core.domain.usecase.home.ObserveHomeUseCase
+import com.saion.core.domain.usecase.home.RefreshHomeUseCase
+import com.saion.core.model.member.MemberInfo
 import com.saion.core.domain.usecase.invitation.IssueInvitationUseCase
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
@@ -33,9 +36,12 @@ import com.saion.feature.home.impl.home.viewmodel.toUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -70,7 +76,8 @@ class HomeViewModelTest {
 
         HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
-            getHomeUseCase = GetHomeUseCase(homeRepository),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -83,9 +90,11 @@ class HomeViewModelTest {
 
     @Test
     fun `현재 써클이 없고 sync로 복구되지 않으면 none 상태가 된다`() = runTest {
+        val homeRepository = FakeHomeRepository(result = AppResult.Success(defaultOverview()))
         val viewModel = HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = null)),
-            getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Success(defaultOverview()))),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -99,13 +108,13 @@ class HomeViewModelTest {
     @Test
     fun `홈 조회 성공 시 content 상태가 된다`() = runTest {
         val overview = defaultOverview()
+        val homeRepository = FakeHomeRepository(result = AppResult.Success(overview))
         val viewModel = HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(
                 FakeCurrentCircleRepository(initialCircleId = overview.circle.circleId),
             ),
-            getHomeUseCase = GetHomeUseCase(
-                FakeHomeRepository(result = AppResult.Success(overview)),
-            ),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -173,9 +182,11 @@ class HomeViewModelTest {
 
     @Test
     fun `홈 조회 실패 시 스낵바 effect를 보낸다`() = runTest {
+        val homeRepository = FakeHomeRepository(result = AppResult.Failure(AppError.NetworkUnavailable()))
         val viewModel = HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
-            getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Failure(AppError.NetworkUnavailable()))),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -200,7 +211,8 @@ class HomeViewModelTest {
         )
         HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
-            getHomeUseCase = GetHomeUseCase(homeRepository),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -218,13 +230,15 @@ class HomeViewModelTest {
     @Test
     fun `초대 클릭 시 초대장을 발급하고 공유를 호출한다`() = runTest {
         val overview = defaultOverview()
+        val homeRepository = FakeHomeRepository(result = AppResult.Success(overview))
         val invitationRepository = FakeInvitationRepository()
         val shareClient = FakeInvitationShareClient()
         val viewModel = HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(
                 FakeCurrentCircleRepository(initialCircleId = overview.circle.circleId),
             ),
-            getHomeUseCase = GetHomeUseCase(FakeHomeRepository(result = AppResult.Success(overview))),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(invitationRepository),
             invitationShareClient = shareClient,
@@ -254,7 +268,8 @@ class HomeViewModelTest {
 
         HomeViewModel(
             observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
-            getHomeUseCase = GetHomeUseCase(homeRepository),
+            observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
             invitationShareClient = FakeInvitationShareClient(),
@@ -268,15 +283,15 @@ class HomeViewModelTest {
     }
 }
 
-private fun observeResolvedCurrentCircleUseCase(repository: CurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
+private fun observeResolvedCurrentCircleUseCase(repository: FakeCurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
     ObserveResolvedCurrentCircleUseCase(
         observeCurrentCircleUseCase = ObserveCurrentCircleUseCase(repository),
-        syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository),
+        syncCurrentCircleUseCase = SyncCurrentCircleUseCase(repository, FakeResolvedCircleRepository(repository)),
     )
 
 private class FakeCurrentCircleRepository(
     initialCircleId: String?,
-    private val syncedCircleId: String? = initialCircleId,
+    val syncedCircleId: String? = initialCircleId,
 ) : CurrentCircleRepository {
     private val flow = MutableStateFlow(initialCircleId)
     var syncCallCount: Int = 0
@@ -289,12 +304,9 @@ private class FakeCurrentCircleRepository(
 
     override suspend fun getCurrentCircleId(): String? = flow.value
 
-    override suspend fun selectCircle(circleId: String): AppResult<Unit> = AppResult.Success(Unit)
-
-    override suspend fun syncCurrentCircle(): AppResult<String?> {
-        syncCallCount += 1
-        flow.value = syncedCircleId
-        return AppResult.Success(flow.value)
+    override suspend fun selectCircle(circleId: String): AppResult<Unit> {
+        flow.value = circleId
+        return AppResult.Success(Unit)
     }
 
     override suspend fun clearCurrentCircle() {
@@ -302,19 +314,57 @@ private class FakeCurrentCircleRepository(
     }
 }
 
+private class FakeResolvedCircleRepository(
+    private val repository: FakeCurrentCircleRepository,
+) : CircleRepository {
+    override fun observeCircles(): Flow<List<CircleSummary>> = flowOf(emptyList())
+
+    override suspend fun listCircles(): AppResult<List<CircleSummary>> = AppResult.Success(emptyList())
+
+    override suspend fun refreshCircles(): AppResult<List<CircleSummary>> {
+        repository.syncCallCount += 1
+        return AppResult.Success(
+            repository.syncedCircleId?.let { listOf(CircleSummary(circleId = it, name = "circle", ownerId = "owner")) }.orEmpty(),
+        )
+    }
+
+    override suspend fun createCircle(name: String): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun transferInitiator(circleId: String, targetMemberId: String): AppResult<CircleSummary> = error("Not used")
+
+    override suspend fun leave(circleId: String): AppResult<Unit> = error("Not used")
+}
+
 private class FakeHomeRepository(private val result: AppResult<HomeOverview>) : HomeRepository {
     var requestedCircleId: String? = null
     var requestCount: Int = 0
+    private val homeState = MutableStateFlow<HomeOverview?>(null)
+
+    override fun observeHome(circleId: String): Flow<HomeOverview?> = homeState
+
+    override fun observeMembers(circleId: String): Flow<List<CircleMember>> = homeState.map { it?.members.orEmpty() }
 
     override suspend fun getHome(circleId: String): AppResult<HomeOverview> {
+        return homeState.value?.let { AppResult.Success(it) } ?: refreshHome(circleId)
+    }
+
+    override suspend fun refreshHome(circleId: String): AppResult<HomeOverview> {
         requestedCircleId = circleId
         requestCount += 1
+        if (result is AppResult.Success) {
+            homeState.value = result.data
+        }
         return result
     }
 
     override suspend fun getMembers(circleId: String): AppResult<List<CircleMember>> {
         error("Not used")
     }
+
+    override suspend fun updateCachedMyMemberProfile(
+        circleId: String,
+        memberInfo: MemberInfo,
+    ) = Unit
 }
 
 private class FakeInvitationRepository : InvitationRepository {
