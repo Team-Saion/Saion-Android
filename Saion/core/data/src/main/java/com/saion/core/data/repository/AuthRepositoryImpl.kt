@@ -3,6 +3,7 @@ package com.saion.core.data.repository
 import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
+import com.saion.core.datastore.datasource.MemberProfileLocalDataSource
 import com.saion.core.domain.repository.AuthRepository
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
@@ -22,6 +23,7 @@ import kotlinx.serialization.json.jsonPrimitive
 internal class AuthRepositoryImpl @Inject constructor(
     private val localDataSource: AuthLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
+    private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
     private val remoteDataSource: AuthRemoteDataSource,
 ) : AuthRepository {
     override suspend fun loginWithKakao(idToken: String): AppResult<MemberRole> = safeRequest(
@@ -43,6 +45,7 @@ internal class AuthRepositoryImpl @Inject constructor(
     override suspend fun clearSession() {
         localDataSource.clearTokens()
         currentCircleLocalDataSource.clearSelectedCircleId()
+        memberProfileLocalDataSource.clearProfile()
     }
 }
 

@@ -3,6 +3,7 @@ package com.saion.feature.mypage.impl.mypage
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,12 +18,18 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
@@ -48,6 +55,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun MyPageScreen(
     modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {},
     onNotificationSettingsClick: () -> Unit = {},
     onTermsClick: () -> Unit = {},
     onFeedbackClick: () -> Unit = {},
@@ -58,7 +66,10 @@ internal fun MyPageScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val versionName = remember(context) { context.findVersionName() }
+    var shouldRefreshProfileOnResume by rememberSaveable { mutableStateOf(false) }
+    var didLeaveForProfileEdit by rememberSaveable { mutableStateOf(false) }
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
@@ -67,10 +78,31 @@ internal fun MyPageScreen(
         }
     }
 
+    DisposableEffect(lifecycleOwner, shouldRefreshProfileOnResume) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP && shouldRefreshProfileOnResume) {
+                didLeaveForProfileEdit = true
+            }
+
+            if (event == Lifecycle.Event.ON_RESUME && shouldRefreshProfileOnResume && didLeaveForProfileEdit) {
+                viewModel.dispatch(MyPageIntent.RefreshProfile)
+                shouldRefreshProfileOnResume = false
+                didLeaveForProfileEdit = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     MyPageScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         versionName = versionName,
+        onProfileClick = {
+            shouldRefreshProfileOnResume = true
+            didLeaveForProfileEdit = false
+            onProfileClick()
+        },
         onNotificationSettingsClick = onNotificationSettingsClick,
         onTermsClick = onTermsClick,
         onFeedbackClick = onFeedbackClick,
@@ -88,6 +120,7 @@ private fun MyPageScreen(
     uiState: MyPageState,
     snackbarHostState: SnackbarHostState,
     versionName: String,
+    onProfileClick: () -> Unit,
     onNotificationSettingsClick: () -> Unit,
     onTermsClick: () -> Unit,
     onFeedbackClick: () -> Unit,
@@ -114,7 +147,10 @@ private fun MyPageScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileSection(uiState = uiState)
+            ProfileSection(
+                uiState = uiState,
+                onClick = onProfileClick,
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -202,6 +238,7 @@ private fun MyPageScreenPreview() {
             ),
             snackbarHostState = remember { SnackbarHostState() },
             versionName = "1.0.0",
+            onProfileClick = {},
             onNotificationSettingsClick = {},
             onTermsClick = {},
             onFeedbackClick = {},

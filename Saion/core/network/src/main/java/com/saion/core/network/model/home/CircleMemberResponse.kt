@@ -14,7 +14,7 @@ data class CircleMemberResponse(
     val avatarColor: AvatarColorResponse,
     @SerialName("profileImageUrl")
     val profileImageUrl: String? = null,
-    @SerialName("isMe")
+    @SerialName("me")
     val isMe: Boolean,
     @SerialName("role")
     val role: String,

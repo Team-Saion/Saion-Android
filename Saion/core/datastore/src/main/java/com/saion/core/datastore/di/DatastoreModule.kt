@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import com.saion.core.datastore.datastore.authDataStore
 import com.saion.core.datastore.datastore.currentCircleDataStore
+import com.saion.core.datastore.datastore.memberProfileDataStore
 import com.saion.core.datastore.datastore.notificationSettingDataStore
 import com.saion.core.datastore.model.AuthTokens
 import com.saion.core.datastore.model.CurrentCircle
+import com.saion.core.datastore.model.MemberProfileCache
 import com.saion.core.datastore.model.NotificationSettingCache
 import dagger.Module
 import dagger.Provides
@@ -32,4 +34,10 @@ object DatastoreModule {
     internal fun provideNotificationSettingDataStore(
         @ApplicationContext context: Context,
     ): DataStore<NotificationSettingCache> = context.notificationSettingDataStore
+
+    @Provides
+    @Singleton
+    internal fun provideMemberProfileDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<MemberProfileCache> = context.memberProfileDataStore
 }

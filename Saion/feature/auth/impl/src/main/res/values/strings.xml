@@ -13,16 +13,4 @@
     <string name="auth_error_timeout">응답이 지연되고 있습니다. 다시 시도해주세요.</string>
     <string name="auth_error_server_unavailable">서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.</string>
     <string name="auth_error_unauthorized">로그인 정보가 만료되었습니다. 다시 로그인해주세요.</string>
-    <string name="nickname_title">어떻게 불러드릴까요?</string>
-    <string name="nickname_placeholder">닉네임을 입력해주세요</string>
-    <string name="nickname_placeholder_short">닉네임</string>
-    <string name="nickname_submit">시작하기</string>
-    <string name="nickname_validation_guide">2~10자, 한글, 영문, 숫자만</string>
-    <string name="nickname_validation_empty">닉네임을 입력해주세요.</string>
-    <string name="nickname_validation_too_short">닉네임은 2자 이상이어야 해요.</string>
-    <string name="nickname_validation_too_long">닉네임은 10자 이하로 입력해주세요.</string>
-    <string name="nickname_validation_invalid_character">한글, 영문, 숫자만 사용할 수 있어요.</string>
-    <string name="nickname_profile_image_description">프로필 이미지</string>
-    <string name="nickname_error_load_onboarding">온보딩 정보를 불러오지 못했습니다.</string>
-    <string name="nickname_error_save">닉네임 저장에 실패했습니다. 다시 시도해주세요.</string>
 </resources>

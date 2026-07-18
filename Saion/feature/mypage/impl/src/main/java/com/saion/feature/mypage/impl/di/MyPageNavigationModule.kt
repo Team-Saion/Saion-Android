@@ -8,6 +8,8 @@ import com.saion.feature.mypage.api.key.MyPageNavKey
 import com.saion.feature.mypage.api.key.NotificationSettingsNavKey
 import com.saion.feature.mypage.impl.mypage.MyPageScreen
 import com.saion.feature.mypage.impl.notificationsetting.NotificationSettingsScreen
+import com.saion.feature.profileedit.api.key.ProfileEditNavKey
+import com.saion.feature.profileedit.impl.MyPageProfileEditScreen
 import com.saion.feature.terms.api.key.TermDetailNavKey
 import com.saion.feature.terms.api.key.TermsAgreementNavKey
 import com.saion.feature.terms.api.key.TermsMode
@@ -29,8 +31,14 @@ object MyPageNavigationModule {
             with(scope) {
                 entry<MyPageNavKey> {
                     MyPageScreen(
+                        onProfileClick = { navigator.push(ProfileEditNavKey()) },
                         onNotificationSettingsClick = { navigator.push(NotificationSettingsNavKey) },
                         onTermsClick = { navigator.push(TermsAgreementNavKey(mode = TermsMode.READ_ONLY)) },
+                    )
+                }
+                entry<ProfileEditNavKey> {
+                    MyPageProfileEditScreen(
+                        onBack = { navigator.pop() },
                     )
                 }
                 entry<NotificationSettingsNavKey> {

@@ -6,6 +6,7 @@ import com.saion.core.model.member.MemberRole
 import com.saion.core.model.member.MemberStatus
 import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
+import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -33,14 +34,16 @@ class MemberUseCasesTest {
         assertEquals(
             MemberUseCaseOutcome(
                 result = expected,
-                call = MemberRepositoryCall.ChangeState(
-                    status = MemberStatus.DELETED,
-                    role = MemberRole.ADMIN,
+                calls = listOf(
+                    MemberRepositoryCall.ChangeState(
+                        status = MemberStatus.DELETED,
+                        role = MemberRole.ADMIN,
+                    ),
                 ),
             ),
             MemberUseCaseOutcome(
                 result = actual,
-                call = repository.lastCall,
+                calls = repository.calls,
             ),
         )
     }
@@ -55,11 +58,284 @@ class MemberUseCasesTest {
         assertEquals(
             MemberUseCaseOutcome(
                 result = expected,
-                call = MemberRepositoryCall.Withdraw(reason = "테스트 종료"),
+                calls = listOf(MemberRepositoryCall.Withdraw(reason = "테스트 종료")),
             ),
             MemberUseCaseOutcome(
                 result = actual,
-                call = repository.lastCall,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `온보딩 합성 유즈케이스는 이미지가 있으면 업로드 후 완료를 호출한다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val profileImage = sampleProfileImageUpload()
+        val useCase = CompleteOnboardingWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            completeOnboardingUseCase = CompleteOnboardingUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "사이온",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = listOf(
+                    MemberRepositoryCall.UploadProfileImage(profileImage),
+                    MemberRepositoryCall.CompleteOnboarding("사이온"),
+                ),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `온보딩 합성 유즈케이스는 이미지가 없으면 완료만 호출한다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val useCase = CompleteOnboardingWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            completeOnboardingUseCase = CompleteOnboardingUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "사이온",
+            profileImage = null,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = listOf(MemberRepositoryCall.CompleteOnboarding("사이온")),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `온보딩 합성 유즈케이스는 이미지 업로드가 실패하면 완료를 호출하지 않는다`() = runBlocking {
+        val failure = AppResult.Failure(AppError.NetworkUnavailable())
+        val repository = FakeMemberRepository(uploadProfileImageResult = failure)
+        val profileImage = sampleProfileImageUpload()
+        val useCase = CompleteOnboardingWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            completeOnboardingUseCase = CompleteOnboardingUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "사이온",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = failure,
+                calls = listOf(MemberRepositoryCall.UploadProfileImage(profileImage)),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `온보딩 합성 유즈케이스는 완료가 실패하면 그 실패를 반환한다`() = runBlocking {
+        val failure = AppResult.Failure(AppError.Timeout())
+        val repository = FakeMemberRepository(completeOnboardingResult = failure)
+        val profileImage = sampleProfileImageUpload()
+        val useCase = CompleteOnboardingWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            completeOnboardingUseCase = CompleteOnboardingUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "사이온",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = failure,
+                calls = listOf(
+                    MemberRepositoryCall.UploadProfileImage(profileImage),
+                    MemberRepositoryCall.CompleteOnboarding("사이온"),
+                ),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 이미지가 있으면 업로드 후 수정을 호출한다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val profileImage = sampleProfileImageUpload()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "새닉네임",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = listOf(
+                    MemberRepositoryCall.UploadProfileImage(profileImage),
+                    MemberRepositoryCall.UpdateProfile("새닉네임"),
+                ),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 이미지가 없으면 수정만 호출한다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "새닉네임",
+            profileImage = null,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = listOf(MemberRepositoryCall.UpdateProfile("새닉네임")),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 이미지 업로드가 실패하면 수정을 호출하지 않는다`() = runBlocking {
+        val failure = AppResult.Failure(AppError.NetworkUnavailable())
+        val repository = FakeMemberRepository(uploadProfileImageResult = failure)
+        val profileImage = sampleProfileImageUpload()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "새닉네임",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = failure,
+                calls = listOf(MemberRepositoryCall.UploadProfileImage(profileImage)),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 이미지만 변경되면 업로드만 호출한다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val profileImage = sampleProfileImageUpload()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = null,
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = listOf(MemberRepositoryCall.UploadProfileImage(profileImage)),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 변경사항이 없으면 아무것도 호출하지 않는다`() = runBlocking {
+        val repository = FakeMemberRepository()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = null,
+            profileImage = null,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = AppResult.Success(Unit),
+                calls = emptyList(),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
+            ),
+        )
+    }
+
+    @Test
+    fun `프로필 수정 합성 유즈케이스는 수정이 실패하면 그 실패를 반환한다`() = runBlocking {
+        val failure = AppResult.Failure(AppError.ServerUnavailable())
+        val repository = FakeMemberRepository(updateProfileResult = failure)
+        val profileImage = sampleProfileImageUpload()
+        val useCase = UpdateMyProfileWithProfileImageUseCase(
+            uploadProfileImageUseCase = UploadProfileImageUseCase(repository),
+            updateProfileUseCase = UpdateProfileUseCase(repository),
+        )
+
+        val actual = useCase(
+            nickname = "새닉네임",
+            profileImage = profileImage,
+        )
+
+        assertEquals(
+            MemberUseCaseOutcome(
+                result = failure,
+                calls = listOf(
+                    MemberRepositoryCall.UploadProfileImage(profileImage),
+                    MemberRepositoryCall.UpdateProfile("새닉네임"),
+                ),
+            ),
+            MemberUseCaseOutcome(
+                result = actual,
+                calls = repository.calls,
             ),
         )
     }
@@ -67,14 +343,20 @@ class MemberUseCasesTest {
 
 private data class MemberUseCaseOutcome<T>(
     val result: AppResult<T>,
-    val call: MemberRepositoryCall?,
+    val calls: List<MemberRepositoryCall>,
 )
 
 private sealed interface MemberRepositoryCall {
+    data class CompleteOnboarding(val nickname: String) : MemberRepositoryCall
+
+    data class UpdateProfile(val nickname: String) : MemberRepositoryCall
+
     data class ChangeState(
         val status: MemberStatus?,
         val role: MemberRole?,
     ) : MemberRepositoryCall
+
+    data class UploadProfileImage(val image: ProfileImageUpload) : MemberRepositoryCall
 
     data class Withdraw(val reason: String) : MemberRepositoryCall
 }
@@ -111,30 +393,45 @@ private class FakeMemberRepository(
     private val logoutResult: AppResult<Unit> = AppResult.Success(Unit),
     private val withdrawResult: AppResult<Unit> = AppResult.Success(Unit),
 ) : MemberRepository {
-    var lastCall: MemberRepositoryCall? = null
+    val calls: MutableList<MemberRepositoryCall> = mutableListOf()
 
     override suspend fun getMyInfo(): AppResult<MemberInfo> = myInfoResult
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = onboardingInfoResult
 
-    override suspend fun completeOnboarding(nickname: String): AppResult<Unit> = completeOnboardingResult
+    override suspend fun completeOnboarding(nickname: String): AppResult<Unit> {
+        calls += MemberRepositoryCall.CompleteOnboarding(nickname)
+        return completeOnboardingResult
+    }
 
-    override suspend fun updateProfile(nickname: String): AppResult<Unit> = updateProfileResult
+    override suspend fun updateProfile(nickname: String): AppResult<Unit> {
+        calls += MemberRepositoryCall.UpdateProfile(nickname)
+        return updateProfileResult
+    }
 
     override suspend fun changeState(
         status: MemberStatus?,
         role: MemberRole?,
     ): AppResult<MemberInfo> {
-        lastCall = MemberRepositoryCall.ChangeState(status = status, role = role)
+        calls += MemberRepositoryCall.ChangeState(status = status, role = role)
         return changeStateResult
     }
 
-    override suspend fun uploadProfileImage(image: ProfileImageUpload): AppResult<Unit> = uploadProfileImageResult
+    override suspend fun uploadProfileImage(image: ProfileImageUpload): AppResult<Unit> {
+        calls += MemberRepositoryCall.UploadProfileImage(image)
+        return uploadProfileImageResult
+    }
 
     override suspend fun logout(): AppResult<Unit> = logoutResult
 
     override suspend fun withdraw(reason: String): AppResult<Unit> {
-        lastCall = MemberRepositoryCall.Withdraw(reason = reason)
+        calls += MemberRepositoryCall.Withdraw(reason = reason)
         return withdrawResult
     }
 }
+
+private fun sampleProfileImageUpload(): ProfileImageUpload = ProfileImageUpload(
+    bytes = byteArrayOf(1, 2, 3),
+    fileName = "profile.png",
+    mimeType = "image/png",
+)

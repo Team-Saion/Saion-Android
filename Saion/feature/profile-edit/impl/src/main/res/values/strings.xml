@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_edit_auth_title">어떻게 불러드릴까요?</string>
+    <string name="profile_edit_mypage_title">프로필을 수정해보세요</string>
+    <string name="profile_edit_placeholder">닉네임을 입력해주세요</string>
+    <string name="profile_edit_submit_auth">시작하기</string>
+    <string name="profile_edit_submit_mypage">저장하기</string>
+    <string name="profile_edit_validation_guide">2~10자, 한글, 영문, 숫자만</string>
+    <string name="profile_edit_validation_empty">닉네임을 입력해주세요.</string>
+    <string name="profile_edit_validation_too_short">닉네임은 2자 이상이어야 해요.</string>
+    <string name="profile_edit_validation_too_long">닉네임은 10자 이하로 입력해주세요.</string>
+    <string name="profile_edit_validation_invalid_character">한글, 영문, 숫자만 사용할 수 있어요.</string>
+    <string name="profile_edit_profile_image_description">프로필 이미지</string>
+    <string name="profile_edit_error_load_auth">온보딩 정보를 불러오지 못했습니다.</string>
+    <string name="profile_edit_error_save_auth">닉네임 저장에 실패했습니다. 다시 시도해주세요.</string>
+    <string name="profile_edit_error_load_mypage">프로필 정보를 불러오지 못했어요</string>
+    <string name="profile_edit_error_save_mypage">프로필을 저장하지 못했어요</string>
+    <string name="profile_edit_error_read_image">선택한 이미지를 불러오지 못했어요</string>
+</resources>

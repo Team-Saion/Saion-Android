@@ -175,6 +175,27 @@ class MyPageViewModelTest {
         assertTrue(viewModel.uiState.value.showLogoutDialog)
         assertTrue(viewModel.uiState.value.isLogoutLoading.not())
     }
+
+    @Test
+    fun `프로필 새로고침 intent 시 내 정보를 다시 조회한다`() = runTest {
+        val repository = FakeMemberRepository(
+            myInfoResults = listOf(
+                AppResult.Success(defaultMemberInfo()),
+                AppResult.Success(defaultMemberInfo().copy(nickname = "변경됨")),
+            ),
+        )
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(MyPageIntent.RefreshProfile)
+        advanceUntilIdle()
+
+        assertEquals("변경됨", viewModel.uiState.value.nickname)
+        assertEquals(2, repository.getMyInfoCallCount)
+    }
 }
 
 private fun defaultMemberInfo(): MemberInfo = MemberInfo(
@@ -186,10 +207,18 @@ private fun defaultMemberInfo(): MemberInfo = MemberInfo(
 )
 
 private class FakeMemberRepository(
-    private val myInfoResult: AppResult<MemberInfo>,
+    private val myInfoResult: AppResult<MemberInfo> = AppResult.Success(defaultMemberInfo()),
+    private val myInfoResults: List<AppResult<MemberInfo>> = emptyList(),
     private val logoutResult: AppResult<Unit> = AppResult.Success(Unit),
 ) : MemberRepository {
-    override suspend fun getMyInfo(): AppResult<MemberInfo> = myInfoResult
+    var getMyInfoCallCount: Int = 0
+        private set
+
+    override suspend fun getMyInfo(): AppResult<MemberInfo> {
+        val result = myInfoResults.getOrNull(getMyInfoCallCount) ?: myInfoResult
+        getMyInfoCallCount += 1
+        return result
+    }
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> {
         throw UnsupportedOperationException()

@@ -2,6 +2,8 @@ package com.saion.core.data.repository
 
 import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
+import com.saion.core.datastore.datasource.MemberProfileLocalDataSource
+import com.saion.core.datastore.model.MemberProfileCache
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -147,18 +149,21 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `clearSession clears local tokens and current circle`() = runBlocking {
+    fun `clearSession clears local tokens current circle and member profile cache`() = runBlocking {
         val localDataSource = FakeAuthLocalDataSource(accessToken = jwtWithRoles("MEMBER"))
         val currentCircleLocalDataSource = FakeCurrentCircleLocalDataSource()
+        val memberProfileLocalDataSource = FakeMemberProfileLocalDataSource()
         val repository = createRepository(
             localDataSource = localDataSource,
             currentCircleLocalDataSource = currentCircleLocalDataSource,
+            memberProfileLocalDataSource = memberProfileLocalDataSource,
         )
 
         repository.clearSession()
 
         assertTrue(localDataSource.clearTokensCalled)
         assertTrue(currentCircleLocalDataSource.clearSelectedCircleIdCalled)
+        assertTrue(memberProfileLocalDataSource.clearProfileCalled)
     }
 }
 
@@ -166,9 +171,11 @@ private fun createRepository(
     accessToken: String = jwtWithRoles("MEMBER"),
     localDataSource: FakeAuthLocalDataSource = FakeAuthLocalDataSource(),
     currentCircleLocalDataSource: FakeCurrentCircleLocalDataSource = FakeCurrentCircleLocalDataSource(),
+    memberProfileLocalDataSource: FakeMemberProfileLocalDataSource = FakeMemberProfileLocalDataSource(),
 ): AuthRepositoryImpl = AuthRepositoryImpl(
     localDataSource = localDataSource,
     currentCircleLocalDataSource = currentCircleLocalDataSource,
+    memberProfileLocalDataSource = memberProfileLocalDataSource,
     remoteDataSource = FakeAuthRemoteDataSource(accessToken = accessToken),
 )
 
@@ -230,6 +237,18 @@ private class FakeCurrentCircleLocalDataSource : CurrentCircleLocalDataSource {
 
     override suspend fun clearSelectedCircleId() {
         clearSelectedCircleIdCalled = true
+    }
+}
+
+private class FakeMemberProfileLocalDataSource : MemberProfileLocalDataSource {
+    var clearProfileCalled: Boolean = false
+
+    override suspend fun getProfile(): MemberProfileCache? = null
+
+    override suspend fun saveProfile(profile: MemberProfileCache) = Unit
+
+    override suspend fun clearProfile() {
+        clearProfileCalled = true
     }
 }
 

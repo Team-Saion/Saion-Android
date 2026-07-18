@@ -22,6 +22,7 @@ internal class MyPageViewModel @Inject constructor(
 
     override fun handleIntent(intent: MyPageIntent) {
         when (intent) {
+            MyPageIntent.RefreshProfile -> loadMyInfo()
             MyPageIntent.ClickLogout -> update { copy(showLogoutDialog = true) }
             MyPageIntent.DismissLogoutDialog -> update { copy(showLogoutDialog = false, isLogoutLoading = false) }
             MyPageIntent.ConfirmLogout -> {

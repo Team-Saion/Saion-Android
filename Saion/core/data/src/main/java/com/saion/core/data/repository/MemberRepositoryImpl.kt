@@ -3,6 +3,8 @@ package com.saion.core.data.repository
 import com.saion.core.data.util.safeRequest
 import com.saion.core.datastore.datasource.AuthLocalDataSource
 import com.saion.core.datastore.datasource.CurrentCircleLocalDataSource
+import com.saion.core.datastore.datasource.MemberProfileLocalDataSource
+import com.saion.core.datastore.model.MemberProfileCache
 import com.saion.core.domain.repository.MemberRepository
 import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.member.MemberRole
@@ -11,9 +13,10 @@ import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
-import com.saion.core.network.model.member.MemberInfoResponse
 import com.saion.core.network.datasource.MemberRemoteDataSource
+import com.saion.core.network.model.member.MemberInfoResponse
 import javax.inject.Inject
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 멤버 원격 응답을 도메인 결과로 변환하는 기본 구현입니다.
@@ -21,11 +24,23 @@ import javax.inject.Inject
 internal class MemberRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
+    private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
-    override suspend fun getMyInfo(): AppResult<MemberInfo> = safeRequest(
-        request = { memberRemoteDataSource.getMyInfo() },
-    ) { response -> response.toMemberInfoResult() }
+    private val hasFetchedMyInfoThisRun = AtomicBoolean(false)
+
+    override suspend fun getMyInfo(): AppResult<MemberInfo> {
+        if (!hasFetchedMyInfoThisRun.get()) {
+            return fetchMyInfoFromRemote()
+        }
+
+        val cachedProfile = memberProfileLocalDataSource.getProfile()
+        return if (cachedProfile != null) {
+            cachedProfile.toMemberInfoResult()
+        } else {
+            fetchMyInfoFromRemote()
+        }
+    }
 
     override suspend fun getOnboardingInfo(): AppResult<OnboardingInfo> = safeRequest(
         request = { memberRemoteDataSource.getOnboardingInfo() },
@@ -51,7 +66,9 @@ internal class MemberRepositoryImpl @Inject constructor(
 
     override suspend fun updateProfile(nickname: String): AppResult<Unit> = safeRequest(
         request = { memberRemoteDataSource.updateProfile(nickname = nickname) },
-    ) {
+    ) { response ->
+        syncProfileCache(response.toMemberInfo())
+        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(Unit)
     }
 
@@ -65,7 +82,12 @@ internal class MemberRepositoryImpl @Inject constructor(
                 role = role?.value,
             )
         },
-    ) { response -> response.toMemberInfoResult() }
+    ) { response ->
+        val memberInfo = response.toMemberInfo()
+        syncProfileCache(memberInfo)
+        hasFetchedMyInfoThisRun.set(true)
+        AppResult.Success(memberInfo)
+    }
 
     override suspend fun uploadProfileImage(image: ProfileImageUpload): AppResult<Unit> = safeRequest(
         request = {
@@ -75,7 +97,9 @@ internal class MemberRepositoryImpl @Inject constructor(
                 mimeType = image.mimeType,
             )
         },
-    ) {
+    ) { response ->
+        syncProfileCache(response.toMemberInfo())
+        hasFetchedMyInfoThisRun.set(true)
         AppResult.Success(Unit)
     }
 
@@ -84,6 +108,8 @@ internal class MemberRepositoryImpl @Inject constructor(
     ) {
         authLocalDataSource.clearTokens()
         currentCircleLocalDataSource.clearSelectedCircleId()
+        memberProfileLocalDataSource.clearProfile()
+        hasFetchedMyInfoThisRun.set(false)
         AppResult.Success(Unit)
     }
 
@@ -92,11 +118,44 @@ internal class MemberRepositoryImpl @Inject constructor(
     ) {
         authLocalDataSource.clearTokens()
         currentCircleLocalDataSource.clearSelectedCircleId()
+        memberProfileLocalDataSource.clearProfile()
+        hasFetchedMyInfoThisRun.set(false)
         AppResult.Success(Unit)
+    }
+
+    private suspend fun fetchMyInfoFromRemote(): AppResult<MemberInfo> = safeRequest(
+        request = { memberRemoteDataSource.getMyInfo() },
+    ) { response ->
+        val memberInfo = response.toMemberInfo()
+        syncProfileCache(memberInfo)
+        hasFetchedMyInfoThisRun.set(true)
+        AppResult.Success(memberInfo)
+    }
+
+    private suspend fun syncProfileCache(memberInfo: MemberInfo) {
+        memberProfileLocalDataSource.saveProfile(memberInfo.toCache())
     }
 }
 
-private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> {
+private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> = toMemberInfo()
+    .let { AppResult.Success(it) }
+
+private fun MemberInfoResponse.toMemberInfo(): MemberInfo {
+    val memberRole = MemberRole.from(role)
+        ?: throw IllegalArgumentException("Member role is missing or invalid.")
+    val memberStatus = MemberStatus.from(status)
+        ?: throw IllegalArgumentException("Member status is missing or invalid.")
+
+    return MemberInfo(
+        nickname = nickname,
+        profileImageUrl = profileImageUrl?.normalizeProfileImageUrl(),
+        avatarColorHex = avatarColor.hex,
+        role = memberRole,
+        status = memberStatus,
+    )
+}
+
+private fun MemberProfileCache.toMemberInfoResult(): AppResult<MemberInfo> {
     val memberRole = MemberRole.from(role)
         ?: return AppResult.Failure(
             AppError.Unknown(message = "Member role is missing or invalid."),
@@ -109,13 +168,22 @@ private fun MemberInfoResponse.toMemberInfoResult(): AppResult<MemberInfo> {
     return AppResult.Success(
         MemberInfo(
             nickname = nickname,
-            profileImageUrl = profileImageUrl?.normalizeProfileImageUrl(),
-            avatarColorHex = avatarColor.hex,
+            profileImageUrl = profileImageUrl.ifBlank { null }?.normalizeProfileImageUrl(),
+            avatarColorHex = avatarColorHex,
             role = memberRole,
             status = memberStatus,
         ),
     )
 }
+
+private fun MemberInfo.toCache(): MemberProfileCache = MemberProfileCache(
+    hasValue = true,
+    nickname = nickname,
+    profileImageUrl = profileImageUrl.orEmpty(),
+    avatarColorHex = avatarColorHex,
+    role = role.value,
+    status = status.value,
+)
 
 private fun String.normalizeProfileImageUrl(): String = replace(
     oldValue = "http://",

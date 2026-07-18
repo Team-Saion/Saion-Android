@@ -11,8 +11,8 @@ import com.saion.core.navigation.ui.AppNavigationHost
 import com.saion.feature.auth.api.key.AuthNavKey
 import com.saion.feature.auth.api.key.AuthStartStep
 import com.saion.feature.auth.impl.login.LoginScreen
-import com.saion.feature.auth.impl.nickname.NicknameScreen
 import com.saion.feature.main.api.key.MainNavKey
+import com.saion.feature.profileedit.impl.AuthProfileEditScreen
 import com.saion.feature.terms.api.key.TermDetailNavKey
 import com.saion.feature.terms.api.key.TermsAgreementNavKey
 import com.saion.feature.terms.api.key.TermsMode
@@ -69,7 +69,7 @@ private fun AuthRoute(
                         TermsScreen(
                             mode = key.mode,
                             onBack = { flowNavigator.replace(LoginNavKey) },
-                            onComplete = { flowNavigator.replace(NicknameNavKey) },
+                            onComplete = { flowNavigator.replace(ProfileEditNavKey) },
                             onOpenTerm = { _, url ->
                                 flowNavigator.push(TermDetailNavKey(url = url))
                             },
@@ -81,8 +81,8 @@ private fun AuthRoute(
                             onBack = { flowNavigator.pop() },
                         )
                     }
-                    entry<NicknameNavKey> {
-                        NicknameScreen(
+                    entry<ProfileEditNavKey> {
+                        AuthProfileEditScreen(
                             onBack = { flowNavigator.replace(TermsAgreementNavKey(mode = TermsMode.AGREEMENT)) },
                             onComplete = { onAuthComplete() },
                         )

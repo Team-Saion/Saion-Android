@@ -24,7 +24,7 @@ class NotificationRepositoryImplTest {
                 NotificationSettingResponse(
                     d7Enabled = true,
                     d1Enabled = false,
-                    dDayEnabled = true,
+                    ddayEnabled = true,
                     familyScheduleCheckEnabled = false,
                 ),
             ),
@@ -68,7 +68,7 @@ class NotificationRepositoryImplTest {
                 NotificationSettingResponse(
                     d7Enabled = true,
                     d1Enabled = true,
-                    dDayEnabled = false,
+                    ddayEnabled = false,
                     familyScheduleCheckEnabled = true,
                 ),
             ),
@@ -139,7 +139,7 @@ class NotificationRepositoryImplTest {
                 NotificationSettingResponse(
                     d7Enabled = false,
                     d1Enabled = false,
-                    dDayEnabled = true,
+                    ddayEnabled = true,
                     familyScheduleCheckEnabled = true,
                 ),
             ),
@@ -248,7 +248,7 @@ private class FakeNotificationRemoteDataSource : NotificationRemoteDataSource {
 private fun defaultNotificationSettingResponse(): NotificationSettingResponse = NotificationSettingResponse(
     d7Enabled = true,
     d1Enabled = true,
-    dDayEnabled = false,
+    ddayEnabled = false,
     familyScheduleCheckEnabled = true,
 )
 

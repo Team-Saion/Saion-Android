@@ -6,6 +6,7 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
 import com.saion.core.datastore.model.AuthTokens
 import com.saion.core.datastore.model.CurrentCircle
+import com.saion.core.datastore.model.MemberProfileCache
 import com.saion.core.datastore.model.NotificationSettingCache
 import java.io.InputStream
 import java.io.OutputStream
@@ -72,6 +73,33 @@ internal val Context.notificationSettingDataStore: DataStore<NotificationSetting
                 d1Enabled = false,
                 ddayEnabled = false,
                 familyScheduleCheckEnabled = false,
+            )
+    },
+)
+
+internal val Context.memberProfileDataStore: DataStore<MemberProfileCache> by dataStore(
+    fileName = "member-profile.preferences_pb",
+    serializer = object : Serializer<MemberProfileCache> {
+        override suspend fun readFrom(input: InputStream): MemberProfileCache =
+            Json.decodeFromString<MemberProfileCache>(input.readBytes().decodeToString())
+
+        override suspend fun writeTo(
+            t: MemberProfileCache,
+            output: OutputStream,
+        ) {
+            withContext(Dispatchers.IO) {
+                output.write(Json.encodeToString<MemberProfileCache>(t).encodeToByteArray())
+            }
+        }
+
+        override val defaultValue: MemberProfileCache
+            get() = MemberProfileCache(
+                hasValue = false,
+                nickname = "",
+                profileImageUrl = "",
+                avatarColorHex = "",
+                role = "",
+                status = "",
             )
     },
 )

@@ -1,4 +1,4 @@
-package com.saion.feature.auth.impl.nickname.component
+package com.saion.feature.profileedit.impl.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,23 +17,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.saion.core.model.member.NicknameValidationResult
 import com.saion.core.ui.component.SaionProfile
+import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.component.input.SaionTextArea
 import com.saion.ds.component.input.SaionTextAreaVariant
 import com.saion.ds.theme.SaionTheme
-import com.saion.feature.auth.impl.R
+import com.saion.feature.profileedit.impl.R
 
 @Composable
-internal fun NicknameContent(
+internal fun ProfileEditContent(
+    title: String,
     nickname: String,
     placeholder: String,
     validationResult: NicknameValidationResult?,
     imageUrl: String?,
     avatarColorHex: String,
     focusRequester: FocusRequester,
+    onProfileImageClick: () -> Unit,
     onNicknameChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -46,16 +49,18 @@ internal fun NicknameContent(
             textStyle = SaionTheme.typography.display2,
             imageUrl = imageUrl,
             avatarColorHex = avatarColorHex,
-            contentDescription = stringResource(R.string.nickname_profile_image_description),
+            isShowEdit = true,
+            contentDescription = stringResource(R.string.profile_edit_profile_image_description),
             modifier = Modifier
                 .size(80.dp)
-                .align(Alignment.CenterHorizontally),
+                .align(Alignment.CenterHorizontally)
+                .noRippleClickable(onClick = onProfileImageClick),
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        androidx.compose.material3.Text(
-            text = stringResource(R.string.nickname_title),
+        Text(
+            text = title,
             style = SaionTheme.typography.title2,
             color = SaionTheme.colors.label.default,
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -83,22 +88,6 @@ internal fun NicknameContent(
                 .focusRequester(focusRequester),
             minLines = 1,
             maxLines = 1,
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun NicknameContentPreview() {
-    SaionTheme {
-        NicknameContent(
-            nickname = "사이온",
-            placeholder = stringResource(R.string.nickname_placeholder),
-            validationResult = NicknameValidationResult.Valid,
-            imageUrl = null,
-            avatarColorHex = "#FFD35C",
-            focusRequester = FocusRequester(),
-            onNicknameChange = {},
         )
     }
 }
