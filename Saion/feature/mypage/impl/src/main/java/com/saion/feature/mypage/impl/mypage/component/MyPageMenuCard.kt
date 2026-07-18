@@ -76,14 +76,14 @@ private fun MyPageMenuRow(
                     contentDescription = null,
                     size = IconButtonSize.MEDIUM,
                     tint = SaionTheme.colors.primary.subtle,
-                    onClick = {},
+                    onClick = onClick,
                 )
             }
 
             is MyPageMenuTrailingContent.TextButton -> {
                 SaionTextButton(
                     text = trailingContent.text,
-                    onClick = {},
+                    onClick = onClick,
                     variant = TextButtonVariant.NORMAL,
                     size = TextButtonSize.SMALL,
                     enabled = trailingContent.enabled,

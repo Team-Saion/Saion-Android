@@ -4,6 +4,7 @@
     <string name="mypage_notification_settings">알림 설정</string>
     <string name="mypage_terms">약관 확인</string>
     <string name="mypage_feedback">의견 보내기</string>
+    <string name="mypage_feedback_preparing">의견 보내기 기능은 아직 준비 중이에요</string>
     <string name="mypage_logout">로그아웃</string>
     <string name="mypage_logout_dialog_title">로그아웃 하시겠어요?</string>
     <string name="mypage_logout_dialog_cancel">취소</string>

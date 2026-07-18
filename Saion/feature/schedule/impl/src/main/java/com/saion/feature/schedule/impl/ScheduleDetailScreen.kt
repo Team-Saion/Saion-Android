@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +39,10 @@ import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.ui.component.DdayBadge
 import com.saion.core.ui.component.DdayBadgeSize
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.ScheduleProgressSection
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.button.ButtonSize
@@ -85,7 +87,10 @@ internal fun ScheduleDetailScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             ScheduleDetailEffect.Deleted -> onDeleted()
-            is ScheduleDetailEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is ScheduleDetailEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -106,7 +111,7 @@ private fun ScheduleDetailScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -159,6 +164,11 @@ private fun ScheduleDetailScreen(
             isDanger = true,
         )
     }
+}
+
+private fun ScheduleDetailSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is ScheduleDetailSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is ScheduleDetailSnackbarMessage.Text -> null
 }
 
 @Composable

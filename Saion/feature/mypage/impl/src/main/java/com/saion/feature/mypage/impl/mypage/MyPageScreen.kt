@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +32,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.event.GlobalUiEvent
 import com.saion.core.ui.event.GlobalUiEventBus
@@ -58,7 +60,6 @@ internal fun MyPageScreen(
     onProfileClick: () -> Unit = {},
     onNotificationSettingsClick: () -> Unit = {},
     onTermsClick: () -> Unit = {},
-    onFeedbackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {},
     onWithdrawClick: () -> Unit = {},
     viewModel: MyPageViewModel = viewModel(),
@@ -73,7 +74,10 @@ internal fun MyPageScreen(
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
-            is MyPageEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is MyPageEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
             MyPageEffect.LogoutCompleted -> GlobalUiEventBus.emit(GlobalUiEvent.SessionExpired)
         }
     }
@@ -105,7 +109,7 @@ internal fun MyPageScreen(
         },
         onNotificationSettingsClick = onNotificationSettingsClick,
         onTermsClick = onTermsClick,
-        onFeedbackClick = onFeedbackClick,
+        onFeedbackClick = { viewModel.dispatch(MyPageIntent.ClickFeedback) },
         onUpdateClick = onUpdateClick,
         onLogoutClick = { viewModel.dispatch(MyPageIntent.ClickLogout) },
         onLogoutDismiss = { viewModel.dispatch(MyPageIntent.DismissLogoutDialog) },
@@ -133,7 +137,7 @@ private fun MyPageScreen(
 ) {
     SaionScaffold(
         modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         systemBarInset = SystemBarInset.None,
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         containerColor = SaionTheme.colors.background.subtle,
@@ -213,6 +217,11 @@ private fun MyPageScreen(
 private fun MyPageSnackbarMessage.resolve(context: Context): String = when (this) {
     is MyPageSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is MyPageSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun MyPageSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is MyPageSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is MyPageSnackbarMessage.Text -> null
 }
 
 private fun Context.findVersionName(): String = runCatching {

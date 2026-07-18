@@ -118,6 +118,30 @@ class MyPageViewModelTest {
     }
 
     @Test
+    fun `의견 보내기 메뉴 클릭 시 준비중 스낵바 effect를 보낸다`() = runTest {
+        val repository = FakeMemberRepository(myInfoResult = AppResult.Success(defaultMemberInfo()))
+        val viewModel = MyPageViewModel(
+            getMyInfoUseCase = GetMyInfoUseCase(repository),
+            logoutUseCase = LogoutUseCase(repository),
+        )
+        advanceUntilIdle()
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(MyPageIntent.ClickFeedback)
+        advanceUntilIdle()
+
+        assertEquals(
+            MyPageEffect.ShowSnackbar(
+                MyPageSnackbarMessage.Text(
+                    value = "",
+                    defaultMessageResId = com.saion.feature.mypage.impl.R.string.mypage_feedback_preparing,
+                ),
+            ),
+            effectDeferred.await(),
+        )
+    }
+
+    @Test
     fun `로그아웃 다이얼로그 취소 시 상태가 닫힌다`() = runTest {
         val repository = FakeMemberRepository(myInfoResult = AppResult.Success(defaultMemberInfo()))
         val viewModel = MyPageViewModel(

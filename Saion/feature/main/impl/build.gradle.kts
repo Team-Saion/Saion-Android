@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.domain)
     implementation(projects.feature.circleCreate.api)
     implementation(projects.feature.home.api)
     implementation(projects.feature.schedule.api)

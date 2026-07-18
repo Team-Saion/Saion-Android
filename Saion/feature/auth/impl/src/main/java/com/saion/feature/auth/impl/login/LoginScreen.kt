@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.brand.SaionBrandIntroDefaults
 import com.saion.ds.theme.SaionTheme
@@ -51,7 +53,10 @@ internal fun LoginScreen(
         when (effect) {
             is LoginEffect.NavigateNext -> onNavigateNext(effect.startStep)
             LoginEffect.NavigateMain -> onNavigateMain()
-            is LoginEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is LoginEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -89,7 +94,7 @@ private fun LoginScreen(
         )
 
         SaionScaffold(
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
             bottomBar = {
                 LoginBottomContent(
                     alpha = introAlpha,
@@ -108,6 +113,13 @@ private fun LoginScreen(
                 .offset(y = SaionBrandIntroDefaults.LogoAnchorOffsetY),
         )
     }
+}
+
+private fun com.saion.feature.auth.impl.ui.AuthSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is com.saion.feature.auth.impl.ui.AuthSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is com.saion.feature.auth.impl.ui.AuthSnackbarMessage.Res,
+    is com.saion.feature.auth.impl.ui.AuthSnackbarMessage.Text,
+    -> null
 }
 
 @Composable

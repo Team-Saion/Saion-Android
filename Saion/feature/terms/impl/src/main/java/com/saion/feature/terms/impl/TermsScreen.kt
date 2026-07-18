@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.component.button.ButtonSize
@@ -94,7 +96,10 @@ fun TermsScreen(
 
             is TermsUIEffect.NavigateDetail -> onOpenTerm(effect.title, effect.url)
 
-            is TermsUIEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is TermsUIEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -124,7 +129,7 @@ private fun TermsScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
     ) {
         if (uiState.isLoading && uiState.terms.items.isEmpty()) {
@@ -152,6 +157,12 @@ private fun TermsScreen(
             }
         }
     }
+}
+
+private fun com.saion.feature.terms.impl.ui.TermsSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is com.saion.feature.terms.impl.ui.TermsSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is com.saion.feature.terms.impl.ui.TermsSnackbarMessage.Res,
+    is com.saion.feature.terms.impl.ui.TermsSnackbarMessage.Text -> null
 }
 
 @Composable

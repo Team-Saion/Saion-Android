@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +24,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.notification.NotificationSetting
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -51,7 +53,10 @@ internal fun NotificationSettingsScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             is NotificationSettingsEffect.ShowSnackbar -> {
-                snackbarHostState.showSnackbar(effect.message.resolve(context))
+                snackbarHostState.showSaionSnackbar(
+                    message = effect.message.resolve(context),
+                    variant = effect.message.variant(),
+                )
             }
         }
     }
@@ -75,7 +80,7 @@ private fun NotificationSettingsScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -183,6 +188,11 @@ private fun NotificationToggleRow(
 private fun NotificationSettingsSnackbarMessage.resolve(context: Context): String = when (this) {
     is NotificationSettingsSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is NotificationSettingsSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun NotificationSettingsSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is NotificationSettingsSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is NotificationSettingsSnackbarMessage.Text -> null
 }
 
 @Preview(showBackground = true)

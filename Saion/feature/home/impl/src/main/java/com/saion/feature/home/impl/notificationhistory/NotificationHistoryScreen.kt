@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +30,9 @@ import com.saion.core.model.notification.NotificationRouteType
 import com.saion.core.model.notification.NotificationType
 import com.saion.core.ui.component.SaionPullToRefreshBox
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.core.ui.ext.noRippleClickable
@@ -73,7 +75,10 @@ internal fun NotificationHistoryScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             is NotificationHistoryEffect.ShowSnackbar -> {
-                snackbarHostState.showSnackbar(effect.message.resolve(context))
+                snackbarHostState.showSaionSnackbar(
+                    message = effect.message.resolve(context),
+                    variant = effect.message.variant(),
+                )
             }
 
             NotificationHistoryEffect.NavigateToHome -> onNavigateToHome()
@@ -107,7 +112,7 @@ private fun NotificationHistoryScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -223,6 +228,11 @@ private fun NotificationHistoryItem(
 private fun NotificationHistorySnackbarMessage.resolve(context: Context): String = when (this) {
     is NotificationHistorySnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is NotificationHistorySnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun NotificationHistorySnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is NotificationHistorySnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is NotificationHistorySnackbarMessage.Text -> SaionSnackbarVariant.Cautionary
 }
 
 @Composable

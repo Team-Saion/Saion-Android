@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +29,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.home.CircleMember
 import com.saion.core.ui.component.SaionProfile
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -56,7 +58,10 @@ internal fun HomeMemberListScreen(
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
-            is HomeMemberListEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is HomeMemberListEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -75,7 +80,7 @@ private fun HomeMemberListScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         containerColor = SaionTheme.colors.background.muted,
         systemBarInset = SystemBarInset.None,
         topBar = {
@@ -193,6 +198,11 @@ private fun HomeMemberListPlaceholder(
 private fun HomeMemberListSnackbarMessage.resolve(context: Context): String = when (this) {
     is HomeMemberListSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is HomeMemberListSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun HomeMemberListSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is HomeMemberListSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is HomeMemberListSnackbarMessage.Text -> null
 }
 
 @Preview(showBackground = true)

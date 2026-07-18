@@ -1,6 +1,7 @@
 package com.saion.feature.mypage.impl.mypage.viewmodel
 
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.viewModelScope
 import com.saion.core.domain.usecase.member.GetMyInfoUseCase
 import com.saion.core.domain.usecase.member.LogoutUseCase
 import com.saion.core.ui.error.toSnackbarMessage
@@ -8,6 +9,7 @@ import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.mypage.impl.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 @Stable
@@ -23,6 +25,16 @@ internal class MyPageViewModel @Inject constructor(
     override fun handleIntent(intent: MyPageIntent) {
         when (intent) {
             MyPageIntent.RefreshProfile -> loadMyInfo()
+            MyPageIntent.ClickFeedback -> viewModelScope.launch {
+                emitEffect(
+                    MyPageEffect.ShowSnackbar(
+                        MyPageSnackbarMessage.Text(
+                            value = "",
+                            defaultMessageResId = R.string.mypage_feedback_preparing,
+                        ),
+                    ),
+                )
+            }
             MyPageIntent.ClickLogout -> update { copy(showLogoutDialog = true) }
             MyPageIntent.DismissLogoutDialog -> update { copy(showLogoutDialog = false, isLogoutLoading = false) }
             MyPageIntent.ConfirmLogout -> {

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.event.GlobalUiEvent
 import com.saion.core.ui.event.GlobalUiEventBus
@@ -60,7 +62,10 @@ internal fun WithdrawScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             is WithdrawEffect.ShowSnackbar -> {
-                snackbarHostState.showSnackbar(effect.message.resolve(context))
+                snackbarHostState.showSaionSnackbar(
+                    message = effect.message.resolve(context),
+                    variant = effect.message.variant(),
+                )
             }
 
             WithdrawEffect.WithdrawCompleted -> GlobalUiEventBus.emit(GlobalUiEvent.SessionExpired)
@@ -90,7 +95,7 @@ private fun WithdrawScreen(
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -191,6 +196,11 @@ private fun WithdrawContent(
 private fun WithdrawSnackbarMessage.resolve(context: Context): String = when (this) {
     is WithdrawSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is WithdrawSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun WithdrawSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is WithdrawSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is WithdrawSnackbarMessage.Text -> null
 }
 
 @Preview(showBackground = true)

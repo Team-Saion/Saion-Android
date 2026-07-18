@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +31,10 @@ import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
 import com.saion.core.ui.component.SaionProfile
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.button.ButtonSize
@@ -66,7 +68,10 @@ internal fun InvitationAcceptScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             InvitationAcceptEffect.Close -> onClose()
-            is InvitationAcceptEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is InvitationAcceptEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -88,7 +93,7 @@ private fun InvitationAcceptScreen(
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
         systemBarInset = SystemBarInset.None,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -251,6 +256,11 @@ private fun InvitationFallback() {
 private fun InvitationAcceptSnackbarMessage.resolve(context: Context): String = when (this) {
     is InvitationAcceptSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is InvitationAcceptSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun InvitationAcceptSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is InvitationAcceptSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is InvitationAcceptSnackbarMessage.Text -> null
 }
 
 @Preview(showBackground = true)

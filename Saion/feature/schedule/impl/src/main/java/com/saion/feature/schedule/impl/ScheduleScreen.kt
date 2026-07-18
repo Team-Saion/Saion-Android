@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,8 +31,11 @@ import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.ScheduleAddCard
 import com.saion.core.ui.component.SaionPullToRefreshBox
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.ScheduleSummaryCard
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -63,7 +65,10 @@ internal fun ScheduleScreen(
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
-            is ScheduleEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is ScheduleEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -90,7 +95,7 @@ private fun ScheduleScreen(
 ) {
     SaionScaffold(
         modifier = modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         systemBarInset = SystemBarInset.None,
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         containerColor = SaionTheme.colors.background.muted,
@@ -209,6 +214,11 @@ private val ScheduleState.isRefreshing: Boolean
 private fun ScheduleSnackbarMessage.resolve(context: Context): String = when (this) {
     is ScheduleSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is ScheduleSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun ScheduleSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is ScheduleSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is ScheduleSnackbarMessage.Text -> null
 }
 
 @Preview(showBackground = true)

@@ -25,7 +25,6 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
@@ -47,7 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.button.ButtonSize
@@ -88,7 +90,10 @@ internal fun ScheduleCreateScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             is ScheduleCreateEffect.NavigateToDetail -> onCreated(effect.scheduleId)
-            is ScheduleCreateEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is ScheduleCreateEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -112,7 +117,7 @@ private fun ScheduleCreateScreen(
 
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 modifier = Modifier.statusBarsPadding(),
@@ -226,6 +231,11 @@ private fun ScheduleCreateScreen(
 
         null -> Unit
     }
+}
+
+private fun ScheduleCreateSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is ScheduleCreateSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is ScheduleCreateSnackbarMessage.Text -> null
 }
 
 @Composable

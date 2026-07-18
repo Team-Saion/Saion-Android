@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +32,10 @@ import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -70,7 +72,10 @@ internal fun HomeScreen(
 
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
-            is HomeEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is HomeEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -114,7 +119,7 @@ private fun HomeScreen(
             .fillMaxSize()
             .background(brush = HOME_BACKGROUND),
         containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         systemBarInset = SystemBarInset.None,
         topBar = { HomeTopBar(onNotificationClick = onNotificationClick) },
         floatingActionButton = {
@@ -219,6 +224,11 @@ private val HomeState.circleTitle: String
 private fun HomeSnackbarMessage.resolve(context: Context): String = when (this) {
     is HomeSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is HomeSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
+}
+
+private fun HomeSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is HomeSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is HomeSnackbarMessage.Text -> null
 }
 
 @Preview
