@@ -9,6 +9,8 @@ internal sealed interface NotificationHistoryEffect : UIEffect {
     data object NavigateToHome : NotificationHistoryEffect
 
     data object NavigateToSchedule : NotificationHistoryEffect
+
+    data class NavigateToScheduleDetail(val scheduleId: String) : NotificationHistoryEffect
 }
 
 internal sealed interface NotificationHistorySnackbarMessage {

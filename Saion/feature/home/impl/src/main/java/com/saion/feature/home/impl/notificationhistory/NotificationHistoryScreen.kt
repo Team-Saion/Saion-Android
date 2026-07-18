@@ -46,7 +46,6 @@ import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHis
 import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHistorySnackbarMessage
 import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHistoryState
 import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHistoryViewModel
-import kotlinx.collections.immutable.persistentListOf
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -55,6 +54,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeParseException
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun NotificationHistoryScreen(
@@ -62,6 +62,7 @@ internal fun NotificationHistoryScreen(
     onSettingsClick: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToSchedule: () -> Unit,
+    onNavigateToScheduleDetail: (String) -> Unit,
     viewModel: NotificationHistoryViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,6 +78,8 @@ internal fun NotificationHistoryScreen(
             NotificationHistoryEffect.NavigateToHome -> onNavigateToHome()
 
             NotificationHistoryEffect.NavigateToSchedule -> onNavigateToSchedule()
+
+            is NotificationHistoryEffect.NavigateToScheduleDetail -> onNavigateToScheduleDetail(effect.scheduleId)
         }
     }
 

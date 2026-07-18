@@ -14,6 +14,8 @@ import com.saion.feature.home.impl.notificationhistory.NotificationHistoryScreen
 import com.saion.feature.main.api.key.MainTabNavKey
 import com.saion.feature.mypage.api.key.NotificationSettingsNavKey
 import com.saion.feature.schedule.api.key.ScheduleNavKey
+import com.saion.feature.schedule.api.key.ScheduleCreateNavKey
+import com.saion.feature.schedule.api.key.ScheduleDetailNavKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,8 +34,12 @@ object HomeNavigationModule {
                     HomeScreen(
                         onNotificationClick = { navigator.push(NotificationHistoryNavKey) },
                         onCreateCircleClick = { navigator.push(CircleCreateNavKey) },
+                        onScheduleAddClick = { navigator.push(ScheduleCreateNavKey) },
                         onScheduleListClick = {
                             (navigator as? TabNavigationState<MainTabNavKey>)?.selectTab(ScheduleNavKey)
+                        },
+                        onScheduleClick = { scheduleId ->
+                            navigator.push(ScheduleDetailNavKey(scheduleId = scheduleId))
                         },
                         onMemberListClick = {
                             navigator.push(HomeMemberListNavKey)
@@ -58,6 +64,9 @@ object HomeNavigationModule {
                                 tabNavigator.popUpTo(HomeNavKey)
                                 tabNavigator.selectTab(ScheduleNavKey)
                             }
+                        },
+                        onNavigateToScheduleDetail = { scheduleId ->
+                            navigator.push(ScheduleDetailNavKey(scheduleId = scheduleId))
                         },
                     )
                 }

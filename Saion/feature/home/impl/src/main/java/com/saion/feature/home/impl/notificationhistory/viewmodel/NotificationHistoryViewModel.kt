@@ -5,6 +5,7 @@ import com.saion.core.domain.usecase.notification.GetNotificationInboxUseCase
 import com.saion.core.domain.usecase.notification.MarkNotificationReadUseCase
 import com.saion.core.model.notification.NotificationInboxItem
 import com.saion.core.model.notification.NotificationRouteType
+import com.saion.core.model.result.AppResult
 import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
 import com.saion.feature.home.impl.R
@@ -116,9 +117,17 @@ internal class NotificationHistoryViewModel @Inject constructor(
             NotificationRouteType.HOME,
             -> launchNavigation(NotificationHistoryEffect.NavigateToHome)
 
-            NotificationRouteType.SCHEDULE_DETAIL,
             NotificationRouteType.SCHEDULE_LIST,
             -> launchNavigation(NotificationHistoryEffect.NavigateToSchedule)
+
+            NotificationRouteType.SCHEDULE_DETAIL -> {
+                val scheduleId = item.route.scheduleId
+                if (scheduleId.isNullOrBlank()) {
+                    launchInvalidScheduleRouteSnackbar()
+                } else {
+                    launchNavigation(NotificationHistoryEffect.NavigateToScheduleDetail(scheduleId))
+                }
+            }
         }
     }
 
@@ -127,7 +136,23 @@ internal class NotificationHistoryViewModel @Inject constructor(
             onSuccess = {},
         ) {
             emitEffect(effect)
-            com.saion.core.model.result.AppResult.Success(Unit)
+            AppResult.Success(Unit)
+        }
+    }
+
+    private fun launchInvalidScheduleRouteSnackbar() {
+        launchSafely(
+            onSuccess = {},
+        ) {
+            emitEffect(
+                NotificationHistoryEffect.ShowSnackbar(
+                    NotificationHistorySnackbarMessage.Text(
+                        value = "",
+                        defaultMessageResId = R.string.notification_history_error_invalid_schedule_route,
+                    ),
+                ),
+            )
+            AppResult.Success(Unit)
         }
     }
 

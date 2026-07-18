@@ -104,7 +104,7 @@ class NotificationHistoryViewModelTest {
     }
 
     @Test
-    fun `스케줄 상세 알림은 현재 정책상 스케줄 탭 이동 effect를 보낸다`() = runTest {
+    fun `스케줄 상세 알림은 읽음 처리 후 상세 이동 effect를 보낸다`() = runTest {
         val item = defaultNotificationItem(routeType = NotificationRouteType.SCHEDULE_DETAIL)
         val updatedItem = item.copy(readAt = "2026-07-17T09:00:00")
         val viewModel = createViewModel(
@@ -119,7 +119,37 @@ class NotificationHistoryViewModelTest {
         viewModel.dispatch(NotificationHistoryIntent.NotificationClicked(item))
         advanceUntilIdle()
 
-        assertEquals(NotificationHistoryEffect.NavigateToSchedule, effectDeferred.await())
+        assertEquals(NotificationHistoryEffect.NavigateToScheduleDetail(scheduleId = "schedule-1"), effectDeferred.await())
+    }
+
+    @Test
+    fun `스케줄 상세 알림에 scheduleId가 없으면 스낵바 effect를 보낸다`() = runTest {
+        val item = defaultNotificationItem(
+            routeType = NotificationRouteType.SCHEDULE_DETAIL,
+            scheduleId = null,
+        )
+        val updatedItem = item.copy(readAt = "2026-07-17T09:00:00")
+        val viewModel = createViewModel(
+            repository = FakeNotificationRepository(
+                inboxResult = AppResult.Success(NotificationInboxPage(items = listOf(item), nextCursor = null)),
+                markReadResult = AppResult.Success(updatedItem),
+            ),
+        )
+        advanceUntilIdle()
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(NotificationHistoryIntent.NotificationClicked(item))
+        advanceUntilIdle()
+
+        assertEquals(
+            NotificationHistoryEffect.ShowSnackbar(
+                NotificationHistorySnackbarMessage.Text(
+                    value = "",
+                    defaultMessageResId = com.saion.feature.home.impl.R.string.notification_history_error_invalid_schedule_route,
+                ),
+            ),
+            effectDeferred.await(),
+        )
     }
 
     @Test
@@ -196,6 +226,7 @@ private class FakeNotificationRepository(
 private fun defaultNotificationItem(
     routeType: NotificationRouteType = NotificationRouteType.HOME,
     readAt: String? = null,
+    scheduleId: String? = "schedule-1",
 ): NotificationInboxItem = NotificationInboxItem(
     id = 1L,
     type = NotificationType.SCHEDULE_CREATED,
@@ -206,6 +237,6 @@ private fun defaultNotificationItem(
     route = NotificationRoute(
         type = routeType,
         circleId = "circle-1",
-        scheduleId = "schedule-1",
+        scheduleId = scheduleId,
     ),
 )

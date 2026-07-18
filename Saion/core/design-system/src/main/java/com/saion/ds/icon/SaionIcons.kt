@@ -6,7 +6,10 @@ import com.saion.ds.icon.vector.IcCheck
 import com.saion.ds.icon.vector.IcCheckFilled
 import com.saion.ds.icon.vector.IcChevronLeft
 import com.saion.ds.icon.vector.IcChevronRight
+import com.saion.ds.icon.vector.IcClose
 import com.saion.ds.icon.vector.IcCloseFilled
+import com.saion.ds.icon.vector.IcDot
+import com.saion.ds.icon.vector.IcDotOutline
 import com.saion.ds.icon.vector.IcHome
 import com.saion.ds.icon.vector.IcKakaoLogo
 import com.saion.ds.icon.vector.IcPerson
@@ -24,6 +27,7 @@ object SaionIcons {
     val Selection: ImageVector = IcSelection
     val ChevronRight: ImageVector = IcChevronRight
     val ChevronLeft: ImageVector = IcChevronLeft
+    val Close: ImageVector = IcClose
     val CloseFilled: ImageVector = IcCloseFilled
     val Check: ImageVector = IcCheck
     val CheckFilled: ImageVector = IcCheckFilled
@@ -33,4 +37,6 @@ object SaionIcons {
     val Bell: ImageVector = IcBell
     val Settings: ImageVector = IcSettings
     val Plus: ImageVector = IcPlus
+    val Dot: ImageVector = IcDot
+    val DotOutline: ImageVector = IcDotOutline
 }

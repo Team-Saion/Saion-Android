@@ -1,12 +1,9 @@
 package com.saion.feature.home.impl.home.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,22 +11,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUrgencyLevel
+import com.saion.core.ui.component.DdayBadge
+import com.saion.core.ui.component.DdayBadgeSize
+import com.saion.core.ui.component.ScheduleProgressSection
 import com.saion.core.ui.ext.noRippleClickable
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
 import com.saion.ds.theme.SaionTheme
-import com.saion.ds.token.radius.toRoundedCornerShape
 import com.saion.feature.home.impl.R
 import java.time.LocalDate
 import java.time.LocalTime
@@ -43,8 +39,6 @@ internal fun HomeScheduleHeroCard(
     onShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val ddayStyle = schedule.heroDdayStyle()
-
     HeroCardSurface(modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -76,43 +70,13 @@ internal fun HomeScheduleHeroCard(
                         )
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .clip(SaionTheme.radius.component.full.toRoundedCornerShape())
-                            .background(ddayStyle.backgroundColor)
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = ddayStyle.label,
-                            style = SaionTheme.typography.title3Strong,
-                            color = ddayStyle.contentColor,
-                        )
-                    }
+                    DdayBadge(
+                        dday = schedule.dday,
+                        size = DdayBadgeSize.LARGE,
+                    )
                 }
 
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    HeroProgressBar(progressRate = schedule.progressRate)
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_hero_progress_start),
-                            style = SaionTheme.typography.caption1,
-                            color = SaionTheme.colors.label.strong,
-                        )
-                        Text(
-                            text = stringResource(R.string.home_hero_progress_end),
-                            style = SaionTheme.typography.caption1,
-                            color = SaionTheme.colors.label.muted,
-                        )
-                    }
-                }
+                ScheduleProgressSection(progressRate = schedule.progressRate)
             }
 
             SaionButton(
@@ -123,73 +87,6 @@ internal fun HomeScheduleHeroCard(
                 size = ButtonSize.LARGE,
             )
         }
-    }
-}
-
-private val PROGRESS_GRADIENT: Brush = Brush.horizontalGradient(
-    0f to Color(0xFFFD9A04),
-    1f to Color(0xFFFFE2B3),
-)
-
-@Composable
-private fun HeroProgressBar(
-    progressRate: Int,
-    modifier: Modifier = Modifier,
-) {
-    val normalizedProgress = (progressRate.coerceIn(0, 100)) / 100f
-    val filledProgress = if (normalizedProgress == 0f) 0f else normalizedProgress.coerceAtLeast(0.08f)
-    val shape = SaionTheme.radius.component.full.toRoundedCornerShape()
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(8.dp)
-            .clip(shape)
-            .background(SaionTheme.colors.background.muted),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(filledProgress)
-                .fillMaxHeight()
-                .clip(shape)
-                .background(PROGRESS_GRADIENT),
-        )
-    }
-}
-
-private data class HeroDdayStyle(
-    val label: String,
-    val backgroundColor: Color,
-    val contentColor: Color,
-)
-
-@Composable
-private fun ScheduleSummary.heroDdayStyle(): HeroDdayStyle {
-    val label = heroDdayText()
-    val ddayValue = dday
-    return if (ddayValue != null && ddayValue <= 7) {
-        HeroDdayStyle(
-            label = label,
-            backgroundColor = Color(0xFFFFEEEE),
-            contentColor = Color(0xFFFF4B4B),
-        )
-    } else {
-        HeroDdayStyle(
-            label = label,
-            backgroundColor = Color(0xFFF4F4F4),
-            contentColor = SaionTheme.colors.label.subtle,
-        )
-    }
-}
-
-@Composable
-private fun ScheduleSummary.heroDdayText(): String {
-    val ddayValue = dday
-    return when {
-        ddayValue == null -> stringResource(R.string.home_schedule_dday_default)
-        ddayValue == 0 -> stringResource(R.string.home_schedule_dday_today)
-        ddayValue < 0 -> stringResource(R.string.home_schedule_dday_offset, -ddayValue)
-        else -> stringResource(R.string.home_schedule_dday_offset, ddayValue)
     }
 }
 

@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.map
 internal fun ScheduleScreen(
     modifier: Modifier = Modifier,
     onAddClick: () -> Unit = {},
+    onScheduleClick: (String) -> Unit = {},
     viewModel: ScheduleViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +75,7 @@ internal fun ScheduleScreen(
         onRefresh = { viewModel.dispatch(ScheduleIntent.RefreshRequested) },
         onLoadNextPage = { viewModel.dispatch(ScheduleIntent.LoadNextPageRequested) },
         onAddClick = onAddClick,
+        onScheduleClick = onScheduleClick,
         modifier = modifier,
     )
 }
@@ -86,6 +88,7 @@ private fun ScheduleScreen(
     onRefresh: () -> Unit,
     onLoadNextPage: () -> Unit,
     onAddClick: () -> Unit,
+    onScheduleClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SaionScaffold(
@@ -109,6 +112,7 @@ private fun ScheduleScreen(
                     isAppending = uiState.isAppending,
                     onLoadNextPage = onLoadNextPage,
                     onAddClick = onAddClick,
+                    onScheduleClick = onScheduleClick,
                 )
             }
         }
@@ -148,6 +152,7 @@ private fun ScheduleContent(
     isAppending: Boolean,
     onLoadNextPage: () -> Unit,
     onAddClick: () -> Unit,
+    onScheduleClick: (String) -> Unit,
 ) {
     val listState = rememberLazyListState()
 
@@ -178,7 +183,7 @@ private fun ScheduleContent(
         items(items = schedules, key = ScheduleSummary::scheduleId) { schedule ->
             ScheduleSummaryCard(
                 schedule = schedule,
-                onClick = {},
+                onClick = { onScheduleClick(schedule.scheduleId) },
             )
         }
 
@@ -254,6 +259,7 @@ private fun ScheduleScreenContentPreview() {
             onRefresh = {},
             onLoadNextPage = {},
             onAddClick = {},
+            onScheduleClick = {},
         )
     }
 }
@@ -274,6 +280,7 @@ private fun ScheduleScreenEmptyPreview() {
             onRefresh = {},
             onLoadNextPage = {},
             onAddClick = {},
+            onScheduleClick = {},
         )
     }
 }

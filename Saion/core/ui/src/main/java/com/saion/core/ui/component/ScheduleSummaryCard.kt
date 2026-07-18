@@ -2,7 +2,6 @@ package com.saion.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,7 +68,10 @@ fun ScheduleSummaryCard(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        ScheduleDdayPill(schedule = schedule)
+        DdayBadge(
+            dday = schedule.dday,
+            size = DdayBadgeSize.MEDIUM,
+        )
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -85,28 +86,6 @@ fun ScheduleSummaryCard(
 }
 
 @Composable
-private fun ScheduleDdayPill(
-    schedule: ScheduleSummary,
-    modifier: Modifier = Modifier,
-) {
-    val (label, backgroundColor, contentColor) = schedule.ddayPresentation()
-
-    Box(
-        modifier = modifier
-            .clip(SaionTheme.radius.component.full.toRoundedCornerShape())
-            .background(backgroundColor)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = SaionTheme.typography.label2,
-            color = contentColor,
-        )
-    }
-}
-
-@Composable
 private fun ScheduleSummary.formatScheduleDate(): String {
     val locale = Locale.KOREAN
     val date = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return startDate
@@ -116,50 +95,6 @@ private fun ScheduleSummary.formatScheduleDate(): String {
         date.dayOfMonth,
         date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
     )
-}
-
-@Composable
-private fun ScheduleSummary.ddayPresentation(): Triple<String, Color, Color> {
-    val ddayValue = dday
-    val (backgroundColor, contentColor) = urgencyChipColors()
-
-    return when {
-        ddayValue == null -> Triple(
-            stringResource(R.string.schedule_summary_dday_default),
-            backgroundColor,
-            contentColor,
-        )
-
-        ddayValue < 0 -> Triple(
-            stringResource(R.string.schedule_summary_dday_offset, -ddayValue),
-            backgroundColor,
-            contentColor,
-        )
-
-        ddayValue == 0 -> Triple(
-            stringResource(R.string.schedule_summary_dday_today),
-            backgroundColor,
-            contentColor,
-        )
-
-        ddayValue <= 7 -> Triple(
-            stringResource(R.string.schedule_summary_dday_offset, ddayValue),
-            backgroundColor,
-            contentColor,
-        )
-
-        else -> Triple(
-            stringResource(R.string.schedule_summary_dday_offset, ddayValue),
-            backgroundColor,
-            contentColor,
-        )
-    }
-}
-
-@Composable
-private fun ScheduleSummary.urgencyChipColors(): Pair<Color, Color> = when (urgencyLevel) {
-    ScheduleUrgencyLevel.URGENT -> Color(0xFFFFF1F1) to Color(0xFFFF5A5A)
-    ScheduleUrgencyLevel.NORMAL -> SaionTheme.colors.fill.subtle to SaionTheme.colors.label.subtle
 }
 
 @Preview(showBackground = true)

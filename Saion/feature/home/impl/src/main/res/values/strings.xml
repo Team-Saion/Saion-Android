@@ -15,16 +15,11 @@
     <string name="home_hero_schedule_title">가장 가까운 일정이에요</string>
     <string name="home_hero_schedule_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="home_hero_schedule_all_day">종일</string>
-    <string name="home_hero_progress_start">여유있어요</string>
-    <string name="home_hero_progress_end">서두르세요</string>
     <string name="home_hero_schedule_cta">가족에게 전하기</string>
     <string name="home_schedule_title">일정</string>
     <string name="home_fab_add_schedule">일정 추가</string>
     <string name="home_schedule_detail">일정 상세 보기</string>
     <string name="home_schedule_date">%1$d월 %2$d일 (%3$s)</string>
-    <string name="home_schedule_dday_default">일정</string>
-    <string name="home_schedule_dday_offset">%1$d일 전</string>
-    <string name="home_schedule_dday_today">오늘</string>
     <string name="home_error_load_circles">서클 목록을 불러오지 못했습니다.</string>
     <string name="home_error_load_overview">홈 정보를 불러오지 못했습니다.</string>
     <string name="home_error_issue_invitation">초대장을 발급하지 못했습니다.</string>
@@ -34,6 +29,7 @@
     <string name="notification_history_empty">도착한 알림이 아직 없어요</string>
     <string name="notification_history_error_load">알림을 불러오지 못했어요</string>
     <string name="notification_history_error_read">알림 상태를 업데이트하지 못했어요</string>
+    <string name="notification_history_error_invalid_schedule_route">이동할 일정 정보를 찾지 못했어요</string>
     <string name="notification_history_time_now">방금 전</string>
     <string name="notification_history_time_minutes">%1$d분 전</string>
     <string name="notification_history_time_hours">%1$d시간 전</string>
