@@ -7,6 +7,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,6 +44,7 @@ fun TermDetailScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             SaionTopBar(
+                modifier = Modifier.statusBarsPadding(),
                 variant = TopBarVariant.Standard(
                     title = stringResource(R.string.terms_title_read_only),
                     onBack = onBack,
