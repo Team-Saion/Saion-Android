@@ -19,6 +19,7 @@
     <string name="home_hero_progress_end">서두르세요</string>
     <string name="home_hero_schedule_cta">가족에게 전하기</string>
     <string name="home_schedule_title">일정</string>
+    <string name="home_fab_add_schedule">일정 추가</string>
     <string name="home_schedule_detail">일정 상세 보기</string>
     <string name="home_schedule_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="home_schedule_dday_default">일정</string>

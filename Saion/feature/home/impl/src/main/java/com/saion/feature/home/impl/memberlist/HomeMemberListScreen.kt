@@ -80,9 +80,11 @@ private fun HomeMemberListScreen(
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = SaionTheme.colors.background.muted,
         systemBarInset = SystemBarInset.None,
         topBar = {
             SaionTopBar(
+                containerColor = SaionTheme.colors.background.muted,
                 variant = TopBarVariant.Standard(
                     title = null,
                     onBack = onBack,
