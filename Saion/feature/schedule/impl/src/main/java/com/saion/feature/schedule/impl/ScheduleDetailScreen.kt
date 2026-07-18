@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -107,13 +109,14 @@ private fun ScheduleDetailScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
+                modifier = Modifier.statusBarsPadding(),
                 variant = TopBarVariant.Standard(onBack = onBack),
                 containerColor = Color.Transparent,
             )
         },
         bottomBar = {
             if (uiState.canDelete && uiState.detail != null) {
-                SaionBottomCTA {
+                SaionBottomCTA(modifier = Modifier.navigationBarsPadding()) {
                     SaionButton(
                         text = stringResource(R.string.schedule_detail_delete),
                         onClick = { onIntent(ScheduleDetailIntent.DeleteClicked) },
