@@ -95,6 +95,7 @@ internal val Context.memberProfileDataStore: DataStore<MemberProfileCache> by da
         override val defaultValue: MemberProfileCache
             get() = MemberProfileCache(
                 hasValue = false,
+                memberId = "",
                 nickname = "",
                 profileImageUrl = "",
                 avatarColorHex = "",

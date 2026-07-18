@@ -147,6 +147,7 @@ private fun MemberInfoResponse.toMemberInfo(): MemberInfo {
         ?: throw IllegalArgumentException("Member status is missing or invalid.")
 
     return MemberInfo(
+        memberId = id,
         nickname = nickname,
         profileImageUrl = profileImageUrl?.normalizeProfileImageUrl(),
         avatarColorHex = avatarColor.hex,
@@ -167,6 +168,7 @@ private fun MemberProfileCache.toMemberInfoResult(): AppResult<MemberInfo> {
 
     return AppResult.Success(
         MemberInfo(
+            memberId = memberId,
             nickname = nickname,
             profileImageUrl = profileImageUrl.ifBlank { null }?.normalizeProfileImageUrl(),
             avatarColorHex = avatarColorHex,
@@ -178,6 +180,7 @@ private fun MemberProfileCache.toMemberInfoResult(): AppResult<MemberInfo> {
 
 private fun MemberInfo.toCache(): MemberProfileCache = MemberProfileCache(
     hasValue = true,
+    memberId = memberId,
     nickname = nickname,
     profileImageUrl = profileImageUrl.orEmpty(),
     avatarColorHex = avatarColorHex,

@@ -223,6 +223,7 @@ private fun createMyPageProfileEditViewModel(
 )
 
 private fun defaultMemberInfo(): MemberInfo = MemberInfo(
+    memberId = "member-1",
     nickname = "수빈",
     profileImageUrl = "https://example.com/profile.png",
     avatarColorHex = "#6C757F",

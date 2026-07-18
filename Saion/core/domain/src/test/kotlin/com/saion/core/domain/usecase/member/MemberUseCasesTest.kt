@@ -17,6 +17,7 @@ class MemberUseCasesTest {
     fun `멤버 상태 변경은 status와 role을 그대로 저장소에 전달한다`() = runBlocking {
         val expected = AppResult.Success(
             MemberInfo(
+                memberId = "member-1",
                 nickname = "관리자",
                 profileImageUrl = null,
                 avatarColorHex = "#FFFFFF",
@@ -364,6 +365,7 @@ private sealed interface MemberRepositoryCall {
 private class FakeMemberRepository(
     private val myInfoResult: AppResult<MemberInfo> = AppResult.Success(
         MemberInfo(
+            memberId = "member-1",
             nickname = "사이온",
             profileImageUrl = null,
             avatarColorHex = "#FFFFFF",
@@ -382,6 +384,7 @@ private class FakeMemberRepository(
     private val updateProfileResult: AppResult<Unit> = AppResult.Success(Unit),
     private val changeStateResult: AppResult<MemberInfo> = AppResult.Success(
         MemberInfo(
+            memberId = "member-1",
             nickname = "사이온",
             profileImageUrl = null,
             avatarColorHex = "#FFFFFF",

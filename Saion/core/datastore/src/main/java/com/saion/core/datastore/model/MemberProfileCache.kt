@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MemberProfileCache(
     val hasValue: Boolean,
+    val memberId: String = "",
     val nickname: String,
     val profileImageUrl: String,
     val avatarColorHex: String,

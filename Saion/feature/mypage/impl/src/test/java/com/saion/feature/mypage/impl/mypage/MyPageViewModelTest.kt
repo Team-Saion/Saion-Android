@@ -47,6 +47,7 @@ class MyPageViewModelTest {
     @Test
     fun `내 정보 조회 성공 시 상태에 프로필 정보가 반영된다`() = runTest {
         val memberInfo = MemberInfo(
+            memberId = "member-1",
             nickname = "수빈",
             profileImageUrl = "https://example.com/profile.png",
             avatarColorHex = "#6C757F",
@@ -199,6 +200,7 @@ class MyPageViewModelTest {
 }
 
 private fun defaultMemberInfo(): MemberInfo = MemberInfo(
+    memberId = "member-1",
     nickname = "수빈",
     profileImageUrl = "https://example.com/profile.png",
     avatarColorHex = "#6C757F",

@@ -18,6 +18,7 @@ internal class DefaultMemberProfileLocalDataSource @Inject constructor(
         dataStore.updateData {
             MemberProfileCache(
                 hasValue = false,
+                memberId = "",
                 nickname = "",
                 profileImageUrl = "",
                 avatarColorHex = "",

@@ -1,6 +1,7 @@
 package com.saion.core.model.member
 
 data class MemberInfo(
+    val memberId: String,
     val nickname: String,
     val profileImageUrl: String?,
     val avatarColorHex: String,

@@ -231,6 +231,7 @@ private class AuthFakeMemberRepository(
 
     override suspend fun getMyInfo(): AppResult<MemberInfo> = AppResult.Success(
         MemberInfo(
+            memberId = "member-1",
             nickname = "unused",
             profileImageUrl = null,
             avatarColorHex = "#000000",
