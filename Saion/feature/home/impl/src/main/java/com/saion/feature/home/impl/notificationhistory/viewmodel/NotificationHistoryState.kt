@@ -10,5 +10,6 @@ import kotlinx.collections.immutable.persistentListOf
 internal data class NotificationHistoryState(
     val items: ImmutableList<NotificationInboxItem> = persistentListOf(),
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
     val isLoadFailed: Boolean = false,
 ) : UIState

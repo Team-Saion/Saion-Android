@@ -25,16 +25,18 @@ internal class NotificationHistoryViewModel @Inject constructor(
 
     override fun handleIntent(intent: NotificationHistoryIntent) {
         when (intent) {
+            NotificationHistoryIntent.RefreshRequested -> loadNotifications(isRefresh = true)
             is NotificationHistoryIntent.NotificationClicked -> handleNotificationClick(intent.item)
         }
     }
 
-    private fun loadNotifications() {
+    private fun loadNotifications(isRefresh: Boolean = false) {
         launchSafely(
             onStart = {
                 update {
                     copy(
-                        isLoading = true,
+                        isLoading = if (isRefresh) false else true,
+                        isRefreshing = isRefresh,
                         isLoadFailed = false,
                     )
                 }
@@ -44,6 +46,7 @@ internal class NotificationHistoryViewModel @Inject constructor(
                     copy(
                         items = page.items.toImmutableList(),
                         isLoading = false,
+                        isRefreshing = false,
                         isLoadFailed = false,
                     )
                 }
@@ -52,6 +55,7 @@ internal class NotificationHistoryViewModel @Inject constructor(
                 update {
                     copy(
                         isLoading = false,
+                        isRefreshing = false,
                         isLoadFailed = items.isEmpty(),
                     )
                 }

@@ -5,6 +5,7 @@
 
 package com.saion.ds.theme
 
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
@@ -76,6 +77,7 @@ fun SaionTheme(content: @Composable () -> Unit) {
                 handleColor = LocalSaionColors.current.primary.default,
                 backgroundColor = LocalSaionColors.current.primary.default.copy(alpha = 0.3f),
             ),
+            LocalOverscrollFactory provides null,
             content = content,
         )
     }

@@ -29,6 +29,7 @@ import com.saion.core.model.notification.NotificationInboxItem
 import com.saion.core.model.notification.NotificationRoute
 import com.saion.core.model.notification.NotificationRouteType
 import com.saion.core.model.notification.NotificationType
+import com.saion.core.ui.component.SaionPullToRefreshBox
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
@@ -88,6 +89,7 @@ internal fun NotificationHistoryScreen(
         snackbarHostState = snackbarHostState,
         onBack = onBack,
         onSettingsClick = onSettingsClick,
+        onRefresh = { viewModel.dispatch(NotificationHistoryIntent.RefreshRequested) },
         onNotificationClick = { item ->
             viewModel.dispatch(NotificationHistoryIntent.NotificationClicked(item))
         },
@@ -100,6 +102,7 @@ private fun NotificationHistoryScreen(
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onSettingsClick: () -> Unit,
+    onRefresh: () -> Unit,
     onNotificationClick: (NotificationInboxItem) -> Unit,
 ) {
     SaionScaffold(
@@ -124,47 +127,53 @@ private fun NotificationHistoryScreen(
             )
         },
     ) {
-        when {
-            uiState.isLoading && uiState.items.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    SaionSpinner()
+        SaionPullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            when {
+                uiState.isLoading && uiState.items.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        SaionSpinner()
+                    }
                 }
-            }
 
-            uiState.items.isEmpty() -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (uiState.isLoadFailed) {
-                                R.string.notification_history_error_load
-                            } else {
-                                R.string.notification_history_empty
-                            },
-                        ),
-                        style = SaionTheme.typography.body1,
-                        color = SaionTheme.colors.label.subtle,
-                    )
-                }
-            }
-
-            else -> {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(
-                        items = uiState.items,
-                        key = NotificationInboxItem::id,
-                    ) { item ->
-                        NotificationHistoryItem(
-                            item = item,
-                            onClick = { onNotificationClick(item) },
+                uiState.items.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(
+                                if (uiState.isLoadFailed) {
+                                    R.string.notification_history_error_load
+                                } else {
+                                    R.string.notification_history_empty
+                                },
+                            ),
+                            style = SaionTheme.typography.body1,
+                            color = SaionTheme.colors.label.subtle,
                         )
+                    }
+                }
+
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(
+                            items = uiState.items,
+                            key = NotificationInboxItem::id,
+                        ) { item ->
+                            NotificationHistoryItem(
+                                item = item,
+                                onClick = { onNotificationClick(item) },
+                            )
+                        }
                     }
                 }
             }
@@ -321,6 +330,7 @@ private fun NotificationHistoryScreenPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onBack = {},
             onSettingsClick = {},
+            onRefresh = {},
             onNotificationClick = {},
         )
     }

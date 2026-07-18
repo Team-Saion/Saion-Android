@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +30,7 @@ import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.ScheduleAddCard
+import com.saion.core.ui.component.SaionPullToRefreshBox
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.ScheduleSummaryCard
 import com.saion.core.ui.component.SystemBarInset
@@ -51,7 +50,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScheduleScreen(
     modifier: Modifier = Modifier,
@@ -80,7 +78,6 @@ internal fun ScheduleScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScheduleScreen(
     uiState: ScheduleState,
@@ -98,7 +95,7 @@ private fun ScheduleScreen(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets,
         containerColor = SaionTheme.colors.background.muted,
     ) {
-        PullToRefreshBox(
+        SaionPullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize(),

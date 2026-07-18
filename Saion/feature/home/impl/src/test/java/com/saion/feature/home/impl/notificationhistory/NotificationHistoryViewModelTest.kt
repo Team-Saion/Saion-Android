@@ -17,11 +17,14 @@ import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHis
 import com.saion.feature.home.impl.notificationhistory.viewmodel.NotificationHistoryViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -63,6 +66,7 @@ class NotificationHistoryViewModelTest {
 
         assertEquals(listOf(inboxItem), viewModel.uiState.value.items)
         assertTrue(viewModel.uiState.value.isLoading.not())
+        assertTrue(viewModel.uiState.value.isRefreshing.not())
         assertTrue(viewModel.uiState.value.isLoadFailed.not())
     }
 
@@ -190,6 +194,37 @@ class NotificationHistoryViewModelTest {
         val effect = effectDeferred.await()
         assertTrue(effect is NotificationHistoryEffect.ShowSnackbar)
     }
+
+    @Test
+    fun `새로고침 요청 시 refresh 상태로 재조회한다`() = runTest {
+        val inboxItem = defaultNotificationItem()
+        val refreshGate = Job()
+        val repository = FakeNotificationRepository(
+            inboxResult = AppResult.Success(NotificationInboxPage(items = listOf(inboxItem), nextCursor = null)),
+            onGetInbox = { callCount ->
+                if (callCount == 2) {
+                    refreshGate.join()
+                }
+            },
+        )
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+
+        launch {
+            viewModel.dispatch(NotificationHistoryIntent.RefreshRequested)
+        }
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.isRefreshing)
+        assertTrue(viewModel.uiState.value.isLoading.not())
+
+        refreshGate.complete()
+        advanceUntilIdle()
+
+        assertEquals(2, repository.getInboxCallCount)
+        assertTrue(viewModel.uiState.value.isRefreshing.not())
+        assertTrue(viewModel.uiState.value.isLoading.not())
+    }
 }
 
 private fun createViewModel(repository: FakeNotificationRepository): NotificationHistoryViewModel =
@@ -201,13 +236,19 @@ private fun createViewModel(repository: FakeNotificationRepository): Notificatio
 private class FakeNotificationRepository(
     private val inboxResult: AppResult<NotificationInboxPage>,
     private val markReadResult: AppResult<NotificationInboxItem> = AppResult.Failure(AppError.Unknown()),
+    private val onGetInbox: suspend (callCount: Int) -> Unit = {},
 ) : NotificationRepository {
     var markReadRequestedId: Long? = null
+    var getInboxCallCount: Int = 0
 
     override suspend fun getInbox(
         cursor: Long?,
         size: Int?,
-    ): AppResult<NotificationInboxPage> = inboxResult
+    ): AppResult<NotificationInboxPage> {
+        getInboxCallCount += 1
+        onGetInbox(getInboxCallCount)
+        return inboxResult
+    }
 
     override suspend fun markRead(notificationId: Long): AppResult<NotificationInboxItem> {
         markReadRequestedId = notificationId
