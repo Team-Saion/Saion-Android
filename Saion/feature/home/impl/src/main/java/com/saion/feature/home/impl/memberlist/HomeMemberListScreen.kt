@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.model.home.CircleMember
-import com.saion.core.model.member.MemberRole
 import com.saion.core.ui.component.SaionProfile
 import com.saion.core.ui.component.SaionScaffold
 import com.saion.core.ui.component.SystemBarInset
@@ -154,19 +153,12 @@ private fun HomeMemberListItem(
         )
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = if (member.isMe) member.nickname + meSuffix else member.nickname,
                 style = SaionTheme.typography.title3Strong,
                 color = SaionTheme.colors.label.default,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Text(
-                text = member.role.toRoleLabel(),
-                style = SaionTheme.typography.body2,
-                color = SaionTheme.colors.label.subtle,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -195,14 +187,6 @@ private fun HomeMemberListPlaceholder(
 private fun HomeMemberListSnackbarMessage.resolve(context: Context): String = when (this) {
     is HomeMemberListSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
     is HomeMemberListSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
-}
-
-@Composable
-private fun String.toRoleLabel(): String = when (MemberRole.from(this)) {
-    MemberRole.ADMIN -> stringResource(R.string.home_member_list_role_admin)
-    MemberRole.MEMBER -> stringResource(R.string.home_member_list_role_member)
-    MemberRole.PENDING -> stringResource(R.string.home_member_list_role_pending)
-    null -> this
 }
 
 @Preview(showBackground = true)
