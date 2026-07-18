@@ -6,6 +6,7 @@ import com.saion.core.network.model.circle.CreateCircleRequest
 import com.saion.core.network.model.common.ApiResponse
 import com.saion.core.network.model.common.ApiResponse.Companion.toApiResponse
 import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -31,4 +32,8 @@ class CircleService(private val client: HttpClient) {
         .patch("/api/v1/circles/$circleId/initiator") {
             setBody(CircleTransferInitiatorRequest(targetMemberId = targetMemberId))
         }.toApiResponse()
+
+    suspend fun leave(circleId: String): ApiResponse<Unit> = client
+        .delete("/api/v1/circles/$circleId/members/me")
+        .toApiResponse()
 }

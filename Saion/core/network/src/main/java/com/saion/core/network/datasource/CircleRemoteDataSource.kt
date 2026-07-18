@@ -12,4 +12,6 @@ interface CircleRemoteDataSource {
         circleId: String,
         targetMemberId: String,
     ): ApiResponse<CircleSummaryResponse>
+
+    suspend fun leave(circleId: String): ApiResponse<Unit>
 }

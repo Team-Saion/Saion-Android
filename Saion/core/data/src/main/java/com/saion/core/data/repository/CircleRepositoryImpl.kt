@@ -36,6 +36,12 @@ internal class CircleRepositoryImpl @Inject constructor(
     ) { response ->
         AppResult.Success(response.toDomain())
     }
+
+    override suspend fun leave(circleId: String): AppResult<Unit> = safeRequest(
+        request = { circleRemoteDataSource.leave(circleId = circleId) },
+    ) {
+        AppResult.Success(Unit)
+    }
 }
 
 private fun CircleSummaryResponse.toDomain(): CircleSummary = CircleSummary(

@@ -12,4 +12,6 @@ interface CircleRepository {
         circleId: String,
         targetMemberId: String,
     ): AppResult<CircleSummary>
+
+    suspend fun leave(circleId: String): AppResult<Unit>
 }

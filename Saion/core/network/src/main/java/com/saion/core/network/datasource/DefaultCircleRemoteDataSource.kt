@@ -19,4 +19,6 @@ class DefaultCircleRemoteDataSource @Inject constructor(
         circleId = circleId,
         targetMemberId = targetMemberId,
     )
+
+    override suspend fun leave(circleId: String): ApiResponse<Unit> = service.leave(circleId = circleId)
 }

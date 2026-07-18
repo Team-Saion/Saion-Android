@@ -78,6 +78,25 @@ class CircleUseCasesTest {
             ),
         )
     }
+
+    @Test
+    fun `써클 탈퇴는 circleId를 그대로 저장소에 전달한다`() = runBlocking {
+        val expected = AppResult.Success(Unit)
+        val repository = FakeCircleRepository(leaveResult = expected)
+
+        val actual = LeaveCircleUseCase(repository).invoke(circleId = "circle-1")
+
+        assertEquals(
+            CircleUseCaseOutcome(
+                result = expected,
+                call = CircleRepositoryCall.Leave(circleId = "circle-1"),
+            ),
+            CircleUseCaseOutcome(
+                result = actual,
+                call = repository.lastCall,
+            ),
+        )
+    }
 }
 
 private data class CircleUseCaseOutcome<T>(
@@ -94,6 +113,8 @@ private sealed interface CircleRepositoryCall {
         val circleId: String,
         val targetMemberId: String,
     ) : CircleRepositoryCall
+
+    data class Leave(val circleId: String) : CircleRepositoryCall
 }
 
 private class FakeCircleRepository(
@@ -104,6 +125,7 @@ private class FakeCircleRepository(
     private val transferResult: AppResult<CircleSummary> = AppResult.Success(
         CircleSummary(circleId = "default", name = "default", ownerId = "owner"),
     ),
+    private val leaveResult: AppResult<Unit> = AppResult.Success(Unit),
 ) : CircleRepository {
     var lastCall: CircleRepositoryCall? = null
 
@@ -126,5 +148,10 @@ private class FakeCircleRepository(
             targetMemberId = targetMemberId,
         )
         return transferResult
+    }
+
+    override suspend fun leave(circleId: String): AppResult<Unit> {
+        lastCall = CircleRepositoryCall.Leave(circleId = circleId)
+        return leaveResult
     }
 }
