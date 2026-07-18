@@ -1,5 +1,7 @@
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.io.File
+import org.gradle.api.GradleException
 
 plugins {
     id("com.saion.android.application")
@@ -21,6 +23,72 @@ android {
         applicationId = "com.saion.app"
         versionCode = 1
         versionName = "1.0"
+    }
+
+    val properties = gradleLocalProperties(
+        projectRootDir = rootDir,
+        providers = providers,
+    )
+    val releaseStoreFile = properties.getProperty("release.signing.store.file")
+    val releaseStorePassword = properties.getProperty("release.signing.store.password")
+    val releaseKeyAlias = properties.getProperty("release.signing.key.alias")
+    val releaseKeyPassword = properties.getProperty("release.signing.key.password")
+    val releaseSigningConfigured = listOf(
+        releaseStoreFile,
+        releaseStorePassword,
+        releaseKeyAlias,
+        releaseKeyPassword,
+    ).all { !it.isNullOrBlank() }
+
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = File(requireNotNull(releaseStoreFile))
+                storePassword = requireNotNull(releaseStorePassword)
+                keyAlias = requireNotNull(releaseKeyAlias)
+                keyPassword = requireNotNull(releaseKeyPassword)
+            }
+        }
+    }
+
+    buildTypes {
+        if (releaseSigningConfigured) {
+            getByName("release") {
+                signingConfig = signingConfigs.getByName("release")
+            }
+            getByName("internal") {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
+}
+
+val validateReleaseSigningConfig = tasks.register("validateReleaseSigningConfig") {
+    doLast {
+        val properties = gradleLocalProperties(
+            projectRootDir = rootDir,
+            providers = providers,
+        )
+        val requiredKeys = listOf(
+            "release.signing.store.file",
+            "release.signing.store.password",
+            "release.signing.key.alias",
+            "release.signing.key.password",
+        )
+        val missingKeys = requiredKeys.filter { properties.getProperty(it).isNullOrBlank() }
+
+        if (missingKeys.isNotEmpty()) {
+            throw GradleException(
+                "Missing release signing properties in local.properties: " +
+                    missingKeys.joinToString(),
+            )
+        }
+    }
+}
+
+tasks.configureEach {
+    if (name == "preReleaseBuild" || name == "preInternalBuild") {
+        dependsOn(validateReleaseSigningConfig)
     }
 }
 

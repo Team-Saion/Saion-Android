@@ -23,6 +23,11 @@ internal fun Project.configureAndroidApplication() {
                     "proguard-rules.pro",
                 )
             }
+            create("internal") {
+                initWith(getByName("release"))
+                applicationIdSuffix = ".internal"
+                matchingFallbacks += listOf("release")
+            }
         }
     }
 }
@@ -34,6 +39,13 @@ internal fun Project.configureAndroidLibrary() {
         defaultConfig {
             minSdk = BuildLogicConstants.MIN_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+
+        buildTypes {
+            create("internal") {
+                initWith(getByName("release"))
+                matchingFallbacks += listOf("release")
+            }
         }
     }
 }
