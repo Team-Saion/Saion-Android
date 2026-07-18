@@ -1,12 +1,12 @@
 package com.saion.feature.circlecreate.impl
 
 import android.content.Context
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,7 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
 import com.saion.core.ui.component.SystemBarInset
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
@@ -47,7 +50,11 @@ internal fun CircleCreateScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             CircleCreateEffect.Close -> onClose()
-            is CircleCreateEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+
+            is CircleCreateEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -71,7 +78,7 @@ private fun CircleCreateScreen(
     val validationMessage = uiState.validationMessageResId?.let { stringResource(it) }
 
     SaionScaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 variant = TopBarVariant.Standard(
@@ -95,15 +102,14 @@ private fun CircleCreateScreen(
         },
         systemBarInset = SystemBarInset.None,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
         ) {
             CircleCreateContent(
                 name = uiState.name,
                 placeholder = stringResource(R.string.circle_create_placeholder),
                 onNameChange = onNameChange,
+                modifier = Modifier.offset(y = maxHeight * 0.2f),
             )
 
             if (uiState.isSubmitting) SaionSpinner()
@@ -113,12 +119,22 @@ private fun CircleCreateScreen(
 
 private fun CircleCreateSnackbarMessage.resolve(context: Context): String = when (this) {
     is CircleCreateSnackbarMessage.Res -> context.getString(resId)
+
     is CircleCreateSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
+
     is CircleCreateSnackbarMessage.Error -> error.resolveMessage(
         context = context,
         defaultMessageResId = defaultMessageResId,
         fallbackToDefaultForSystemErrors = true,
     )
+}
+
+private fun CircleCreateSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is CircleCreateSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+
+    is CircleCreateSnackbarMessage.Res,
+    is CircleCreateSnackbarMessage.Text,
+    -> null
 }
 
 @Preview(showBackground = true)

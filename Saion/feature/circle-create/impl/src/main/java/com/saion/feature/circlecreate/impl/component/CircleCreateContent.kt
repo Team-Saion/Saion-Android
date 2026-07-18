@@ -26,11 +26,10 @@ internal fun CircleCreateContent(
     name: String,
     placeholder: String,
     onNameChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 176.dp),
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -38,7 +37,7 @@ internal fun CircleCreateContent(
             style = SaionTheme.typography.title2,
             color = SaionTheme.colors.label.default,
         )
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         SaionTextArea(
             value = name,
             onValueChange = onNameChange,

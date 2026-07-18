@@ -4,12 +4,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,10 +26,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.saion.core.ui.component.SaionScaffold
+import com.saion.core.ui.component.SaionSnackbarHost
+import com.saion.core.ui.component.SaionSnackbarVariant
+import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.ext.CollectWithLifecycle
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
+import androidx.compose.ui.tooling.preview.Preview
+import com.saion.core.model.member.NicknameValidation
+import com.saion.core.model.member.NicknameValidationResult
+import com.saion.ds.theme.SaionTheme
 import com.saion.feature.profileedit.impl.component.ProfileEditBottomAction
 import com.saion.feature.profileedit.impl.component.ProfileEditContent
 
@@ -44,7 +54,10 @@ fun AuthProfileEditScreen(
         when (effect) {
             ProfileEditEffect.NavigateBack -> onBack()
             ProfileEditEffect.NavigateComplete -> onComplete()
-            is ProfileEditEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is ProfileEditEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -74,7 +87,10 @@ fun MyPageProfileEditScreen(onBack: () -> Unit) {
         when (effect) {
             ProfileEditEffect.NavigateBack -> onBack()
             ProfileEditEffect.NavigateComplete -> onBack()
-            is ProfileEditEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message.resolve(context))
+            is ProfileEditEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
+                message = effect.message.resolve(context),
+                variant = effect.message.variant(),
+            )
         }
     }
 
@@ -113,7 +129,7 @@ private fun ProfileEditScreen(
     }
 
     SaionScaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             SaionTopBar(
                 variant = TopBarVariant.Standard(onBack = onBackClick),
@@ -137,7 +153,8 @@ private fun ProfileEditScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             ProfileEditContent(
                 title = stringResource(uiConfig.titleResId),
@@ -157,5 +174,65 @@ private fun ProfileEditScreen(
 
             if (uiState.isSubmitting) SaionSpinner()
         }
+    }
+}
+
+private fun ProfileEditSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
+    is ProfileEditSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is ProfileEditSnackbarMessage.Text -> null
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ProfileEditScreenPreview() {
+    SaionTheme {
+        ProfileEditScreen(
+            uiState = ProfileEditUiState(
+                nickname = "사이온",
+                validation = NicknameValidation(
+                    originalNickname = "사이온",
+                    trimmedNickname = "사이온",
+                    result = NicknameValidationResult.Valid,
+                ),
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            uiConfig = ProfileEditUiConfig(
+                titleResId = R.string.profile_edit_auth_title,
+                placeholderResId = R.string.profile_edit_placeholder,
+                submitResId = R.string.profile_edit_submit_auth,
+            ),
+            onProfileImageSelected = {},
+            onBackClick = {},
+            onNicknameChange = {},
+            onSubmit = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ProfileEditScreen_MyPage_Preview() {
+    SaionTheme {
+        ProfileEditScreen(
+            uiState = ProfileEditUiState(
+                initialNickname = "사이온",
+                nickname = "사이온2",
+                validation = NicknameValidation(
+                    originalNickname = "사이온2",
+                    trimmedNickname = "사이온2",
+                    result = NicknameValidationResult.Valid,
+                ),
+            ),
+            snackbarHostState = remember { SnackbarHostState() },
+            uiConfig = ProfileEditUiConfig(
+                titleResId = R.string.profile_edit_mypage_title,
+                placeholderResId = R.string.profile_edit_placeholder,
+                submitResId = R.string.profile_edit_submit_mypage,
+            ),
+            onProfileImageSelected = {},
+            onBackClick = {},
+            onNicknameChange = {},
+            onSubmit = {},
+        )
     }
 }
