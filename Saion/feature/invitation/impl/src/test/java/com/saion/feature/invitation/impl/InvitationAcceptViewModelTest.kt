@@ -12,6 +12,8 @@ import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
 import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
+import com.saion.core.model.result.AppError
+import com.saion.core.model.result.BusinessErrorType
 import com.saion.core.model.result.AppResult
 import com.saion.feature.invitation.impl.viewmodel.InvitationAcceptEffect
 import com.saion.feature.invitation.impl.viewmodel.InvitationAcceptIntent
@@ -30,6 +32,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -70,17 +74,68 @@ class InvitationAcceptViewModelTest {
         assertEquals("circle-1", currentCircleRepository.selectedCircleId)
         assertEquals(InvitationAcceptEffect.Close, effectDeferred.await())
     }
+
+    @Test
+    fun `만료된 초대장 조회 실패 시 만료 상태를 노출한다`() = runTest {
+        val viewModel = InvitationAcceptViewModel(
+            getInvitationByTokenUseCase = GetInvitationByTokenUseCase(
+                FakeInvitationRepository(
+                    getInvitationResult = AppResult.Failure(
+                        AppError.Business(
+                            businessType = BusinessErrorType.NOT_FOUND,
+                            rawCode = "I410_1",
+                            message = "만료된 초대장이에요. 초대자에게 다시 요청해주세요.",
+                        ),
+                    ),
+                ),
+            ),
+            acceptInvitationUseCase = AcceptInvitationUseCase(FakeInvitationRepository()),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(
+                currentCircleRepository = FakeCurrentCircleRepository(),
+                circleRepository = FakeResolvedCircleRepository(),
+            ),
+        )
+
+        viewModel.bind("expired-token")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isExpired)
+        assertFalse(viewModel.uiState.value.isLoadFailed)
+        assertEquals(null, viewModel.uiState.value.detail)
+    }
+
+    @Test
+    fun `만료가 아닌 초대장 조회 실패 시 일반 실패 상태를 유지한다`() = runTest {
+        val viewModel = InvitationAcceptViewModel(
+            getInvitationByTokenUseCase = GetInvitationByTokenUseCase(
+                FakeInvitationRepository(
+                    getInvitationResult = AppResult.Failure(
+                        AppError.Business(
+                            businessType = BusinessErrorType.NOT_FOUND,
+                            rawCode = "I404_1",
+                            message = "초대장을 찾을 수 없습니다.",
+                        ),
+                    ),
+                ),
+            ),
+            acceptInvitationUseCase = AcceptInvitationUseCase(FakeInvitationRepository()),
+            selectCurrentCircleUseCase = SelectCurrentCircleUseCase(
+                currentCircleRepository = FakeCurrentCircleRepository(),
+                circleRepository = FakeResolvedCircleRepository(),
+            ),
+        )
+
+        viewModel.bind("missing-token")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isExpired)
+        assertTrue(viewModel.uiState.value.isLoadFailed)
+        assertEquals(null, viewModel.uiState.value.detail)
+    }
 }
 
-private class FakeInvitationRepository : InvitationRepository {
-    override suspend fun issueInvitation(
-        type: InvitationType,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): AppResult<IssuedInvitation> = throw UnsupportedOperationException("Not required for this test")
-
-    override suspend fun getInvitationByToken(token: String): AppResult<InvitationDetail> = AppResult.Success(
+private class FakeInvitationRepository(
+    private val getInvitationResult: AppResult<InvitationDetail> = AppResult.Success(
         InvitationDetail(
             invitationId = "invite-1",
             circleName = "비니네",
@@ -90,10 +145,21 @@ private class FakeInvitationRepository : InvitationRepository {
             ),
             expiresAt = "2026-07-30T00:00:00",
         ),
-    )
+    ),
+    private val acceptInvitationResult: AppResult<AcceptedInvitation> = AppResult.Success(
+        AcceptedInvitation(circleId = "circle-1"),
+    ),
+) : InvitationRepository {
+    override suspend fun issueInvitation(
+        type: InvitationType,
+        targetId: String,
+        inviteToName: String?,
+        message: String?,
+    ): AppResult<IssuedInvitation> = throw UnsupportedOperationException("Not required for this test")
 
-    override suspend fun acceptInvitation(token: String): AppResult<AcceptedInvitation> =
-        AppResult.Success(AcceptedInvitation(circleId = "circle-1"))
+    override suspend fun getInvitationByToken(token: String): AppResult<InvitationDetail> = getInvitationResult
+
+    override suspend fun acceptInvitation(token: String): AppResult<AcceptedInvitation> = acceptInvitationResult
 }
 
 private class FakeCurrentCircleRepository : CurrentCircleRepository {

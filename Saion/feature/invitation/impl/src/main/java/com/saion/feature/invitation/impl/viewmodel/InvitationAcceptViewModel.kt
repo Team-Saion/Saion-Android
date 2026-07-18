@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.saion.core.domain.usecase.circle.SelectCurrentCircleUseCase
 import com.saion.core.domain.usecase.invitation.AcceptInvitationUseCase
 import com.saion.core.domain.usecase.invitation.GetInvitationByTokenUseCase
+import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.core.ui.error.toSnackbarMessage
 import com.saion.core.ui.viewmodel.BaseViewModel
@@ -41,6 +42,7 @@ internal class InvitationAcceptViewModel @Inject constructor(
                 update {
                     copy(
                         isLoading = true,
+                        isExpired = false,
                         isLoadFailed = false,
                     )
                 }
@@ -50,15 +52,28 @@ internal class InvitationAcceptViewModel @Inject constructor(
                     copy(
                         isLoading = false,
                         detail = detail,
+                        isExpired = false,
                         isLoadFailed = false,
                     )
                 }
             },
             onFailure = { error ->
+                if (error.isExpiredInvitation()) {
+                    update {
+                        copy(
+                            isLoading = false,
+                            detail = null,
+                            isExpired = true,
+                            isLoadFailed = false,
+                        )
+                    }
+                    return@launchSafely
+                }
                 update {
                     copy(
                         isLoading = false,
                         detail = null,
+                        isExpired = false,
                         isLoadFailed = true,
                     )
                 }
@@ -90,6 +105,16 @@ internal class InvitationAcceptViewModel @Inject constructor(
                 emitEffect(InvitationAcceptEffect.Close)
             },
             onFailure = { error ->
+                if (error.isExpiredInvitation()) {
+                    update {
+                        copy(
+                            detail = null,
+                            isExpired = true,
+                            isLoadFailed = false,
+                        )
+                    }
+                    return@launchSafely
+                }
                 emitEffect(
                     InvitationAcceptEffect.ShowSnackbar(
                         error.toSnackbarMessage(
@@ -116,5 +141,12 @@ internal class InvitationAcceptViewModel @Inject constructor(
         ) {
             AppResult.Success(Unit)
         }
+    }
+
+    private fun AppError.isExpiredInvitation(): Boolean =
+        this is AppError.Business && rawCode == EXPIRED_INVITATION_ERROR_CODE
+
+    private companion object {
+        const val EXPIRED_INVITATION_ERROR_CODE = "I410_1"
     }
 }

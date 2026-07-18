@@ -15,8 +15,9 @@ import com.saion.ds.icon.vector.IcKakaoLogo
 import com.saion.ds.icon.vector.IcPerson
 import com.saion.ds.icon.vector.IcPlus
 import com.saion.ds.icon.vector.IcSchedule
-import com.saion.ds.icon.vector.IcSettings
 import com.saion.ds.icon.vector.IcSelection
+import com.saion.ds.icon.vector.IcSettings
+import com.saion.ds.icon.vector.IcWarning
 import com.saion.ds.icon.vector.SaionLogo
 import com.saion.ds.icon.vector.SaionSymbol
 
@@ -39,4 +40,5 @@ object SaionIcons {
     val Plus: ImageVector = IcPlus
     val Dot: ImageVector = IcDot
     val DotOutline: ImageVector = IcDotOutline
+    val Warning: ImageVector = IcWarning
 }

@@ -9,5 +9,6 @@ internal data class InvitationAcceptState(
     val isLoading: Boolean = true,
     val isAccepting: Boolean = false,
     val detail: InvitationDetail? = null,
+    val isExpired: Boolean = false,
     val isLoadFailed: Boolean = false,
 ) : UIState
