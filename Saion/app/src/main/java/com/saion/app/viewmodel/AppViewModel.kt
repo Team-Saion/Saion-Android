@@ -39,6 +39,10 @@ class AppViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
 
+    fun savePendingInvitation(token: String) {
+        pendingInvitationLinkStore.save(token)
+    }
+
     init {
         viewModelScope.launch {
             val startDestination = resolveStartDestination()

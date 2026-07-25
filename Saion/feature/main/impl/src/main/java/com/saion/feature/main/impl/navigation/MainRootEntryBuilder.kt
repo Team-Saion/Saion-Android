@@ -24,6 +24,8 @@ import com.saion.core.domain.usecase.circle.ResolvedCurrentCircle
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.key.AppNavKey
 import com.saion.core.navigation.navigator.AppNavigator
+import com.saion.core.navigation.store.PendingNotificationNavigationStore
+import com.saion.core.navigation.state.TabNavigationState
 import com.saion.core.navigation.state.rememberTabNavigationState
 import com.saion.core.navigation.ui.AppTabNavigationHost
 import com.saion.core.ui.component.SaionScaffold
@@ -39,6 +41,7 @@ import com.saion.feature.main.api.key.MainNavKey
 import com.saion.feature.main.api.key.MainTabNavKey
 import com.saion.feature.main.impl.R
 import com.saion.feature.mypage.api.key.MyPageNavKey
+import com.saion.feature.schedule.api.key.ScheduleDetailNavKey
 import com.saion.feature.schedule.api.key.ScheduleNavKey
 import javax.inject.Inject
 import kotlin.jvm.JvmSuppressWildcards
@@ -94,6 +97,11 @@ private fun MainRoute(
     val rootTabs = items.map(TabItem::navKey).toSet()
     val shouldShowBottomBar = navigationState.current in rootTabs
     val shouldHandleExitOnBack = shouldShowBottomBar && !navigationState.canPop
+
+    LaunchedEffect(navigationState) {
+        PendingNotificationNavigationStore.consume()?.let(navigationState::navigateToNotificationDestination)
+        PendingNotificationNavigationStore.events.collect(navigationState::navigateToNotificationDestination)
+    }
 
     LaunchedEffect(navigationState.selectedTab, navigationState.current, shouldHandleExitOnBack) {
         isExitSnackbarVisible = false
@@ -168,4 +176,28 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun TabNavigationState<MainTabNavKey>.navigateToNotificationDestination(
+    destination: AppNavKey,
+) {
+    when (destination) {
+        HomeNavKey -> {
+            selectTab(HomeNavKey)
+            popUpTo(HomeNavKey)
+        }
+
+        ScheduleNavKey -> {
+            selectTab(ScheduleNavKey)
+            popUpTo(ScheduleNavKey)
+        }
+
+        is ScheduleDetailNavKey -> {
+            selectTab(ScheduleNavKey)
+            popUpTo(ScheduleNavKey)
+            push(destination)
+        }
+
+        else -> Unit
+    }
 }

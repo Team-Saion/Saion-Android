@@ -11,10 +11,12 @@ import androidx.activity.viewModels
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.saion.app.invitation.PendingInvitationLinkStore
+import com.saion.app.notification.FcmNotificationNavigationParser
 import com.saion.app.ui.SaionApp
 import com.saion.app.viewmodel.AppViewModel
 import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.key.AppNavKey
+import com.saion.core.navigation.store.PendingNotificationNavigationStore
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.jvm.JvmSuppressWildcards
@@ -59,8 +61,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val token = intent?.data?.toInvitationToken() ?: return
-        pendingInvitationLinkStore.save(token)
+        intent?.data?.toInvitationToken()?.let(appViewModel::savePendingInvitation)
+        intent?.toNotificationPayload()
+            ?.let(FcmNotificationNavigationParser::parse)
+            ?.let(PendingNotificationNavigationStore::save)
     }
 
     private fun Uri.toInvitationToken(): String? {
@@ -68,5 +72,16 @@ class MainActivity : ComponentActivity() {
         if (host != "kakaolink") return null
         if (getQueryParameter("action") != "invite") return null
         return getQueryParameter("token")?.takeIf { it.isNotBlank() }
+    }
+
+    private fun Intent.toNotificationPayload(): Map<String, String>? {
+        val extras = extras ?: return null
+        val payload = extras.keySet()
+            .mapNotNull { key ->
+                extras.getString(key)?.let { value -> key to value }
+            }
+            .toMap()
+
+        return payload.takeIf { it.isNotEmpty() }
     }
 }
