@@ -182,6 +182,8 @@ private fun ScheduleContent(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        item(key = "schedule_add") { ScheduleAddCard(onClick = onAddClick) }
+
         items(items = schedules, key = ScheduleSummary::scheduleId) { schedule ->
             ScheduleSummaryCard(
                 schedule = schedule,
@@ -200,10 +202,6 @@ private fun ScheduleContent(
                     SaionSpinner()
                 }
             }
-        }
-
-        item(key = "schedule_add") {
-            ScheduleAddCard(onClick = onAddClick)
         }
     }
 }
