@@ -29,6 +29,9 @@ object InvitationNavigationModule {
                                 navigator.replaceAll(MainNavKey)
                             }
                         },
+                        onComplete = {
+                            navigator.replaceAll(MainNavKey)
+                        },
                     )
                 }
             }

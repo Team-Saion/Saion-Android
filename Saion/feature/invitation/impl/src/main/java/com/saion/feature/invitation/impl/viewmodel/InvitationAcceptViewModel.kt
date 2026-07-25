@@ -102,7 +102,7 @@ internal class InvitationAcceptViewModel @Inject constructor(
             },
             onSuccess = { invitation ->
                 selectCurrentCircleUseCase(invitation.circleId)
-                emitEffect(InvitationAcceptEffect.Close)
+                emitEffect(InvitationAcceptEffect.Complete)
             },
             onFailure = { error ->
                 if (error.isExpiredInvitation()) {

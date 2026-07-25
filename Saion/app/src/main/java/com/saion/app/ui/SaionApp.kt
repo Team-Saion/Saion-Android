@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.saion.app.invitation.PendingInvitationLinkStore
+import com.saion.app.navigation.key.SplashNavKey
 import com.saion.app.navigation.shared.AppRootNavigationHost
 import com.saion.app.navigation.startup.StartupNavigationCoordinator
 import com.saion.app.navigation.state.rememberSaionAppState
@@ -48,9 +49,10 @@ fun SaionApp(
 
         LaunchedEffect(Unit) {
             pendingInvitationLinkStore.events.collect {
-                if (appState.navigationState.current == MainNavKey) {
+                val current = appState.navigationState.current
+                if (current !is SplashNavKey && current !is AuthNavKey) {
                     pendingInvitationLinkStore.consume()?.let { token ->
-                        appState.navigationState.replaceAll(MainNavKey, InvitationAcceptNavKey(token))
+                        appState.navigationState.showInvitation(token = token)
                     }
                 }
             }
@@ -59,7 +61,7 @@ fun SaionApp(
         LaunchedEffect(currentDestination) {
             if (currentDestination == MainNavKey) {
                 pendingInvitationLinkStore.consume()?.let { token ->
-                    appState.navigationState.replaceAll(MainNavKey, InvitationAcceptNavKey(token))
+                    appState.navigationState.showInvitation(token = token)
                 }
             }
         }
@@ -67,6 +69,7 @@ fun SaionApp(
         StartupNavigationCoordinator(
             uiState = uiState,
             navigationState = appState.navigationState,
+            pendingInvitationLinkStore = pendingInvitationLinkStore,
         )
 
         SaionScaffold(
@@ -78,6 +81,15 @@ fun SaionApp(
                 entryBuilders = rootEntryBuilders,
             )
         }
+    }
+}
+
+private fun com.saion.core.navigation.state.NavigationState<AppNavKey>.showInvitation(token: String) {
+    val invitationKey = InvitationAcceptNavKey(token)
+    if (current == MainNavKey) {
+        replaceAll(MainNavKey, invitationKey)
+    } else {
+        replaceAll(invitationKey)
     }
 }
 

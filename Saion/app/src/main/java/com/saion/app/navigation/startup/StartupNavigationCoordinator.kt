@@ -2,12 +2,14 @@ package com.saion.app.navigation.startup
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import com.saion.app.invitation.PendingInvitationLinkStore
 import com.saion.app.navigation.key.SplashNavKey
 import com.saion.app.viewmodel.AppUiState
 import com.saion.core.navigation.key.AppNavKey
 import com.saion.core.navigation.state.NavigationState
 import com.saion.feature.auth.api.key.AuthNavKey
 import com.saion.feature.auth.api.key.AuthStartStep
+import com.saion.feature.invitation.api.key.InvitationAcceptNavKey
 import com.saion.feature.main.api.key.MainNavKey
 import kotlinx.coroutines.delay
 
@@ -15,6 +17,7 @@ import kotlinx.coroutines.delay
 fun StartupNavigationCoordinator(
     uiState: AppUiState,
     navigationState: NavigationState<AppNavKey>,
+    pendingInvitationLinkStore: PendingInvitationLinkStore,
 ) {
     LaunchedEffect(uiState.isLoading, uiState.startDestination) {
         if (uiState.isLoading) return@LaunchedEffect
@@ -22,6 +25,10 @@ fun StartupNavigationCoordinator(
         when (val destination = uiState.startDestination) {
             AppStartDestination.SplashThenLogin -> navigateSplashToLogin(navigationState)
             is AppStartDestination.Auth -> navigationState.replaceAll(AuthNavKey(startStep = destination.startStep))
+            is AppStartDestination.Invitation -> {
+                pendingInvitationLinkStore.consume()
+                navigationState.replaceAll(InvitationAcceptNavKey(destination.token))
+            }
             AppStartDestination.Main -> navigationState.replaceAll(MainNavKey)
             null -> Unit
         }

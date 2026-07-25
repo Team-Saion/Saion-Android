@@ -3,6 +3,7 @@ package com.saion.app.viewmodel
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.saion.app.invitation.PendingInvitationLinkStore
 import com.saion.app.navigation.startup.AppStartDestination
 import com.saion.core.domain.usecase.auth.ClearSessionUseCase
 import com.saion.core.domain.usecase.auth.GetStoredMemberRoleUseCase
@@ -33,6 +34,7 @@ class AppViewModel @Inject constructor(
     private val clearSessionUseCase: ClearSessionUseCase,
     private val syncCurrentCircleUseCase: SyncCurrentCircleUseCase,
     private val notificationLifecycleManager: NotificationLifecycleManager,
+    private val pendingInvitationLinkStore: PendingInvitationLinkStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AppUiState())
     val uiState: StateFlow<AppUiState> = _uiState.asStateFlow()
@@ -53,6 +55,7 @@ class AppViewModel @Inject constructor(
     }
 
     private suspend fun resolveStartDestination(): AppStartDestination {
+        val pendingInvitationToken = pendingInvitationLinkStore.peek()
         if (!isSignedInUseCase()) {
             return AppStartDestination.SplashThenLogin
         }
@@ -65,7 +68,7 @@ class AppViewModel @Inject constructor(
                 MemberRole.ADMIN,
                 -> {
                     syncCurrentCircleUseCase()
-                    AppStartDestination.Main
+                    pendingInvitationToken?.let(AppStartDestination::Invitation) ?: AppStartDestination.Main
                 }
             }
 

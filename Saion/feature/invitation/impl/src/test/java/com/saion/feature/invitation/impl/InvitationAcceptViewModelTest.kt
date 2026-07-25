@@ -51,7 +51,7 @@ class InvitationAcceptViewModelTest {
     }
 
     @Test
-    fun `초대 수락 성공 시 현재 써클을 갱신하고 닫기 effect를 보낸다`() = runTest {
+    fun `초대 수락 성공 시 현재 써클을 갱신하고 완료 effect를 보낸다`() = runTest {
         val currentCircleRepository = FakeCurrentCircleRepository()
         val invitationRepository = FakeInvitationRepository()
         val viewModel = InvitationAcceptViewModel(
@@ -71,7 +71,7 @@ class InvitationAcceptViewModelTest {
         advanceUntilIdle()
 
         assertEquals("circle-1", currentCircleRepository.selectedCircleId)
-        assertEquals(InvitationAcceptEffect.Close, effectDeferred.await())
+        assertEquals(InvitationAcceptEffect.Complete, effectDeferred.await())
     }
 
     @Test

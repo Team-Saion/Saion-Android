@@ -1,5 +1,6 @@
 package com.saion.app.viewmodel
 
+import com.saion.app.invitation.PendingInvitationLinkStore
 import com.saion.app.navigation.startup.AppStartDestination
 import com.saion.core.domain.repository.AuthRepository
 import com.saion.core.domain.repository.CircleRepository
@@ -100,6 +101,30 @@ class AppViewModelTest {
     }
 
     @Test
+    fun `member role with pending invitation routes to invitation and syncs current circle`() = runTest(dispatcher) {
+        val repository = FakeRepository(
+            isSignedIn = true,
+            storedMemberRole = AppResult.Success(MemberRole.MEMBER),
+        )
+        val pendingInvitationLinkStore = PendingInvitationLinkStore().also { it.save("invite-token") }
+
+        val viewModel = createViewModel(
+            repository = repository,
+            pendingInvitationLinkStore = pendingInvitationLinkStore,
+        )
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(
+            AppStartDestination.Invitation(token = "invite-token"),
+            viewModel.uiState.value.startDestination,
+        )
+        assertFalse(repository.clearSessionCalled)
+        assertEquals(1, repository.syncCurrentCircleCallCount)
+        assertEquals(1, repository.pushTokenSyncCallCount)
+    }
+
+    @Test
     fun `admin role routes to main and syncs current circle`() = runTest(dispatcher) {
         val repository = FakeRepository(
             isSignedIn = true,
@@ -134,12 +159,16 @@ class AppViewModelTest {
     }
 }
 
-private fun createViewModel(repository: FakeRepository): AppViewModel = AppViewModel(
+private fun createViewModel(
+    repository: FakeRepository,
+    pendingInvitationLinkStore: PendingInvitationLinkStore = PendingInvitationLinkStore(),
+): AppViewModel = AppViewModel(
     isSignedInUseCase = IsSignedInUseCase(authRepository = repository),
     getStoredMemberRoleUseCase = GetStoredMemberRoleUseCase(authRepository = repository),
     clearSessionUseCase = ClearSessionUseCase(authRepository = repository),
     syncCurrentCircleUseCase = SyncCurrentCircleUseCase(currentCircleRepository = repository, circleRepository = repository),
     notificationLifecycleManager = repository,
+    pendingInvitationLinkStore = pendingInvitationLinkStore,
 )
 
 private class FakeRepository(

@@ -7,5 +7,7 @@ sealed interface AppStartDestination {
 
     data class Auth(val startStep: AuthStartStep) : AppStartDestination
 
+    data class Invitation(val token: String) : AppStartDestination
+
     data object Main : AppStartDestination
 }

@@ -7,6 +7,8 @@ import com.saion.core.ui.viewmodel.UIEffect
 internal sealed interface InvitationAcceptEffect : UIEffect {
     data object Close : InvitationAcceptEffect
 
+    data object Complete : InvitationAcceptEffect
+
     data class ShowSnackbar(val message: InvitationAcceptSnackbarMessage) : InvitationAcceptEffect
 }
 

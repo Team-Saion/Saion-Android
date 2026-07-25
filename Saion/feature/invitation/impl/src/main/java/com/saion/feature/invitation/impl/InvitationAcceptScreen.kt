@@ -1,6 +1,7 @@
 package com.saion.feature.invitation.impl
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,11 +56,14 @@ import com.saion.feature.invitation.impl.viewmodel.InvitationAcceptViewModel
 internal fun InvitationAcceptScreen(
     token: String,
     onClose: () -> Unit,
+    onComplete: () -> Unit,
     viewModel: InvitationAcceptViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    BackHandler(onBack = onClose)
 
     LaunchedEffect(token) {
         viewModel.bind(token)
@@ -68,6 +72,7 @@ internal fun InvitationAcceptScreen(
     viewModel.uiEffect.CollectWithLifecycle { effect ->
         when (effect) {
             InvitationAcceptEffect.Close -> onClose()
+            InvitationAcceptEffect.Complete -> onComplete()
             is InvitationAcceptEffect.ShowSnackbar -> snackbarHostState.showSaionSnackbar(
                 message = effect.message.resolve(context),
                 variant = effect.message.variant(),
