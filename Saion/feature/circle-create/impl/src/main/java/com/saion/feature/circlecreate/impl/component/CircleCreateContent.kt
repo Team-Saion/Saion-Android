@@ -23,17 +23,18 @@ import com.saion.feature.circlecreate.impl.R
 
 @Composable
 internal fun CircleCreateContent(
+    heading: String,
     name: String,
     placeholder: String,
     onNameChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.circle_create_heading),
+            text = heading,
             style = SaionTheme.typography.title2,
             color = SaionTheme.colors.label.default,
         )
@@ -60,6 +61,7 @@ internal fun CircleCreateContent(
 private fun CircleCreateContentPreview() {
     SaionTheme {
         CircleCreateContent(
+            heading = stringResource(R.string.circle_create_heading),
             name = "",
             placeholder = "써클 이름",
             onNameChange = {},

@@ -5,6 +5,7 @@ import com.saion.core.navigation.entry.NavEntryBuilder
 import com.saion.core.navigation.navigator.AppNavigator
 import com.saion.core.navigation.state.TabNavigationState
 import com.saion.feature.circlecreate.api.key.CircleCreateNavKey
+import com.saion.feature.circlecreate.api.key.CircleJoinNavKey
 import com.saion.feature.home.api.key.HomeMemberListNavKey
 import com.saion.feature.home.api.key.HomeNavKey
 import com.saion.feature.home.api.key.NotificationHistoryNavKey
@@ -34,6 +35,7 @@ object HomeNavigationModule {
                     HomeScreen(
                         onNotificationClick = { navigator.push(NotificationHistoryNavKey) },
                         onCreateCircleClick = { navigator.push(CircleCreateNavKey) },
+                        onJoinCircleClick = { navigator.push(CircleJoinNavKey) },
                         onScheduleAddClick = { navigator.push(ScheduleCreateNavKey) },
                         onScheduleListClick = {
                             (navigator as? TabNavigationState<MainTabNavKey>)?.selectTab(ScheduleNavKey)

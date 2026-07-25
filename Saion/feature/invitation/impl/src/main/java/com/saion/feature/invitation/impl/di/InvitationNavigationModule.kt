@@ -26,11 +26,11 @@ object InvitationNavigationModule {
                         token = key.token,
                         onClose = {
                             if (!navigator.pop()) {
-                                navigator.replaceAll(MainNavKey)
+                                navigator.replaceAll(MainNavKey())
                             }
                         },
                         onComplete = {
-                            navigator.replaceAll(MainNavKey)
+                            navigator.replaceAll(MainNavKey.fresh())
                         },
                     )
                 }

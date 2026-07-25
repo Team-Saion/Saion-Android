@@ -43,6 +43,10 @@ fun SaionApp(
                     GlobalUiEvent.SessionExpired -> {
                         appState.navigationState.replaceAll(AuthNavKey())
                     }
+
+                    is GlobalUiEvent.ShowInvitation -> {
+                        appState.navigationState.showInvitation(token = event.token)
+                    }
                 }
             }
         }
@@ -59,7 +63,7 @@ fun SaionApp(
         }
 
         LaunchedEffect(currentDestination) {
-            if (currentDestination == MainNavKey) {
+            if (currentDestination is MainNavKey) {
                 pendingInvitationLinkStore.consume()?.let { token ->
                     appState.navigationState.showInvitation(token = token)
                 }
@@ -86,8 +90,9 @@ fun SaionApp(
 
 private fun com.saion.core.navigation.state.NavigationState<AppNavKey>.showInvitation(token: String) {
     val invitationKey = InvitationAcceptNavKey(token)
-    if (current == MainNavKey) {
-        replaceAll(MainNavKey, invitationKey)
+    val currentMainKey = current as? MainNavKey
+    if (currentMainKey != null) {
+        replaceAll(currentMainKey, invitationKey)
     } else {
         replaceAll(invitationKey)
     }

@@ -29,6 +29,7 @@ import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.ds.component.button.ButtonSize
 import com.saion.ds.component.button.ButtonVariant
 import com.saion.ds.component.button.SaionButton
+import com.saion.ds.component.button.SaionButtonArea
 import com.saion.ds.theme.SaionTheme
 import com.saion.ds.token.radius.toRoundedCornerShape
 import com.saion.feature.home.impl.R
@@ -40,11 +41,18 @@ internal fun HomeHeroCard(
     state: HomeState,
     onInviteClick: () -> Unit,
     onCreateCircleClick: () -> Unit,
+    onJoinCircleClick: () -> Unit,
     onScheduleClick: (String) -> Unit,
     onHeroScheduleShareClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    when (val content = state.toHeroCardContent(onInviteClick = onInviteClick, onCreateCircleClick = onCreateCircleClick)) {
+    when (
+        val content = state.toHeroCardContent(
+            onInviteClick = onInviteClick,
+            onCreateCircleClick = onCreateCircleClick,
+            onJoinCircleClick = onJoinCircleClick,
+        )
+    ) {
         is HeroCardContent.Default -> HomeDefaultHeroCard(
             content = content,
             modifier = modifier,
@@ -91,14 +99,29 @@ private fun HomeDefaultHeroCard(
                 color = SaionTheme.colors.label.default,
             )
 
-            content.buttonText?.let { buttonText ->
-                SaionButton(
-                    text = buttonText,
-                    onClick = content.onClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = ButtonVariant.PRIMARY,
-                    size = ButtonSize.LARGE,
-                    enabled = content.isEnabled,
+            content.primaryButtonText?.let { buttonText ->
+                SaionButtonArea(
+                    mainButton = { buttonModifier ->
+                        SaionButton(
+                            text = buttonText,
+                            onClick = content.onPrimaryClick,
+                            modifier = buttonModifier,
+                            variant = ButtonVariant.PRIMARY,
+                            size = ButtonSize.LARGE,
+                            enabled = content.isPrimaryEnabled,
+                        )
+                    },
+                    subButton = content.secondaryButtonText?.let { secondaryButtonText ->
+                        { buttonModifier: Modifier ->
+                            SaionButton(
+                                text = secondaryButtonText,
+                                onClick = content.onSecondaryClick ?: {},
+                                modifier = buttonModifier,
+                                variant = ButtonVariant.NEUTRAL,
+                                size = ButtonSize.LARGE,
+                            )
+                        }
+                    },
                 )
             }
         }
@@ -127,9 +150,11 @@ internal fun HeroCardSurface(
 private sealed interface HeroCardContent {
     data class Default(
         val title: String,
-        val buttonText: String?,
-        val onClick: () -> Unit,
-        val isEnabled: Boolean = true,
+        val primaryButtonText: String?,
+        val onPrimaryClick: () -> Unit,
+        val isPrimaryEnabled: Boolean = true,
+        val secondaryButtonText: String? = null,
+        val onSecondaryClick: (() -> Unit)? = null,
     ) : HeroCardContent
 
     data class Schedule(val schedule: ScheduleSummary) : HeroCardContent
@@ -139,20 +164,23 @@ private sealed interface HeroCardContent {
 private fun HomeState.toHeroCardContent(
     onInviteClick: () -> Unit,
     onCreateCircleClick: () -> Unit,
+    onJoinCircleClick: () -> Unit,
 ): HeroCardContent = when (this) {
     HomeState.None -> HeroCardContent.Default(
         title = stringResource(R.string.home_hero_empty_title),
-        buttonText = stringResource(R.string.home_hero_create_circle),
-        onClick = onCreateCircleClick,
+        primaryButtonText = stringResource(R.string.home_hero_create_circle),
+        onPrimaryClick = onCreateCircleClick,
+        secondaryButtonText = stringResource(R.string.home_hero_join_circle),
+        onSecondaryClick = onJoinCircleClick,
     )
 
     is HomeState.Content -> heroSchedule?.let { schedule ->
         HeroCardContent.Schedule(schedule = schedule)
     } ?: HeroCardContent.Default(
         title = stringResource(R.string.home_hero_invite_title),
-        buttonText = if (canInvite) stringResource(R.string.home_hero_send_invitation) else null,
-        onClick = onInviteClick,
-        isEnabled = isInviting.not(),
+        primaryButtonText = if (canInvite) stringResource(R.string.home_hero_send_invitation) else null,
+        onPrimaryClick = onInviteClick,
+        isPrimaryEnabled = isInviting.not(),
     )
 
     HomeState.Loading -> error("Loading state should not render HomeHeroCard.")
@@ -166,6 +194,7 @@ private fun HomeHeroCardNonePreview() {
             state = HomeState.None,
             onInviteClick = {},
             onCreateCircleClick = {},
+            onJoinCircleClick = {},
             onScheduleClick = {},
             onHeroScheduleShareClick = {},
             modifier = Modifier.padding(24.dp),
@@ -214,6 +243,7 @@ private fun HomeHeroCardSchedulePreview() {
             ),
             onInviteClick = {},
             onCreateCircleClick = {},
+            onJoinCircleClick = {},
             onScheduleClick = {},
             onHeroScheduleShareClick = {},
             modifier = Modifier.padding(24.dp),

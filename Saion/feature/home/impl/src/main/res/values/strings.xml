@@ -10,6 +10,7 @@
     <string name="home_hero_loading_title">홈 정보를 불러오고 있어요</string>
     <string name="home_hero_empty_title">가입한 서클이 없습니다!</string>
     <string name="home_hero_create_circle">서클 생성하기</string>
+    <string name="home_hero_join_circle">서클 참여하기</string>
     <string name="home_hero_invite_title">써클에 함께할 가족을 초대해주세요</string>
     <string name="home_hero_send_invitation">초대장 보내기</string>
     <string name="home_hero_schedule_title">가장 가까운 일정이에요</string>

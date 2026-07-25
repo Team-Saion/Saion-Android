@@ -31,7 +31,7 @@ class AuthRootEntryBuilder @Inject constructor() : NavEntryBuilder<AppNavKey> {
                 AuthRoute(
                     startStep = key.startStep,
                     showIntroTransition = key.showIntroTransition,
-                    onAuthComplete = { navigator.replaceAll(MainNavKey) },
+                    onAuthComplete = { navigator.replaceAll(MainNavKey()) },
                 )
             }
         }

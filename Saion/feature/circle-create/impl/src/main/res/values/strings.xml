@@ -4,6 +4,11 @@
     <string name="circle_create_heading">우리 써클 이름을 정해요</string>
     <string name="circle_create_placeholder">써클 이름</string>
     <string name="circle_create_submit">써클 만들기</string>
+    <string name="circle_join_title">서클 참여하기</string>
+    <string name="circle_join_heading">초대 코드를 입력해요</string>
+    <string name="circle_join_placeholder">초대 코드</string>
+    <string name="circle_join_submit">초대장 보기</string>
+    <string name="circle_join_error_required">초대 코드를 입력해주세요</string>
     <string name="circle_create_error_required">써클 이름을 입력해주세요</string>
     <string name="circle_create_error_too_long">20자 이내로 입력해주세요.</string>
     <string name="circle_create_error_invalid_character">사용할 수 없는 문자가 포함되어 있어요.</string>

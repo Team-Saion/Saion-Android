@@ -76,6 +76,12 @@ private fun CircleCreateScreen(
     onSubmit: () -> Unit,
 ) {
     val validationMessage = uiState.validationMessageResId?.let { stringResource(it) }
+    val supportingMessage = validationMessage ?: "${uiState.name.length}/20"
+    val supportingMessageColor = if (validationMessage != null || uiState.name.trim().length > 20) {
+        SaionTheme.colors.status.negative.default
+    } else {
+        SaionTheme.colors.label.subtle
+    }
 
     SaionScaffold(
         snackbarHost = { SaionSnackbarHost(hostState = snackbarHostState) },
@@ -91,9 +97,9 @@ private fun CircleCreateScreen(
         },
         bottomBar = {
             CircleCreateBottomAction(
-                nameLength = uiState.name.length,
-                isNameTooLong = uiState.name.trim().length > 20,
-                validationMessage = validationMessage,
+                supportingMessage = supportingMessage,
+                supportingMessageColor = supportingMessageColor,
+                submitText = stringResource(R.string.circle_create_submit),
                 isSubmitEnabled = uiState.isSubmitEnabled,
                 isSubmitting = uiState.isSubmitting,
                 onSubmit = onSubmit,
@@ -106,6 +112,7 @@ private fun CircleCreateScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
         ) {
             CircleCreateContent(
+                heading = stringResource(R.string.circle_create_heading),
                 name = uiState.name,
                 placeholder = stringResource(R.string.circle_create_placeholder),
                 onNameChange = onNameChange,

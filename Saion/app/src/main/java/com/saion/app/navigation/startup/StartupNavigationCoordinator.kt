@@ -29,7 +29,7 @@ fun StartupNavigationCoordinator(
                 pendingInvitationLinkStore.consume()
                 navigationState.replaceAll(InvitationAcceptNavKey(destination.token))
             }
-            AppStartDestination.Main -> navigationState.replaceAll(MainNavKey)
+            AppStartDestination.Main -> navigationState.replaceAll(MainNavKey())
             null -> Unit
         }
     }
