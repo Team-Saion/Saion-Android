@@ -3,6 +3,8 @@ package com.saion.feature.home.impl.memberlist
 import com.saion.core.domain.repository.CurrentCircleRepository
 import com.saion.core.domain.repository.CircleRepository
 import com.saion.core.domain.repository.HomeRepository
+import com.saion.core.domain.usecase.circle.ClearCurrentCircleUseCase
+import com.saion.core.domain.usecase.circle.LeaveCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
@@ -14,8 +16,9 @@ import com.saion.core.model.member.MemberInfo
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListEffect
+import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListIntent
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListSnackbarMessage
-import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListState
+import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListStatus
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -61,6 +65,8 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
         )
 
         advanceUntilIdle()
@@ -78,13 +84,14 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
         )
 
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
-        assertTrue(uiState is HomeMemberListState.Content)
-        uiState as HomeMemberListState.Content
+        assertEquals(HomeMemberListStatus.Content, uiState.status)
         assertEquals(3, uiState.members.size)
         assertEquals(listOf("member-1", "member-2", "member-3"), uiState.members.map(CircleMember::memberId))
     }
@@ -111,11 +118,14 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
         )
 
         advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value as HomeMemberListState.Content
+        val uiState = viewModel.uiState.value
+        assertEquals(HomeMemberListStatus.Content, uiState.status)
         assertEquals(1, uiState.members.size)
         assertEquals("member-2", uiState.members.first().memberId)
     }
@@ -131,13 +141,14 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
         )
 
         advanceUntilIdle()
 
         val uiState = viewModel.uiState.value
-        assertTrue(uiState is HomeMemberListState.Content)
-        uiState as HomeMemberListState.Content
+        assertEquals(HomeMemberListStatus.Empty, uiState.status)
         assertTrue(uiState.members.isEmpty())
     }
 
@@ -150,6 +161,8 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = "circle-1")),
         )
 
         val effectDeferred = async { viewModel.uiEffect.first() }
@@ -157,7 +170,7 @@ class HomeMemberListViewModelTest {
         advanceUntilIdle()
 
         val effect = effectDeferred.await()
-        assertEquals(HomeMemberListState.Error, viewModel.uiState.value)
+        assertEquals(HomeMemberListStatus.Error, viewModel.uiState.value.status)
         assertTrue(effect is HomeMemberListEffect.ShowSnackbar)
         val message = (effect as HomeMemberListEffect.ShowSnackbar).message
         assertTrue(message is HomeMemberListSnackbarMessage.Error)
@@ -172,11 +185,13 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = null)),
         )
 
         advanceUntilIdle()
 
-        assertEquals(HomeMemberListState.Empty, viewModel.uiState.value)
+        assertEquals(HomeMemberListStatus.Empty, viewModel.uiState.value.status)
     }
 
     @Test
@@ -190,12 +205,156 @@ class HomeMemberListViewModelTest {
             ),
             observeHomeMembersUseCase = ObserveHomeMembersUseCase(repository),
             refreshHomeUseCase = RefreshHomeUseCase(repository),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(FakeCurrentCircleRepository(initialCircleId = null, syncedCircleId = "circle-1")),
         )
 
         advanceUntilIdle()
 
-        assertTrue(viewModel.uiState.value is HomeMemberListState.Content)
+        assertEquals(HomeMemberListStatus.Content, viewModel.uiState.value.status)
         assertEquals("circle-1", repository.requestedCircleId)
+    }
+
+    @Test
+    fun `나가기 버튼 클릭 시 확인 다이얼로그가 열린다`() = runTest {
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1")
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(FakeMemberHomeRepository(AppResult.Success(defaultMembers()))),
+            refreshHomeUseCase = RefreshHomeUseCase(FakeMemberHomeRepository(AppResult.Success(defaultMembers()))),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ClickLeave)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showLeaveDialog)
+    }
+
+    @Test
+    fun `나가기 다이얼로그 취소 시 닫히고 로딩이 해제된다`() = runTest {
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1")
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(FakeMemberHomeRepository(AppResult.Success(defaultMembers()))),
+            refreshHomeUseCase = RefreshHomeUseCase(FakeMemberHomeRepository(AppResult.Success(defaultMembers()))),
+            leaveCircleUseCase = LeaveCircleUseCase(FakeLeaveCircleRepository()),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ClickLeave)
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.DismissLeaveDialog)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showLeaveDialog)
+        assertFalse(viewModel.uiState.value.isLeaveLoading)
+    }
+
+    @Test
+    fun `나가기 성공 시 완료 effect를 보내고 다이얼로그가 닫힌다`() = runTest {
+        val leaveRepository = FakeLeaveCircleRepository(result = AppResult.Success(Unit))
+        val homeRepository = FakeMemberHomeRepository(AppResult.Success(defaultMembers()))
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1", syncedCircleId = null)
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
+            leaveCircleUseCase = LeaveCircleUseCase(leaveRepository),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ClickLeave)
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ConfirmLeave)
+        advanceUntilIdle()
+
+        assertEquals("circle-1", leaveRepository.requestedCircleId)
+        assertEquals(HomeMemberListEffect.LeaveCompleted, effectDeferred.await())
+        assertFalse(viewModel.uiState.value.showLeaveDialog)
+        assertFalse(viewModel.uiState.value.isLeaveLoading)
+        assertTrue(currentCircleRepository.clearCallCount > 0)
+        assertEquals(null, currentCircleRepository.getCurrentCircleId())
+    }
+
+    @Test
+    fun `나가기 실패 시 스낵바 effect를 보내고 다이얼로그를 유지한다`() = runTest {
+        val leaveRepository = FakeLeaveCircleRepository(result = AppResult.Failure(AppError.NetworkUnavailable()))
+        val homeRepository = FakeMemberHomeRepository(AppResult.Success(defaultMembers()))
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1")
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
+            leaveCircleUseCase = LeaveCircleUseCase(leaveRepository),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ClickLeave)
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ConfirmLeave)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is HomeMemberListEffect.ShowSnackbar)
+        assertTrue((effect as HomeMemberListEffect.ShowSnackbar).message is HomeMemberListSnackbarMessage.Error)
+        assertTrue(viewModel.uiState.value.showLeaveDialog)
+        assertFalse(viewModel.uiState.value.isLeaveLoading)
+        assertEquals(0, currentCircleRepository.clearCallCount)
+    }
+
+    @Test
+    fun `나가기 로딩 중 재호출 시 중복 요청하지 않는다`() = runTest {
+        val leaveRepository = FakeLeaveCircleRepository(result = AppResult.Success(Unit))
+        val homeRepository = FakeMemberHomeRepository(AppResult.Success(defaultMembers()))
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1")
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
+            leaveCircleUseCase = LeaveCircleUseCase(leaveRepository),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ClickLeave)
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ConfirmLeave)
+        viewModel.dispatch(HomeMemberListIntent.ConfirmLeave)
+        advanceUntilIdle()
+
+        assertEquals(1, leaveRepository.leaveCallCount)
+    }
+
+    @Test
+    fun `현재 써클이 없으면 나가기 API를 호출하지 않고 실패 스낵바를 보낸다`() = runTest {
+        val leaveRepository = FakeLeaveCircleRepository(result = AppResult.Success(Unit))
+        val homeRepository = FakeMemberHomeRepository(AppResult.Success(defaultMembers()))
+        val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = null)
+        val viewModel = HomeMemberListViewModel(
+            observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+            observeHomeMembersUseCase = ObserveHomeMembersUseCase(homeRepository),
+            refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
+            leaveCircleUseCase = LeaveCircleUseCase(leaveRepository),
+            clearCurrentCircleUseCase = ClearCurrentCircleUseCase(currentCircleRepository),
+        )
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeMemberListIntent.ConfirmLeave)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is HomeMemberListEffect.ShowSnackbar)
+        assertTrue((effect as HomeMemberListEffect.ShowSnackbar).message is HomeMemberListSnackbarMessage.Text)
+        assertEquals(0, leaveRepository.leaveCallCount)
     }
 }
 
@@ -211,6 +370,7 @@ private class FakeCurrentCircleRepository(
     val syncedCircleId: String? = initialCircleId,
 ) : CurrentCircleRepository {
     private val flow = MutableStateFlow(initialCircleId)
+    var clearCallCount: Int = 0
 
     override fun observeCurrentCircleId(): StateFlow<String?> = flow
 
@@ -222,6 +382,7 @@ private class FakeCurrentCircleRepository(
     }
 
     override suspend fun clearCurrentCircle() {
+        clearCallCount += 1
         flow.value = null
     }
 }
@@ -248,6 +409,32 @@ private class FakeResolvedCircleRepository(
     ): AppResult<com.saion.core.model.circle.CircleSummary> = error("Not used")
 
     override suspend fun leave(circleId: String): AppResult<Unit> = error("Not used")
+}
+
+private class FakeLeaveCircleRepository(
+    private val result: AppResult<Unit> = AppResult.Success(Unit),
+) : CircleRepository {
+    var requestedCircleId: String? = null
+    var leaveCallCount: Int = 0
+
+    override fun observeCircles(): Flow<List<com.saion.core.model.circle.CircleSummary>> = flowOf(emptyList())
+
+    override suspend fun listCircles(): AppResult<List<com.saion.core.model.circle.CircleSummary>> = AppResult.Success(emptyList())
+
+    override suspend fun refreshCircles(): AppResult<List<com.saion.core.model.circle.CircleSummary>> = AppResult.Success(emptyList())
+
+    override suspend fun createCircle(name: String): AppResult<com.saion.core.model.circle.CircleSummary> = error("Not used")
+
+    override suspend fun transferInitiator(
+        circleId: String,
+        targetMemberId: String,
+    ): AppResult<com.saion.core.model.circle.CircleSummary> = error("Not used")
+
+    override suspend fun leave(circleId: String): AppResult<Unit> {
+        requestedCircleId = circleId
+        leaveCallCount += 1
+        return result
+    }
 }
 
 private class FakeMemberHomeRepository(

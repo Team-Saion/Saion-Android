@@ -6,6 +6,8 @@ import com.saion.core.ui.viewmodel.UIEffect
 
 internal sealed interface HomeMemberListEffect : UIEffect {
     data class ShowSnackbar(val message: HomeMemberListSnackbarMessage) : HomeMemberListEffect
+
+    data object LeaveCompleted : HomeMemberListEffect
 }
 
 internal sealed interface HomeMemberListSnackbarMessage {

@@ -35,14 +35,19 @@ import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
+import com.saion.ds.component.button.SaionTextButton
+import com.saion.ds.component.button.TextButtonSize
+import com.saion.ds.component.feedback.SaionConfirmDialog
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.component.navigation.SaionTopBar
 import com.saion.ds.component.navigation.TopBarVariant
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.home.impl.R
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListEffect
+import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListIntent
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListSnackbarMessage
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListState
+import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListStatus
 import com.saion.feature.home.impl.memberlist.viewmodel.HomeMemberListViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -50,6 +55,7 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 internal fun HomeMemberListScreen(
     onBack: () -> Unit,
+    onLeaveCompleted: () -> Unit,
     viewModel: HomeMemberListViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,6 +68,8 @@ internal fun HomeMemberListScreen(
                 message = effect.message.resolve(context),
                 variant = effect.message.variant(),
             )
+
+            HomeMemberListEffect.LeaveCompleted -> onLeaveCompleted()
         }
     }
 
@@ -69,6 +77,9 @@ internal fun HomeMemberListScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onBack = onBack,
+        onLeaveClick = { viewModel.dispatch(HomeMemberListIntent.ClickLeave) },
+        onLeaveDismiss = { viewModel.dispatch(HomeMemberListIntent.DismissLeaveDialog) },
+        onLeaveConfirm = { viewModel.dispatch(HomeMemberListIntent.ConfirmLeave) },
     )
 }
 
@@ -77,6 +88,9 @@ private fun HomeMemberListScreen(
     uiState: HomeMemberListState,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    onLeaveClick: () -> Unit,
+    onLeaveDismiss: () -> Unit,
+    onLeaveConfirm: () -> Unit,
 ) {
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
@@ -90,12 +104,21 @@ private fun HomeMemberListScreen(
                     title = null,
                     onBack = onBack,
                 ),
+                actions = {
+                    SaionTextButton(
+                        text = stringResource(R.string.home_member_list_leave),
+                        size = TextButtonSize.MEDIUM,
+                        enabled = uiState.isLeaveLoading.not(),
+                        onClick = onLeaveClick,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                },
                 modifier = Modifier.statusBarsPadding(),
             )
         },
     ) {
-        when (uiState) {
-            HomeMemberListState.Loading -> {
+        when (uiState.status) {
+            HomeMemberListStatus.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
@@ -104,28 +127,33 @@ private fun HomeMemberListScreen(
                 }
             }
 
-            HomeMemberListState.Empty -> {
+            HomeMemberListStatus.Empty -> {
                 HomeMemberListPlaceholder(
                     text = stringResource(R.string.home_member_list_empty),
                 )
             }
 
-            HomeMemberListState.Error -> {
+            HomeMemberListStatus.Error -> {
                 HomeMemberListPlaceholder(
                     text = stringResource(R.string.home_member_list_error_fallback),
                 )
             }
 
-            is HomeMemberListState.Content -> {
-                if (uiState.members.isEmpty()) {
-                    HomeMemberListPlaceholder(
-                        text = stringResource(R.string.home_member_list_empty),
-                    )
-                } else {
-                    HomeMemberListContent(members = uiState.members)
-                }
+            HomeMemberListStatus.Content -> {
+                HomeMemberListContent(members = uiState.members)
             }
         }
+    }
+
+    if (uiState.showLeaveDialog) {
+        SaionConfirmDialog(
+            title = stringResource(R.string.home_member_list_leave_dialog_title),
+            confirmButtonText = stringResource(R.string.home_member_list_leave),
+            onConfirm = onLeaveConfirm,
+            dismissButtonText = stringResource(R.string.home_member_list_leave_dialog_cancel),
+            onDismiss = onLeaveDismiss,
+            isDanger = true,
+        )
     }
 }
 
@@ -210,7 +238,8 @@ private fun HomeMemberListSnackbarMessage.variant(): SaionSnackbarVariant? = whe
 private fun HomeMemberListScreenPreview() {
     SaionTheme {
         HomeMemberListScreen(
-            uiState = HomeMemberListState.Content(
+            uiState = HomeMemberListState(
+                status = HomeMemberListStatus.Content,
                 members = listOf(
                     CircleMember(
                         memberId = "1",
@@ -232,6 +261,9 @@ private fun HomeMemberListScreenPreview() {
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onBack = {},
+            onLeaveClick = {},
+            onLeaveDismiss = {},
+            onLeaveConfirm = {},
         )
     }
 }

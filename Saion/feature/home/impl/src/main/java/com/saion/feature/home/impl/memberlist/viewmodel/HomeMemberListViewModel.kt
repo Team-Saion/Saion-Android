@@ -2,6 +2,8 @@ package com.saion.feature.home.impl.memberlist.viewmodel
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.viewModelScope
+import com.saion.core.domain.usecase.circle.ClearCurrentCircleUseCase
+import com.saion.core.domain.usecase.circle.LeaveCircleUseCase
 import com.saion.core.domain.usecase.circle.ObserveResolvedCurrentCircleUseCase
 import com.saion.core.domain.usecase.circle.ResolvedCurrentCircle
 import com.saion.core.domain.usecase.home.ObserveHomeMembersUseCase
@@ -22,7 +24,9 @@ internal class HomeMemberListViewModel @Inject constructor(
     private val observeResolvedCurrentCircleUseCase: ObserveResolvedCurrentCircleUseCase,
     private val observeHomeMembersUseCase: ObserveHomeMembersUseCase,
     private val refreshHomeUseCase: RefreshHomeUseCase,
-) : BaseViewModel<HomeMemberListState, HomeMemberListEffect, HomeMemberListIntent>(HomeMemberListState.Loading) {
+    private val leaveCircleUseCase: LeaveCircleUseCase,
+    private val clearCurrentCircleUseCase: ClearCurrentCircleUseCase,
+) : BaseViewModel<HomeMemberListState, HomeMemberListEffect, HomeMemberListIntent>(HomeMemberListState()) {
     private var currentCircleId: String? = null
     private var membersJob: Job? = null
     private var latestMembers: ImmutableList<com.saion.core.model.home.CircleMember> = emptyList<com.saion.core.model.home.CircleMember>().toImmutableList()
@@ -36,7 +40,24 @@ internal class HomeMemberListViewModel @Inject constructor(
         }
     }
 
-    override fun handleIntent(intent: HomeMemberListIntent) = Unit
+    override fun handleIntent(intent: HomeMemberListIntent) {
+        when (intent) {
+            HomeMemberListIntent.ClickLeave -> update { copy(showLeaveDialog = true) }
+            HomeMemberListIntent.DismissLeaveDialog -> {
+                if (currentState.isLeaveLoading) return
+                update {
+                    copy(
+                        showLeaveDialog = false,
+                        isLeaveLoading = false,
+                    )
+                }
+            }
+            HomeMemberListIntent.ConfirmLeave -> {
+                if (currentState.isLeaveLoading) return
+                leaveCurrentCircle()
+            }
+        }
+    }
 
     private fun handleResolvedCurrentCircle(resolvedCurrentCircle: ResolvedCurrentCircle) {
         when (resolvedCurrentCircle) {
@@ -51,7 +72,13 @@ internal class HomeMemberListViewModel @Inject constructor(
                 membersJob?.cancel()
                 membersJob = null
                 currentCircleId = null
-                update { HomeMemberListState.Empty }
+                latestMembers = emptyList<com.saion.core.model.home.CircleMember>().toImmutableList()
+                update {
+                    copy(
+                        status = HomeMemberListStatus.Empty,
+                        members = latestMembers,
+                    )
+                }
             }
         }
     }
@@ -63,7 +90,10 @@ internal class HomeMemberListViewModel @Inject constructor(
                 .collect { members ->
                     latestMembers = members.toImmutableList()
                     update {
-                        HomeMemberListState.Content(members = latestMembers)
+                        copy(
+                            status = HomeMemberListStatus.Content,
+                            members = latestMembers,
+                        )
                     }
                 }
         }
@@ -72,13 +102,22 @@ internal class HomeMemberListViewModel @Inject constructor(
     private fun refreshMembers(circleId: String) {
         launchSafely(
             onStart = {
-                update { HomeMemberListState.Loading }
+                update { copy(status = HomeMemberListStatus.Loading) }
             },
             onSuccess = {
-                update { HomeMemberListState.Content(members = latestMembers) }
+                update {
+                    copy(
+                        status = if (latestMembers.isEmpty()) {
+                            HomeMemberListStatus.Empty
+                        } else {
+                            HomeMemberListStatus.Content
+                        },
+                        members = latestMembers,
+                    )
+                }
             },
             onFailure = { error ->
-                update { HomeMemberListState.Error }
+                update { copy(status = HomeMemberListStatus.Error) }
                 emitEffect(
                     HomeMemberListEffect.ShowSnackbar(
                         error.toSnackbarMessage(
@@ -91,6 +130,63 @@ internal class HomeMemberListViewModel @Inject constructor(
             },
         ) {
             refreshHomeUseCase(circleId = circleId)
+        }
+    }
+
+    private fun leaveCurrentCircle() {
+        val circleId = currentCircleId
+        if (circleId == null) {
+            viewModelScope.launch {
+                emitEffect(
+                    HomeMemberListEffect.ShowSnackbar(
+                        HomeMemberListSnackbarMessage.Text(
+                            value = "",
+                            defaultMessageResId = R.string.home_member_list_error_leave,
+                        ),
+                    ),
+                )
+            }
+            return
+        }
+
+        update {
+            copy(
+                showLeaveDialog = true,
+                isLeaveLoading = true,
+            )
+        }
+
+        launchSafely(
+            onSuccess = {
+                update {
+                    copy(
+                        showLeaveDialog = false,
+                        isLeaveLoading = false,
+                    )
+                }
+                emitEffect(HomeMemberListEffect.LeaveCompleted)
+            },
+            onFailure = { error ->
+                update { copy(isLeaveLoading = false) }
+                emitEffect(
+                    HomeMemberListEffect.ShowSnackbar(
+                        error.toSnackbarMessage(
+                            defaultMessageResId = R.string.home_member_list_error_leave,
+                            textMessage = { value, resId -> HomeMemberListSnackbarMessage.Text(value, resId) },
+                            errorMessage = { appError, resId -> HomeMemberListSnackbarMessage.Error(appError, resId) },
+                        ),
+                    ),
+                )
+            },
+        ) {
+            when (val result = leaveCircleUseCase(circleId = circleId)) {
+                is com.saion.core.model.result.AppResult.Success -> {
+                    clearCurrentCircleUseCase()
+                    result
+                }
+
+                is com.saion.core.model.result.AppResult.Failure -> result
+            }
         }
     }
 }

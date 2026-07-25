@@ -38,6 +38,10 @@
     <string name="home_member_list_empty">아직 구성원이 없습니다.</string>
     <string name="home_member_list_error_load">구성원 목록을 불러오지 못했습니다.</string>
     <string name="home_member_list_error_fallback">구성원 목록을 표시할 수 없습니다.</string>
+    <string name="home_member_list_error_leave">서클에서 나가지 못했어요.</string>
+    <string name="home_member_list_leave">나가기</string>
+    <string name="home_member_list_leave_dialog_title">이 서클에서 나가시겠어요?</string>
+    <string name="home_member_list_leave_dialog_cancel">취소</string>
     <string name="home_member_list_role_admin">대표</string>
     <string name="home_member_list_role_member">구성원</string>
     <string name="home_member_list_role_pending">초대 대기</string>

@@ -13,9 +13,9 @@ import com.saion.feature.home.impl.memberlist.HomeMemberListScreen
 import com.saion.feature.home.impl.notificationhistory.NotificationHistoryScreen
 import com.saion.feature.main.api.key.MainTabNavKey
 import com.saion.feature.mypage.api.key.NotificationSettingsNavKey
-import com.saion.feature.schedule.api.key.ScheduleNavKey
 import com.saion.feature.schedule.api.key.ScheduleCreateNavKey
 import com.saion.feature.schedule.api.key.ScheduleDetailNavKey
+import com.saion.feature.schedule.api.key.ScheduleNavKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -74,6 +74,7 @@ object HomeNavigationModule {
                 entry<HomeMemberListNavKey> {
                     HomeMemberListScreen(
                         onBack = { navigator.pop() },
+                        onLeaveCompleted = { navigator.replace(HomeNavKey) },
                     )
                 }
             }
