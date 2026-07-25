@@ -10,8 +10,8 @@ import com.saion.core.domain.usecase.circle.SyncCurrentCircleUseCase
 import com.saion.core.domain.usecase.home.GetHomeInviterNameUseCase
 import com.saion.core.domain.usecase.home.ObserveHomeUseCase
 import com.saion.core.domain.usecase.home.RefreshHomeUseCase
-import com.saion.core.model.member.MemberInfo
 import com.saion.core.domain.usecase.invitation.IssueInvitationUseCase
+import com.saion.core.domain.usecase.schedule.RequestFamilyNotificationUseCase
 import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.home.CircleMember
 import com.saion.core.model.home.HomeOverview
@@ -25,6 +25,7 @@ import com.saion.core.model.result.AppResult
 import com.saion.core.model.schedule.ScheduleStatus
 import com.saion.core.model.schedule.ScheduleSummary
 import com.saion.core.model.schedule.ScheduleUrgencyLevel
+import com.saion.core.model.member.MemberInfo
 import com.saion.core.share.InvitationShareClient
 import com.saion.core.share.InvitationShareResult
 import com.saion.feature.home.impl.home.viewmodel.HomeEffect
@@ -80,6 +81,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -97,6 +99,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -117,6 +120,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -189,6 +193,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -215,6 +220,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -241,6 +247,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(invitationRepository),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = shareClient,
         )
 
@@ -272,6 +279,7 @@ class HomeViewModelTest {
             refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
             getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
             issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+            requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(FakeScheduleRepository()),
             invitationShareClient = FakeInvitationShareClient(),
         )
 
@@ -281,6 +289,113 @@ class HomeViewModelTest {
         assertEquals("circle-1", homeRepository.requestedCircleId)
         assertEquals(1, homeRepository.requestCount)
     }
+
+    @Test
+    fun `가족에게 전하기 클릭 시 확인 다이얼로그를 노출한다`() = runTest {
+        val overview = defaultOverview()
+        val viewModel = createHomeViewModel(homeResult = AppResult.Success(overview))
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState.value as HomeState.Content
+        assertTrue(uiState.isFamilyNotificationDialogVisible)
+    }
+
+    @Test
+    fun `가족에게 전하기 다이얼로그를 닫을 수 있다`() = runTest {
+        val overview = defaultOverview()
+        val viewModel = createHomeViewModel(homeResult = AppResult.Success(overview))
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.DismissFamilyNotificationDialog)
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState.value as HomeState.Content
+        assertTrue(uiState.isFamilyNotificationDialogVisible.not())
+    }
+
+    @Test
+    fun `가족에게 전하기 확인 시 현재 써클과 hero 일정으로 요청한다`() = runTest {
+        val overview = defaultOverview()
+        val scheduleRepository = FakeScheduleRepository()
+        val viewModel = createHomeViewModel(
+            homeResult = AppResult.Success(overview),
+            scheduleRepository = scheduleRepository,
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        viewModel.dispatch(HomeIntent.ConfirmFamilyNotification)
+        advanceUntilIdle()
+
+        assertEquals("circle-1", scheduleRepository.requestedCircleId)
+        assertEquals("schedule-0", scheduleRepository.requestedScheduleId)
+    }
+
+    @Test
+    fun `가족에게 전하기 성공 시 성공 스낵바 effect를 보낸다`() = runTest {
+        val overview = defaultOverview()
+        val viewModel = createHomeViewModel(homeResult = AppResult.Success(overview))
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(HomeIntent.ConfirmFamilyNotification)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is HomeEffect.ShowSnackbar)
+        val message = (effect as HomeEffect.ShowSnackbar).message
+        assertTrue(message is HomeSnackbarMessage.Text)
+        assertEquals(
+            com.saion.feature.home.impl.R.string.home_success_request_family_notification,
+            (message as HomeSnackbarMessage.Text).defaultMessageResId,
+        )
+    }
+
+    @Test
+    fun `가족에게 전하기 실패 시 에러 스낵바 effect를 보낸다`() = runTest {
+        val overview = defaultOverview()
+        val viewModel = createHomeViewModel(
+            homeResult = AppResult.Success(overview),
+            scheduleRepository = FakeScheduleRepository(
+                result = AppResult.Failure(AppError.NetworkUnavailable()),
+            ),
+        )
+
+        advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
+        val effectDeferred = async { viewModel.uiEffect.first() }
+
+        viewModel.dispatch(HomeIntent.ConfirmFamilyNotification)
+        advanceUntilIdle()
+
+        val effect = effectDeferred.await()
+        assertTrue(effect is HomeEffect.ShowSnackbar)
+        assertTrue((effect as HomeEffect.ShowSnackbar).message is HomeSnackbarMessage.Error)
+    }
+}
+
+private fun createHomeViewModel(
+    homeResult: AppResult<HomeOverview>,
+    scheduleRepository: FakeScheduleRepository = FakeScheduleRepository(),
+): HomeViewModel {
+    val currentCircleRepository = FakeCurrentCircleRepository(initialCircleId = "circle-1")
+    val homeRepository = FakeHomeRepository(result = homeResult)
+    return HomeViewModel(
+        observeResolvedCurrentCircleUseCase = observeResolvedCurrentCircleUseCase(currentCircleRepository),
+        observeHomeUseCase = ObserveHomeUseCase(homeRepository),
+        refreshHomeUseCase = RefreshHomeUseCase(homeRepository),
+        getHomeInviterNameUseCase = GetHomeInviterNameUseCase(),
+        issueInvitationUseCase = IssueInvitationUseCase(FakeInvitationRepository()),
+        requestFamilyNotificationUseCase = RequestFamilyNotificationUseCase(scheduleRepository),
+        invitationShareClient = FakeInvitationShareClient(),
+    )
 }
 
 private fun observeResolvedCurrentCircleUseCase(repository: FakeCurrentCircleRepository): ObserveResolvedCurrentCircleUseCase =
@@ -365,6 +480,58 @@ private class FakeHomeRepository(private val result: AppResult<HomeOverview>) : 
         circleId: String,
         memberInfo: MemberInfo,
     ) = Unit
+}
+
+private class FakeScheduleRepository(
+    private val result: AppResult<Unit> = AppResult.Success(Unit),
+) : com.saion.core.domain.repository.ScheduleRepository {
+    var requestedCircleId: String? = null
+    var requestedScheduleId: String? = null
+
+    override fun observeScheduleList(circleId: String) = flowOf<com.saion.core.model.schedule.ScheduleListPage?>(null)
+
+    override fun observeScheduleDetail(circleId: String, scheduleId: String) = flowOf<com.saion.core.model.schedule.ScheduleDetail?>(null)
+
+    override suspend fun getCachedScheduleList(circleId: String) = null
+
+    override suspend fun getScheduleList(circleId: String, cursor: String?, size: Int?) = error("Not used")
+
+    override suspend fun refreshScheduleList(circleId: String, cursor: String?, size: Int?) = error("Not used")
+
+    override suspend fun createSchedule(
+        circleId: String,
+        command: com.saion.core.model.schedule.CreateScheduleCommand,
+    ) = error("Not used")
+
+    override suspend fun getScheduleDetail(circleId: String, scheduleId: String) = error("Not used")
+
+    override suspend fun getCachedScheduleDetail(circleId: String, scheduleId: String) = null
+
+    override suspend fun refreshScheduleDetail(circleId: String, scheduleId: String) = error("Not used")
+
+    override suspend fun updateSchedule(
+        circleId: String,
+        scheduleId: String,
+        command: com.saion.core.model.schedule.UpdateScheduleCommand,
+    ) = error("Not used")
+
+    override suspend fun deleteSchedule(circleId: String, scheduleId: String) = error("Not used")
+
+    override suspend fun getConfirmationTypes(circleId: String) = error("Not used")
+
+    override suspend fun registerConfirmation(
+        circleId: String,
+        scheduleId: String,
+        confirmationType: com.saion.core.model.schedule.ConfirmationType,
+    ) = error("Not used")
+
+    override suspend fun cancelConfirmation(circleId: String, scheduleId: String, confirmationId: Long) = error("Not used")
+
+    override suspend fun requestFamilyNotification(circleId: String, scheduleId: String): AppResult<Unit> {
+        requestedCircleId = circleId
+        requestedScheduleId = scheduleId
+        return result
+    }
 }
 
 private class FakeInvitationRepository : InvitationRepository {

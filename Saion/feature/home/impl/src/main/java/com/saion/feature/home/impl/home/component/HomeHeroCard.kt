@@ -54,6 +54,7 @@ internal fun HomeHeroCard(
             schedule = content.schedule,
             onScheduleClick = { onScheduleClick(content.schedule.scheduleId) },
             onShareClick = onHeroScheduleShareClick,
+            isShareEnabled = state is HomeState.Content && state.isRequestingFamilyNotification.not(),
             modifier = modifier,
         )
     }

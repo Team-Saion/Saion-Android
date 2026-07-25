@@ -154,4 +154,9 @@ private class FakeScheduleRemoteDataSource : ScheduleRemoteDataSource {
         scheduleId: String,
         confirmationId: Long,
     ): ApiResponse<Unit> = error("Not used")
+
+    override suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): ApiResponse<Unit> = error("Not used")
 }

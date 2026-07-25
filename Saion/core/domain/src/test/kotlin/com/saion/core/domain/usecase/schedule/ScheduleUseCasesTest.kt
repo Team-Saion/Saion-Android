@@ -195,6 +195,28 @@ class ScheduleUseCasesTest {
     }
 
     @Test
+    fun `가족에게 전하기는 식별자를 그대로 저장소에 전달한다`() = runBlocking {
+        val expected = AppResult.Success(Unit)
+        val repository = FakeScheduleRepository(requestFamilyNotificationResult = expected)
+
+        val actual = RequestFamilyNotificationUseCase(repository).invoke(
+            circleId = "circle-1",
+            scheduleId = "schedule-1",
+        )
+
+        assertEquals(
+            ScheduleUseCaseOutcome(
+                result = expected,
+                call = ScheduleRepositoryCall.RequestFamilyNotification(
+                    circleId = "circle-1",
+                    scheduleId = "schedule-1",
+                ),
+            ),
+            ScheduleUseCaseOutcome(result = actual, call = repository.lastCall),
+        )
+    }
+
+    @Test
     fun `일정 생성 실패 시 홈은 새로고침하지 않는다`() = runBlocking {
         val repository = FakeScheduleRepository(
             createResult = AppResult.Failure(com.saion.core.model.result.AppError.NetworkUnavailable()),
@@ -259,6 +281,11 @@ private sealed interface ScheduleRepositoryCall {
         val scheduleId: String,
         val confirmationId: Long,
     ) : ScheduleRepositoryCall
+
+    data class RequestFamilyNotification(
+        val circleId: String,
+        val scheduleId: String,
+    ) : ScheduleRepositoryCall
 }
 
 private class FakeScheduleRepository(
@@ -272,6 +299,7 @@ private class FakeScheduleRepository(
         RegisteredConfirmation(confirmationType = ConfirmationType.CONFIRMED),
     ),
     private val cancelResult: AppResult<Unit> = AppResult.Success(Unit),
+    private val requestFamilyNotificationResult: AppResult<Unit> = AppResult.Success(Unit),
 ) : ScheduleRepository {
     var lastCall: ScheduleRepositoryCall? = null
 
@@ -346,6 +374,14 @@ private class FakeScheduleRepository(
             confirmationId = confirmationId,
         )
         return cancelResult
+    }
+
+    override suspend fun requestFamilyNotification(circleId: String, scheduleId: String): AppResult<Unit> {
+        lastCall = ScheduleRepositoryCall.RequestFamilyNotification(
+            circleId = circleId,
+            scheduleId = scheduleId,
+        )
+        return requestFamilyNotificationResult
     }
 }
 

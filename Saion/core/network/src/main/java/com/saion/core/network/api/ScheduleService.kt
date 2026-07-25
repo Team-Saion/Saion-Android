@@ -87,6 +87,13 @@ class ScheduleService(private val client: HttpClient) {
     ): ApiResponse<Unit> = client
         .delete("/api/v1/circles/$circleId/schedules/$scheduleId/confirmations/$confirmationId")
         .toApiResponse()
+
+    suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): ApiResponse<Unit> = client
+        .post("/api/v1/circles/$circleId/schedules/$scheduleId/family-notifications")
+        .toApiResponse()
 }
 
 private fun UpdateScheduleRequest.toRequestBody(): JsonObject = buildMap<String, kotlinx.serialization.json.JsonElement> {

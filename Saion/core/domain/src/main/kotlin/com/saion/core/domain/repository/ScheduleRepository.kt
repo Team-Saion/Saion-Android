@@ -77,4 +77,9 @@ interface ScheduleRepository {
         scheduleId: String,
         confirmationId: Long,
     ): AppResult<Unit>
+
+    suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): AppResult<Unit>
 }

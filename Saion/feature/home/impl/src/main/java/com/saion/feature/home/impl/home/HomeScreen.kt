@@ -38,6 +38,7 @@ import com.saion.core.ui.component.SystemBarInset
 import com.saion.core.ui.component.showSaionSnackbar
 import com.saion.core.ui.error.resolveMessage
 import com.saion.core.ui.ext.CollectWithLifecycle
+import com.saion.ds.component.feedback.SaionConfirmDialog
 import com.saion.ds.component.feedback.SaionSpinner
 import com.saion.ds.theme.SaionTheme
 import com.saion.feature.home.impl.R
@@ -62,7 +63,6 @@ internal fun HomeScreen(
     onScheduleAddClick: () -> Unit = {},
     onScheduleListClick: () -> Unit = {},
     onScheduleClick: (String) -> Unit = {},
-    onHeroScheduleShareClick: () -> Unit = {},
     onMemberListClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -88,10 +88,9 @@ internal fun HomeScreen(
         onScheduleAddClick = onScheduleAddClick,
         onScheduleListClick = onScheduleListClick,
         onScheduleClick = onScheduleClick,
-        onHeroScheduleShareClick = {
-            onHeroScheduleShareClick()
-            viewModel.dispatch(HomeIntent.HeroScheduleShareClicked)
-        },
+        onHeroScheduleShareClick = { viewModel.dispatch(HomeIntent.HeroScheduleShareClicked) },
+        onFamilyNotificationDialogDismiss = { viewModel.dispatch(HomeIntent.DismissFamilyNotificationDialog) },
+        onFamilyNotificationConfirm = { viewModel.dispatch(HomeIntent.ConfirmFamilyNotification) },
         onMemberListClick = onMemberListClick,
     )
 }
@@ -112,6 +111,8 @@ private fun HomeScreen(
     onScheduleListClick: () -> Unit,
     onScheduleClick: (String) -> Unit,
     onHeroScheduleShareClick: () -> Unit,
+    onFamilyNotificationDialogDismiss: () -> Unit,
+    onFamilyNotificationConfirm: () -> Unit,
     onMemberListClick: () -> Unit,
 ) {
     SaionScaffold(
@@ -135,6 +136,16 @@ private fun HomeScreen(
             onScheduleClick = onScheduleClick,
             onHeroScheduleShareClick = onHeroScheduleShareClick,
             onMemberListClick = onMemberListClick,
+        )
+    }
+
+    if (uiState is HomeState.Content && uiState.isFamilyNotificationDialogVisible) {
+        SaionConfirmDialog(
+            title = stringResource(R.string.home_family_notification_dialog_title),
+            confirmButtonText = stringResource(R.string.home_family_notification_dialog_confirm),
+            onConfirm = onFamilyNotificationConfirm,
+            dismissButtonText = stringResource(R.string.home_family_notification_dialog_cancel),
+            onDismiss = onFamilyNotificationDialogDismiss,
         )
     }
 }
@@ -245,6 +256,8 @@ private fun HomeScreenNonePreview() {
             onScheduleListClick = {},
             onScheduleClick = {},
             onHeroScheduleShareClick = {},
+            onFamilyNotificationDialogDismiss = {},
+            onFamilyNotificationConfirm = {},
             onMemberListClick = {},
         )
     }
@@ -264,6 +277,8 @@ private fun HomeScreenLoadingPreview() {
             onScheduleListClick = {},
             onScheduleClick = {},
             onHeroScheduleShareClick = {},
+            onFamilyNotificationDialogDismiss = {},
+            onFamilyNotificationConfirm = {},
             onMemberListClick = {},
         )
     }
@@ -353,6 +368,8 @@ private fun HomeScreenContentPreview() {
             onScheduleListClick = {},
             onScheduleClick = {},
             onHeroScheduleShareClick = {},
+            onFamilyNotificationDialogDismiss = {},
+            onFamilyNotificationConfirm = {},
             onMemberListClick = {},
         )
     }

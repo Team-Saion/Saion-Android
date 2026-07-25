@@ -21,6 +21,8 @@ internal sealed interface HomeState : UIState {
         val members: ImmutableList<CircleMember>,
         val canInvite: Boolean,
         val isInviting: Boolean,
+        val isFamilyNotificationDialogVisible: Boolean = false,
+        val isRequestingFamilyNotification: Boolean = false,
         val mainSchedule: ScheduleSummary?,
         val schedules: ImmutableList<ScheduleSummary>,
     ) : HomeState {
@@ -45,11 +47,17 @@ internal sealed interface HomeState : UIState {
         }
 }
 
-internal fun HomeOverview.toUiState(isInviting: Boolean = false): HomeState.Content = HomeState.Content(
+internal fun HomeOverview.toUiState(
+    isInviting: Boolean = false,
+    isFamilyNotificationDialogVisible: Boolean = false,
+    isRequestingFamilyNotification: Boolean = false,
+): HomeState.Content = HomeState.Content(
     circle = circle,
     members = members.toImmutableList(),
     canInvite = canInvite,
     isInviting = isInviting,
+    isFamilyNotificationDialogVisible = isFamilyNotificationDialogVisible,
+    isRequestingFamilyNotification = isRequestingFamilyNotification,
     mainSchedule = mainSchedule,
     schedules = schedules.toImmutableList(),
 )

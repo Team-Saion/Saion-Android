@@ -37,6 +37,7 @@ internal fun HomeScheduleHeroCard(
     schedule: ScheduleSummary,
     onScheduleClick: () -> Unit,
     onShareClick: () -> Unit,
+    isShareEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     HeroCardSurface(modifier = modifier) {
@@ -85,6 +86,7 @@ internal fun HomeScheduleHeroCard(
                 modifier = Modifier.fillMaxWidth(),
                 variant = ButtonVariant.PRIMARY,
                 size = ButtonSize.LARGE,
+                enabled = isShareEnabled,
             )
         }
     }
@@ -149,6 +151,7 @@ private fun HomeScheduleHeroCardPreview() {
             ),
             onScheduleClick = {},
             onShareClick = {},
+            isShareEnabled = true,
             modifier = Modifier.padding(24.dp),
         )
     }

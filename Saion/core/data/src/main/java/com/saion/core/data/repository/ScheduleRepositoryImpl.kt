@@ -220,6 +220,20 @@ internal class ScheduleRepositoryImpl @Inject constructor(private val scheduleRe
         AppResult.Success(Unit)
     }
 
+    override suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): AppResult<Unit> = safeRequest(
+        request = {
+            scheduleRemoteDataSource.requestFamilyNotification(
+                circleId = circleId,
+                scheduleId = scheduleId,
+            )
+        },
+    ) {
+        AppResult.Success(Unit)
+    }
+
     private suspend fun cacheScheduleList(
         circleId: String,
         page: ScheduleListPage,

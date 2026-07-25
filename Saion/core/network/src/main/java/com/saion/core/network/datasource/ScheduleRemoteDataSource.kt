@@ -50,4 +50,9 @@ interface ScheduleRemoteDataSource {
         scheduleId: String,
         confirmationId: Long,
     ): ApiResponse<Unit>
+
+    suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): ApiResponse<Unit>
 }

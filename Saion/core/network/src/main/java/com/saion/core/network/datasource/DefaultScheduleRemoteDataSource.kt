@@ -80,4 +80,12 @@ class DefaultScheduleRemoteDataSource @Inject constructor(
         scheduleId = scheduleId,
         confirmationId = confirmationId,
     )
+
+    override suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): ApiResponse<Unit> = service.requestFamilyNotification(
+        circleId = circleId,
+        scheduleId = scheduleId,
+    )
 }

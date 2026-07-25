@@ -5,4 +5,6 @@ import com.saion.core.ui.viewmodel.UIIntent
 internal sealed interface HomeIntent : UIIntent {
     data object InviteClicked : HomeIntent
     data object HeroScheduleShareClicked : HomeIntent
+    data object DismissFamilyNotificationDialog : HomeIntent
+    data object ConfirmFamilyNotification : HomeIntent
 }
