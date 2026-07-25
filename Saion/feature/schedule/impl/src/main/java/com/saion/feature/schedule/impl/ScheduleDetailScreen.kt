@@ -36,6 +36,7 @@ import com.saion.core.model.schedule.ConfirmationType
 import com.saion.core.model.schedule.MyConfirmation
 import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.component.DdayBadge
 import com.saion.core.ui.component.DdayBadgeSize
 import com.saion.core.ui.component.SaionScaffold
@@ -199,6 +200,8 @@ private fun ScheduleDetailContent(
     ) {
         DdayBadge(
             dday = detail.dday,
+            status = detail.status,
+            urgencyLevel = detail.urgencyLevel,
             size = DdayBadgeSize.LARGE,
         )
 
@@ -331,6 +334,7 @@ private fun ScheduleDetailScreenPreview() {
                     isAllDay = false,
                     needConfirm = true,
                     status = ScheduleStatus.UPCOMING,
+                    urgencyLevel = ScheduleUrgencyLevel.URGENT,
                     progressRate = 40,
                     dday = 7,
                     memo = "케이크 사들고 인천 가야함",

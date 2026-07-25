@@ -70,6 +70,8 @@ fun ScheduleSummaryCard(
 
         DdayBadge(
             dday = schedule.dday,
+            status = schedule.status,
+            urgencyLevel = schedule.urgencyLevel,
             size = DdayBadgeSize.MEDIUM,
         )
 

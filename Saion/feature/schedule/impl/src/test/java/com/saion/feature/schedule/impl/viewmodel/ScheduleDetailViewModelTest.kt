@@ -34,6 +34,7 @@ import com.saion.core.model.schedule.RegisteredConfirmation
 import com.saion.core.model.schedule.ScheduleDetail
 import com.saion.core.model.schedule.ScheduleListPage
 import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.model.schedule.UpdateScheduleCommand
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -433,6 +434,7 @@ private fun defaultDetail(
     isAllDay = false,
     needConfirm = true,
     status = ScheduleStatus.UPCOMING,
+    urgencyLevel = ScheduleUrgencyLevel.URGENT,
     progressRate = 0,
     dday = 0,
     memo = null,

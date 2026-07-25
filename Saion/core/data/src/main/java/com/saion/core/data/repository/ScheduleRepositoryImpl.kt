@@ -352,6 +352,8 @@ private fun ScheduleSummaryResponse.invalidStatusResult(): AppResult.Failure = A
 private fun ScheduleDetailResponse.toDomain(): AppResult<ScheduleDetail> {
     val scheduleStatus = ScheduleStatus.from(status)
         ?: return AppResult.Failure(AppError.Unknown(message = "Schedule status is missing or invalid."))
+    val mappedUrgencyLevel = ScheduleUrgencyLevel.from(urgencyLevel)
+        ?: return AppResult.Failure(AppError.Unknown(message = "Schedule urgency level is missing or invalid."))
     val confirmationCounts = confirmations.map { response ->
         response.toDomain() ?: return response.invalidTypeResult()
     }
@@ -373,6 +375,7 @@ private fun ScheduleDetailResponse.toDomain(): AppResult<ScheduleDetail> {
             isAllDay = isAllDay,
             needConfirm = needConfirm,
             status = scheduleStatus,
+            urgencyLevel = mappedUrgencyLevel,
             progressRate = progressRate,
             dday = dday ?: dDay,
             memo = memo,

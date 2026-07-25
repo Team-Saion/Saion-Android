@@ -74,6 +74,8 @@ internal fun HomeScheduleHeroCard(
 
                     DdayBadge(
                         dday = schedule.dday,
+                        status = schedule.status,
+                        urgencyLevel = schedule.urgencyLevel,
                         size = DdayBadgeSize.LARGE,
                     )
                 }

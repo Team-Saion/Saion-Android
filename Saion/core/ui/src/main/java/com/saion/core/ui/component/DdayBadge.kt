@@ -12,6 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.saion.core.model.schedule.ScheduleStatus
+import com.saion.core.model.schedule.ScheduleUrgencyLevel
 import com.saion.core.ui.R
 import com.saion.ds.theme.SaionTheme
 import com.saion.ds.token.radius.toRoundedCornerShape
@@ -24,10 +26,17 @@ enum class DdayBadgeSize {
 @Composable
 fun DdayBadge(
     dday: Int?,
+    status: ScheduleStatus,
+    urgencyLevel: ScheduleUrgencyLevel,
     size: DdayBadgeSize,
     modifier: Modifier = Modifier,
 ) {
-    val style = ddayBadgeStyle(dday = dday, size = size)
+    val style = ddayBadgeStyle(
+        dday = dday,
+        status = status,
+        urgencyLevel = urgencyLevel,
+        size = size,
+    )
 
     Box(
         modifier = modifier
@@ -57,9 +66,14 @@ private data class DdayBadgeStyle(
 @Composable
 private fun ddayBadgeStyle(
     dday: Int?,
+    status: ScheduleStatus,
+    urgencyLevel: ScheduleUrgencyLevel,
     size: DdayBadgeSize,
 ): DdayBadgeStyle {
-    val (backgroundColor, contentColor) = ddayBadgeColors(dday)
+    val (backgroundColor, contentColor) = ddayBadgeColors(
+        status = status,
+        urgencyLevel = urgencyLevel,
+    )
     return DdayBadgeStyle(
         label = ddayBadgeLabel(dday),
         backgroundColor = backgroundColor,
@@ -86,10 +100,22 @@ private fun ddayBadgeLabel(dday: Int?): String = when {
 }
 
 @Composable
-private fun ddayBadgeColors(dday: Int?): Pair<Color, Color> = if (dday != null && dday <= 7) {
+private fun ddayBadgeColors(
+    status: ScheduleStatus,
+    urgencyLevel: ScheduleUrgencyLevel,
+): Pair<Color, Color> = if (shouldHighlight(status = status, urgencyLevel = urgencyLevel)) {
     SaionTheme.colors.status.negative.subtle to SaionTheme.colors.status.negative.default
 } else {
     SaionTheme.colors.fill.subtle to SaionTheme.colors.label.subtle
+}
+
+private fun shouldHighlight(
+    status: ScheduleStatus,
+    urgencyLevel: ScheduleUrgencyLevel,
+): Boolean = when (status) {
+    ScheduleStatus.UPCOMING -> urgencyLevel == ScheduleUrgencyLevel.URGENT
+    ScheduleStatus.IN_PROGRESS -> true
+    ScheduleStatus.COMPLETED -> false
 }
 
 @Preview(showBackground = true)
@@ -98,6 +124,8 @@ private fun DdayBadgeLargePreview() {
     SaionTheme {
         DdayBadge(
             dday = 3,
+            status = ScheduleStatus.UPCOMING,
+            urgencyLevel = ScheduleUrgencyLevel.URGENT,
             size = DdayBadgeSize.LARGE,
         )
     }
@@ -109,6 +137,8 @@ private fun DdayBadgeMediumPreview() {
     SaionTheme {
         DdayBadge(
             dday = -2,
+            status = ScheduleStatus.UPCOMING,
+            urgencyLevel = ScheduleUrgencyLevel.NORMAL,
             size = DdayBadgeSize.MEDIUM,
         )
     }
