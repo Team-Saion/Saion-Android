@@ -1,12 +1,20 @@
 package com.saion.feature.main.impl.navigation
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,6 +71,7 @@ private fun MainRoute(
     tabEntryBuilders: ImmutableSet<NavEntryBuilder<MainTabNavKey>>,
     observeResolvedCurrentCircleUseCase: ObserveResolvedCurrentCircleUseCase,
 ) {
+    val context = LocalContext.current
     val navigationState = rememberTabNavigationState(
         HomeNavKey,
         ScheduleNavKey,
@@ -70,11 +79,13 @@ private fun MainRoute(
     )
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    var isExitSnackbarVisible by remember { mutableStateOf(false) }
     val resolvedCurrentCircle by remember(observeResolvedCurrentCircleUseCase) {
         observeResolvedCurrentCircleUseCase()
     }.collectAsStateWithLifecycle(initialValue = null)
     val hasJoinedCircle = resolvedCurrentCircle is ResolvedCurrentCircle.Available
     val scheduleTabBlockedMessage = stringResource(R.string.main_schedule_tab_requires_circle)
+    val exitAppMessage = stringResource(R.string.main_exit_app_on_back_press)
     val items = listOf(
         TabItem(HomeNavKey, stringResource(R.string.main_tab_home), SaionIcons.Home),
         TabItem(ScheduleNavKey, stringResource(R.string.main_tab_schedule), SaionIcons.Schedule),
@@ -82,6 +93,30 @@ private fun MainRoute(
     )
     val rootTabs = items.map(TabItem::navKey).toSet()
     val shouldShowBottomBar = navigationState.current in rootTabs
+    val shouldHandleExitOnBack = shouldShowBottomBar && !navigationState.canPop
+
+    LaunchedEffect(navigationState.selectedTab, navigationState.current, shouldHandleExitOnBack) {
+        isExitSnackbarVisible = false
+        snackbarHostState.currentSnackbarData?.dismiss()
+    }
+
+    BackHandler(enabled = shouldHandleExitOnBack) {
+        if (isExitSnackbarVisible) {
+            context.findActivity()?.finish()
+            return@BackHandler
+        }
+        coroutineScope.launch {
+            isExitSnackbarVisible = true
+            snackbarHostState.showSaionSnackbar(
+                message = exitAppMessage,
+                variant = SaionSnackbarVariant.Cautionary,
+                onDismiss = {
+                    isExitSnackbarVisible = false
+                },
+            )
+            isExitSnackbarVisible = false
+        }
+    }
 
     SaionScaffold(
         modifier = Modifier.fillMaxSize(),
@@ -128,3 +163,9 @@ private data class TabItem(
     val title: String,
     val imageVector: ImageVector,
 )
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}

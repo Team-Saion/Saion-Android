@@ -12,4 +12,6 @@ dependencies {
     implementation(projects.feature.home.api)
     implementation(projects.feature.schedule.api)
     implementation(projects.feature.mypage.api)
+
+    implementation(libs.androidx.activity.compose)
 }
