@@ -15,19 +15,11 @@ import io.ktor.client.request.setBody
  * Invitation API 원격 호출을 구성합니다.
  */
 class InvitationService(private val client: HttpClient) {
-    suspend fun issueInvitation(
-        type: String,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): ApiResponse<IssuedInvitationResponse> = client
+    suspend fun issueInvitation(targetId: String): ApiResponse<IssuedInvitationResponse> = client
         .post("/api/v1/invitations") {
             setBody(
                 IssueInvitationRequest(
-                    type = type,
                     targetId = targetId,
-                    inviteToName = inviteToName,
-                    message = message,
                 ),
             )
         }.toApiResponse()

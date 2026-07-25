@@ -5,7 +5,6 @@ import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
-import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
 import com.saion.core.model.result.AppResult
 import com.saion.core.network.datasource.InvitationRemoteDataSource
@@ -18,19 +17,9 @@ import javax.inject.Inject
 internal class InvitationRepositoryImpl @Inject constructor(
     private val invitationRemoteDataSource: InvitationRemoteDataSource,
 ) : InvitationRepository {
-    override suspend fun issueInvitation(
-        type: InvitationType,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): AppResult<IssuedInvitation> = safeRequest(
+    override suspend fun issueInvitation(targetId: String): AppResult<IssuedInvitation> = safeRequest(
         request = {
-            invitationRemoteDataSource.issueInvitation(
-                type = type.value,
-                targetId = targetId,
-                inviteToName = inviteToName,
-                message = message,
-            )
+            invitationRemoteDataSource.issueInvitation(targetId = targetId)
         },
     ) { response ->
         AppResult.Success(response.toDomain())

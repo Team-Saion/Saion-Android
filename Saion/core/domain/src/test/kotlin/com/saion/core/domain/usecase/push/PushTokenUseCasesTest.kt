@@ -74,16 +74,13 @@ private class FakePushTokenRepository(
 }
 
 private fun defaultRegisterPushTokenCommand(): RegisterPushTokenCommand = RegisterPushTokenCommand(
+    installationId = "installation-id",
     token = "fcm-token",
     platform = PushPlatform.ANDROID,
-    osNotificationPermissionGranted = true,
-    appVersion = "1.0.0",
 )
 
 private fun defaultPushToken(): PushToken = PushToken(
     id = 3L,
     platform = PushPlatform.ANDROID,
-    osNotificationPermissionGranted = true,
-    appVersion = "1.0.0",
     active = true,
 )

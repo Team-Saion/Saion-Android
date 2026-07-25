@@ -9,15 +9,13 @@ class DefaultPushTokenRemoteDataSource @Inject constructor(
     private val service: PushTokenService,
 ) : PushTokenRemoteDataSource {
     override suspend fun register(
+        installationId: String,
         token: String,
         platform: String,
-        osNotificationPermissionGranted: Boolean,
-        appVersion: String?,
     ): ApiResponse<PushTokenResponse> = service.register(
+        installationId = installationId,
         token = token,
         platform = platform,
-        osNotificationPermissionGranted = osNotificationPermissionGranted,
-        appVersion = appVersion,
     )
 
     override suspend fun deactivate(tokenId: Long): ApiResponse<Unit> = service.deactivate(tokenId = tokenId)

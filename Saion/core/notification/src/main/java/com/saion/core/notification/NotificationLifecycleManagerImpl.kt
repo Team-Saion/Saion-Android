@@ -14,8 +14,7 @@ class NotificationLifecycleManagerImpl @Inject constructor(
     private val isSignedInUseCase: IsSignedInUseCase,
     private val registerPushTokenUseCase: RegisterPushTokenUseCase,
     private val fcmTokenProvider: FcmTokenProvider,
-    private val notificationPermissionStatusProvider: NotificationPermissionStatusProvider,
-    private val notificationAppInfoProvider: NotificationAppInfoProvider,
+    private val firebaseInstallationIdProvider: FirebaseInstallationIdProvider,
 ) : NotificationLifecycleManager {
     override suspend fun syncOnAppLaunchIfSignedIn() {
         if (!isSignedInUseCase()) return
@@ -49,13 +48,18 @@ class NotificationLifecycleManagerImpl @Inject constructor(
     }
 
     private suspend fun registerToken(token: String) {
+        val installationId = runCatching { firebaseInstallationIdProvider.getId() }
+            .getOrElse { throwable ->
+                if (throwable is CancellationException) throw throwable
+                Timber.tag(TAG).w(throwable, "Failed to fetch Firebase installation id.")
+                return
+            }
         when (
             val result = registerPushTokenUseCase(
                 command = RegisterPushTokenCommand(
+                    installationId = installationId,
                     token = token,
                     platform = PushPlatform.ANDROID,
-                    osNotificationPermissionGranted = notificationPermissionStatusProvider.isGranted(),
-                    appVersion = notificationAppInfoProvider.versionName(),
                 ),
             )
         ) {

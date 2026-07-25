@@ -4,7 +4,6 @@ import com.saion.core.domain.repository.InvitationRepository
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
-import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
 import com.saion.core.model.result.AppResult
 import kotlinx.coroutines.runBlocking
@@ -23,22 +22,12 @@ class InvitationUseCasesTest {
         )
         val repository = FakeInvitationRepository(issueResult = expected)
 
-        val actual = IssueInvitationUseCase(repository).invoke(
-            type = InvitationType.CIRCLE,
-            targetId = "circle-1",
-            inviteToName = "김철수",
-            message = "함께 해요",
-        )
+        val actual = IssueInvitationUseCase(repository).invoke(targetId = "circle-1")
 
         assertEquals(
             InvitationUseCaseOutcome(
                 result = expected,
-                call = InvitationRepositoryCall.IssueInvitation(
-                    type = InvitationType.CIRCLE,
-                    targetId = "circle-1",
-                    inviteToName = "김철수",
-                    message = "함께 해요",
-                ),
+                call = InvitationRepositoryCall.IssueInvitation(targetId = "circle-1"),
             ),
             InvitationUseCaseOutcome(
                 result = actual,
@@ -104,12 +93,7 @@ private data class InvitationUseCaseOutcome<T>(
 )
 
 private sealed interface InvitationRepositoryCall {
-    data class IssueInvitation(
-        val type: InvitationType,
-        val targetId: String,
-        val inviteToName: String?,
-        val message: String?,
-    ) : InvitationRepositoryCall
+    data class IssueInvitation(val targetId: String) : InvitationRepositoryCall
 
     data class GetInvitationByToken(val token: String) : InvitationRepositoryCall
 
@@ -134,18 +118,8 @@ private class FakeInvitationRepository(
 ) : InvitationRepository {
     var lastCall: InvitationRepositoryCall? = null
 
-    override suspend fun issueInvitation(
-        type: InvitationType,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): AppResult<IssuedInvitation> {
-        lastCall = InvitationRepositoryCall.IssueInvitation(
-            type = type,
-            targetId = targetId,
-            inviteToName = inviteToName,
-            message = message,
-        )
+    override suspend fun issueInvitation(targetId: String): AppResult<IssuedInvitation> {
+        lastCall = InvitationRepositoryCall.IssueInvitation(targetId = targetId)
         return issueResult
     }
 

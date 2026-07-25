@@ -9,7 +9,7 @@ import javax.inject.Inject
 /**
  * 기기의 FCM 토큰을 등록합니다.
  *
- * OS 알림 권한 상태와 앱 버전까지 함께 전달해 서버가 발송 대상을 판단할 수 있게 합니다.
+ * 설치 식별자와 함께 등록해 서버가 디바이스 단위로 토큰을 추적할 수 있게 합니다.
  */
 class RegisterPushTokenUseCase @Inject constructor(
     private val pushTokenRepository: PushTokenRepository,

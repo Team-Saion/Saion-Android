@@ -10,17 +10,8 @@ import javax.inject.Inject
 class DefaultInvitationRemoteDataSource @Inject constructor(
     private val service: InvitationService,
 ) : InvitationRemoteDataSource {
-    override suspend fun issueInvitation(
-        type: String,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): ApiResponse<IssuedInvitationResponse> = service.issueInvitation(
-        type = type,
-        targetId = targetId,
-        inviteToName = inviteToName,
-        message = message,
-    )
+    override suspend fun issueInvitation(targetId: String): ApiResponse<IssuedInvitationResponse> =
+        service.issueInvitation(targetId = targetId)
 
     override suspend fun getInvitationByToken(token: String): ApiResponse<InvitationDetailResponse> =
         service.getInvitationByToken(token = token)

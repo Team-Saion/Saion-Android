@@ -10,7 +10,6 @@ import com.saion.core.model.circle.CircleSummary
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
-import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.BusinessErrorType
@@ -150,12 +149,8 @@ private class FakeInvitationRepository(
         AcceptedInvitation(circleId = "circle-1"),
     ),
 ) : InvitationRepository {
-    override suspend fun issueInvitation(
-        type: InvitationType,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): AppResult<IssuedInvitation> = throw UnsupportedOperationException("Not required for this test")
+    override suspend fun issueInvitation(targetId: String): AppResult<IssuedInvitation> =
+        throw UnsupportedOperationException("Not required for this test")
 
     override suspend fun getInvitationByToken(token: String): AppResult<InvitationDetail> = getInvitationResult
 

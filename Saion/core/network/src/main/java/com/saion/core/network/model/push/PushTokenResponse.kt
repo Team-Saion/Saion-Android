@@ -9,10 +9,6 @@ data class PushTokenResponse(
     val id: Long,
     @SerialName("platform")
     val platform: String,
-    @SerialName("osNotificationPermissionGranted")
-    val osNotificationPermissionGranted: Boolean,
-    @SerialName("appVersion")
-    val appVersion: String? = null,
     @SerialName("active")
     val active: Boolean,
 )

@@ -11,18 +11,16 @@ import io.ktor.client.request.setBody
 
 class PushTokenService(private val client: HttpClient) {
     suspend fun register(
+        installationId: String,
         token: String,
         platform: String,
-        osNotificationPermissionGranted: Boolean,
-        appVersion: String?,
     ): ApiResponse<PushTokenResponse> = client
         .post("/api/v1/push-tokens") {
             setBody(
                 RegisterPushTokenRequest(
+                    installationId = installationId,
                     token = token,
                     platform = platform,
-                    osNotificationPermissionGranted = osNotificationPermissionGranted,
-                    appVersion = appVersion,
                 ),
             )
         }.toApiResponse()

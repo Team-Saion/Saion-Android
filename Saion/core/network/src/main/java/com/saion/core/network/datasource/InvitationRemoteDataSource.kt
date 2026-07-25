@@ -6,12 +6,7 @@ import com.saion.core.network.model.invitation.InvitationDetailResponse
 import com.saion.core.network.model.invitation.IssuedInvitationResponse
 
 interface InvitationRemoteDataSource {
-    suspend fun issueInvitation(
-        type: String,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): ApiResponse<IssuedInvitationResponse>
+    suspend fun issueInvitation(targetId: String): ApiResponse<IssuedInvitationResponse>
 
     suspend fun getInvitationByToken(token: String): ApiResponse<InvitationDetailResponse>
 

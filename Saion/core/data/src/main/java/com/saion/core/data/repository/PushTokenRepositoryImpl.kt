@@ -17,10 +17,9 @@ internal class PushTokenRepositoryImpl @Inject constructor(
     override suspend fun registerPushToken(command: RegisterPushTokenCommand): AppResult<PushToken> = safeRequest(
         request = {
             pushTokenRemoteDataSource.register(
+                installationId = command.installationId,
                 token = command.token,
                 platform = command.platform.value,
-                osNotificationPermissionGranted = command.osNotificationPermissionGranted,
-                appVersion = command.appVersion,
             )
         },
     ) { response ->
@@ -44,8 +43,6 @@ private fun PushTokenResponse.toDomain(): AppResult<PushToken> {
         PushToken(
             id = id,
             platform = pushPlatform,
-            osNotificationPermissionGranted = osNotificationPermissionGranted,
-            appVersion = appVersion,
             active = active,
         ),
     )

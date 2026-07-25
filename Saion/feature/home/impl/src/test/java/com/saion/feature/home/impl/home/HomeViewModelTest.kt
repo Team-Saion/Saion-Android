@@ -18,7 +18,6 @@ import com.saion.core.model.home.HomeOverview
 import com.saion.core.model.invitation.AcceptedInvitation
 import com.saion.core.model.invitation.InvitationDetail
 import com.saion.core.model.invitation.InvitationIssuer
-import com.saion.core.model.invitation.InvitationType
 import com.saion.core.model.invitation.IssuedInvitation
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
@@ -257,7 +256,6 @@ class HomeViewModelTest {
         viewModel.dispatch(HomeIntent.InviteClicked)
         advanceUntilIdle()
 
-        assertEquals(InvitationType.CIRCLE, invitationRepository.requestedType)
         assertEquals(overview.circle.circleId, invitationRepository.requestedTargetId)
         assertEquals("수빈", shareClient.sharedInviterName)
         assertEquals(overview.circle.name, shareClient.sharedCircleName)
@@ -537,16 +535,9 @@ private class FakeScheduleRepository(
 }
 
 private class FakeInvitationRepository : InvitationRepository {
-    var requestedType: InvitationType? = null
     var requestedTargetId: String? = null
 
-    override suspend fun issueInvitation(
-        type: InvitationType,
-        targetId: String,
-        inviteToName: String?,
-        message: String?,
-    ): AppResult<IssuedInvitation> {
-        requestedType = type
+    override suspend fun issueInvitation(targetId: String): AppResult<IssuedInvitation> {
         requestedTargetId = targetId
         return AppResult.Success(
             IssuedInvitation(
