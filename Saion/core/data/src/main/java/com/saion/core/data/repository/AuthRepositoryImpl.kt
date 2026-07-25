@@ -9,6 +9,7 @@ import com.saion.core.domain.repository.AuthRepository
 import com.saion.core.model.member.MemberRole
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.network.auth.AuthTokenCacheInvalidator
 import com.saion.core.network.datasource.AuthRemoteDataSource
 import java.util.Base64
 import javax.inject.Inject
@@ -26,6 +27,7 @@ internal class AuthRepositoryImpl @Inject constructor(
     private val circleLocalDataSource: CircleLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
     private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
+    private val authTokenCacheInvalidator: AuthTokenCacheInvalidator,
     private val remoteDataSource: AuthRemoteDataSource,
 ) : AuthRepository {
     override suspend fun loginWithKakao(idToken: String): AppResult<MemberRole> = safeRequest(
@@ -46,6 +48,7 @@ internal class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun clearSession() {
         localDataSource.clearTokens()
+        authTokenCacheInvalidator.invalidate()
         circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()

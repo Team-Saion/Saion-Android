@@ -10,8 +10,11 @@ import com.saion.core.network.api.NotificationSettingService
 import com.saion.core.network.api.PushTokenService
 import com.saion.core.network.api.ScheduleService
 import com.saion.core.network.api.TermService
+import com.saion.core.network.auth.AuthTokenCacheInvalidator
+import com.saion.core.network.auth.KtorAuthTokenCacheInvalidator
 import com.saion.core.network.client.HttpClientFactory
 import dagger.Module
+import dagger.Binds
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -20,50 +23,58 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    @Provides
+internal abstract class NetworkModule {
+    @Binds
     @Singleton
-    internal fun provideHttpClient(factory: HttpClientFactory): HttpClient = factory.create()
+    abstract fun bindAuthTokenCacheInvalidator(
+        impl: KtorAuthTokenCacheInvalidator,
+    ): AuthTokenCacheInvalidator
 
-    @Provides
-    @Singleton
-    internal fun provideAuthService(httpClient: HttpClient): AuthService = AuthService(client = httpClient)
+    companion object {
 
-    @Provides
-    @Singleton
-    internal fun provideCircleService(httpClient: HttpClient): CircleService = CircleService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideHttpClient(factory: HttpClientFactory): HttpClient = factory.create()
 
-    @Provides
-    @Singleton
-    internal fun provideInvitationService(httpClient: HttpClient): InvitationService = InvitationService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideAuthService(httpClient: HttpClient): AuthService = AuthService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideNotificationService(httpClient: HttpClient): NotificationService = NotificationService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideCircleService(httpClient: HttpClient): CircleService = CircleService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideNotificationSettingService(httpClient: HttpClient): NotificationSettingService =
-        NotificationSettingService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideInvitationService(httpClient: HttpClient): InvitationService = InvitationService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun providePushTokenService(httpClient: HttpClient): PushTokenService = PushTokenService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideNotificationService(httpClient: HttpClient): NotificationService = NotificationService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideHomeService(httpClient: HttpClient): HomeService = HomeService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideNotificationSettingService(httpClient: HttpClient): NotificationSettingService =
+            NotificationSettingService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideScheduleService(httpClient: HttpClient): ScheduleService = ScheduleService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun providePushTokenService(httpClient: HttpClient): PushTokenService = PushTokenService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideMemberService(httpClient: HttpClient): MemberService = MemberService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideHomeService(httpClient: HttpClient): HomeService = HomeService(client = httpClient)
 
-    @Provides
-    @Singleton
-    internal fun provideTermService(httpClient: HttpClient): TermService = TermService(client = httpClient)
+        @Provides
+        @Singleton
+        internal fun provideScheduleService(httpClient: HttpClient): ScheduleService = ScheduleService(client = httpClient)
+
+        @Provides
+        @Singleton
+        internal fun provideMemberService(httpClient: HttpClient): MemberService = MemberService(client = httpClient)
+
+        @Provides
+        @Singleton
+        internal fun provideTermService(httpClient: HttpClient): TermService = TermService(client = httpClient)
+    }
 }

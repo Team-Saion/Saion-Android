@@ -14,6 +14,7 @@ import com.saion.core.model.member.OnboardingInfo
 import com.saion.core.model.member.ProfileImageUpload
 import com.saion.core.model.result.AppError
 import com.saion.core.model.result.AppResult
+import com.saion.core.network.auth.AuthTokenCacheInvalidator
 import com.saion.core.network.datasource.MemberRemoteDataSource
 import com.saion.core.network.model.member.MemberInfoResponse
 import javax.inject.Inject
@@ -29,6 +30,7 @@ internal class MemberRepositoryImpl @Inject constructor(
     private val circleLocalDataSource: CircleLocalDataSource,
     private val currentCircleLocalDataSource: CurrentCircleLocalDataSource,
     private val memberProfileLocalDataSource: MemberProfileLocalDataSource,
+    private val authTokenCacheInvalidator: AuthTokenCacheInvalidator,
     private val memberRemoteDataSource: MemberRemoteDataSource,
 ) : MemberRepository {
     private val myInfoState = MutableStateFlow<MemberInfo?>(null)
@@ -66,6 +68,7 @@ internal class MemberRepositoryImpl @Inject constructor(
             accessToken = response.accessToken,
             refreshToken = response.refreshToken,
         )
+        authTokenCacheInvalidator.invalidate()
         AppResult.Success(Unit)
     }
 
@@ -109,6 +112,7 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.logout() },
     ) {
         authLocalDataSource.clearTokens()
+        authTokenCacheInvalidator.invalidate()
         circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()
@@ -120,6 +124,7 @@ internal class MemberRepositoryImpl @Inject constructor(
         request = { memberRemoteDataSource.withdraw(reason = reason) },
     ) {
         authLocalDataSource.clearTokens()
+        authTokenCacheInvalidator.invalidate()
         circleLocalDataSource.clearCircles()
         currentCircleLocalDataSource.clearSelectedCircleId()
         memberProfileLocalDataSource.clearProfile()
