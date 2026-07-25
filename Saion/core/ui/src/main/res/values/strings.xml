@@ -9,8 +9,10 @@
     <string name="schedule_summary_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="schedule_summary_date_range">%1$d월 %2$d일 (%3$s) ~ %4$d월 %5$d일 (%6$s)</string>
     <string name="dday_badge_default">일정</string>
-    <string name="dday_badge_offset">%1$d일 전</string>
-    <string name="dday_badge_today">오늘</string>
+    <string name="dday_badge_offset">D-%1$d</string>
+    <string name="dday_badge_today">D-Day</string>
+    <string name="dday_badge_in_progress">진행 중</string>
+    <string name="dday_badge_completed">종료</string>
     <string name="schedule_progress_relaxed">여유있어요</string>
     <string name="schedule_progress_hurry">서두르세요</string>
 </resources>

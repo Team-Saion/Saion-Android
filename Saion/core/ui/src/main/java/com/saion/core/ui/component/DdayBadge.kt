@@ -75,7 +75,10 @@ private fun ddayBadgeStyle(
         urgencyLevel = urgencyLevel,
     )
     return DdayBadgeStyle(
-        label = ddayBadgeLabel(dday),
+        label = ddayBadgeLabel(
+            dday = dday,
+            status = status,
+        ),
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         padding = when (size) {
@@ -92,11 +95,17 @@ private fun ddayBadgeStyle(
 }
 
 @Composable
-private fun ddayBadgeLabel(dday: Int?): String = when {
-    dday == null -> stringResource(R.string.dday_badge_default)
-    dday == 0 -> stringResource(R.string.dday_badge_today)
-    dday < 0 -> stringResource(R.string.dday_badge_offset, -dday)
-    else -> stringResource(R.string.dday_badge_offset, dday)
+private fun ddayBadgeLabel(
+    dday: Int?,
+    status: ScheduleStatus,
+): String = when (status) {
+    ScheduleStatus.IN_PROGRESS -> stringResource(R.string.dday_badge_in_progress)
+    ScheduleStatus.COMPLETED -> stringResource(R.string.dday_badge_completed)
+    ScheduleStatus.UPCOMING -> when {
+        dday == null -> stringResource(R.string.dday_badge_default)
+        dday == 0 -> stringResource(R.string.dday_badge_today)
+        else -> stringResource(R.string.dday_badge_offset, dday)
+    }
 }
 
 @Composable
@@ -136,8 +145,8 @@ private fun DdayBadgeLargePreview() {
 private fun DdayBadgeMediumPreview() {
     SaionTheme {
         DdayBadge(
-            dday = -2,
-            status = ScheduleStatus.UPCOMING,
+            dday = 1,
+            status = ScheduleStatus.IN_PROGRESS,
             urgencyLevel = ScheduleUrgencyLevel.NORMAL,
             size = DdayBadgeSize.MEDIUM,
         )
