@@ -27,6 +27,8 @@ internal sealed interface HomeState : UIState {
         val schedules: ImmutableList<ScheduleSummary>,
     ) : HomeState {
         val heroSchedule: ScheduleSummary? = mainSchedule
+        val canRequestFamilyNotification: Boolean
+            get() = members.any { member -> member.isMe.not() }
 
         val sectionSchedules: ImmutableList<ScheduleSummary>
             get() = schedules.take(3).toImmutableList()

@@ -37,6 +37,7 @@ internal fun HomeScheduleHeroCard(
     schedule: ScheduleSummary,
     onScheduleClick: () -> Unit,
     onShareClick: () -> Unit,
+    shouldShowShareButton: Boolean,
     isShareEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -80,14 +81,16 @@ internal fun HomeScheduleHeroCard(
                 ScheduleProgressSection(progressRate = schedule.progressRate)
             }
 
-            SaionButton(
-                text = stringResource(R.string.home_hero_schedule_cta),
-                onClick = onShareClick,
-                modifier = Modifier.fillMaxWidth(),
-                variant = ButtonVariant.PRIMARY,
-                size = ButtonSize.LARGE,
-                enabled = isShareEnabled,
-            )
+            if (shouldShowShareButton) {
+                SaionButton(
+                    text = stringResource(R.string.home_hero_schedule_cta),
+                    onClick = onShareClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = ButtonVariant.PRIMARY,
+                    size = ButtonSize.LARGE,
+                    enabled = isShareEnabled,
+                )
+            }
         }
     }
 }
@@ -151,6 +154,7 @@ private fun HomeScheduleHeroCardPreview() {
             ),
             onScheduleClick = {},
             onShareClick = {},
+            shouldShowShareButton = true,
             isShareEnabled = true,
             modifier = Modifier.padding(24.dp),
         )

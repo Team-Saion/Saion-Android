@@ -158,6 +158,7 @@ class HomeViewModelTest {
         ).toUiState()
 
         assertTrue(uiState.shouldShowHero)
+        assertTrue(uiState.canRequestFamilyNotification.not())
     }
 
     @Test
@@ -165,6 +166,7 @@ class HomeViewModelTest {
         val uiState = defaultOverview().toUiState()
 
         assertTrue(uiState.shouldShowHero)
+        assertTrue(uiState.canRequestFamilyNotification)
         assertEquals("schedule-0", uiState.heroSchedule?.scheduleId)
     }
 
