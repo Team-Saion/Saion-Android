@@ -227,12 +227,14 @@ private fun NotificationHistoryItem(
 
 private fun NotificationHistorySnackbarMessage.resolve(context: Context): String = when (this) {
     is NotificationHistorySnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
+    is NotificationHistorySnackbarMessage.Cautionary -> value.ifBlank { context.getString(defaultMessageResId) }
     is NotificationHistorySnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
 }
 
 private fun NotificationHistorySnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
     is NotificationHistorySnackbarMessage.Error -> SaionSnackbarVariant.Negative
-    is NotificationHistorySnackbarMessage.Text -> SaionSnackbarVariant.Cautionary
+    is NotificationHistorySnackbarMessage.Cautionary -> SaionSnackbarVariant.Cautionary
+    is NotificationHistorySnackbarMessage.Text -> SaionSnackbarVariant.Negative
 }
 
 @Composable

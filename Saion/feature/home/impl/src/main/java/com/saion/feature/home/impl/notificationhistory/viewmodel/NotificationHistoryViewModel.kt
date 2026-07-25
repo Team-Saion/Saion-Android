@@ -150,7 +150,7 @@ internal class NotificationHistoryViewModel @Inject constructor(
         ) {
             emitEffect(
                 NotificationHistoryEffect.ShowSnackbar(
-                    NotificationHistorySnackbarMessage.Text(
+                    NotificationHistorySnackbarMessage.Cautionary(
                         value = "",
                         defaultMessageResId = R.string.notification_history_error_invalid_schedule_route,
                     ),

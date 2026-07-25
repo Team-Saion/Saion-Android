@@ -240,11 +240,13 @@ private val HomeState.circleTitle: String
 
 private fun HomeSnackbarMessage.resolve(context: Context): String = when (this) {
     is HomeSnackbarMessage.Text -> value.ifBlank { context.getString(defaultMessageResId) }
+    is HomeSnackbarMessage.Success -> value.ifBlank { context.getString(defaultMessageResId) }
     is HomeSnackbarMessage.Error -> error.resolveMessage(context, defaultMessageResId)
 }
 
 private fun HomeSnackbarMessage.variant(): SaionSnackbarVariant? = when (this) {
     is HomeSnackbarMessage.Error -> SaionSnackbarVariant.Negative
+    is HomeSnackbarMessage.Success -> SaionSnackbarVariant.Positive
     is HomeSnackbarMessage.Text -> null
 }
 

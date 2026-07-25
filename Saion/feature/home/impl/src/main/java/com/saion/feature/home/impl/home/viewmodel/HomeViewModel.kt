@@ -181,7 +181,7 @@ internal class HomeViewModel @Inject constructor(
             onSuccess = {
                 emitEffect(
                     HomeEffect.ShowSnackbar(
-                        HomeSnackbarMessage.Text(
+                        HomeSnackbarMessage.Success(
                             value = "",
                             defaultMessageResId = R.string.home_success_request_family_notification,
                         ),

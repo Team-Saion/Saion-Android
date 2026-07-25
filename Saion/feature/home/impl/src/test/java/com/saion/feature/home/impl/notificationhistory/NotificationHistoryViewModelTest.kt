@@ -149,7 +149,7 @@ class NotificationHistoryViewModelTest {
 
         assertEquals(
             NotificationHistoryEffect.ShowSnackbar(
-                NotificationHistorySnackbarMessage.Text(
+                NotificationHistorySnackbarMessage.Cautionary(
                     value = "",
                     defaultMessageResId = com.saion.feature.home.impl.R.string.notification_history_error_invalid_schedule_route,
                 ),

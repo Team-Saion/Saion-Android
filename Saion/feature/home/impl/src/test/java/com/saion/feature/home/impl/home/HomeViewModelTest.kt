@@ -351,10 +351,10 @@ class HomeViewModelTest {
         val effect = effectDeferred.await()
         assertTrue(effect is HomeEffect.ShowSnackbar)
         val message = (effect as HomeEffect.ShowSnackbar).message
-        assertTrue(message is HomeSnackbarMessage.Text)
+        assertTrue(message is HomeSnackbarMessage.Success)
         assertEquals(
             com.saion.feature.home.impl.R.string.home_success_request_family_notification,
-            (message as HomeSnackbarMessage.Text).defaultMessageResId,
+            (message as HomeSnackbarMessage.Success).defaultMessageResId,
         )
     }
 

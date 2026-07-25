@@ -94,4 +94,22 @@ class SaionSnackbarVisualsTest {
         assertTrue(dismissed)
         assertFalse(actionPerformed)
     }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `showSaionSnackbar removes trailing period from message`() = runTest {
+        val hostState = SnackbarHostState()
+
+        val deferred = async {
+            hostState.showSaionSnackbar(
+                message = "Toast.",
+                duration = SnackbarDuration.Indefinite,
+            )
+        }
+
+        advanceUntilIdle()
+        assertEquals("Toast", hostState.currentSnackbarData?.visuals?.message)
+        hostState.currentSnackbarData?.dismiss()
+        deferred.await()
+    }
 }

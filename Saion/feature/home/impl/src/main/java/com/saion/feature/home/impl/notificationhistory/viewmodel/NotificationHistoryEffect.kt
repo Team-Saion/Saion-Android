@@ -19,6 +19,11 @@ internal sealed interface NotificationHistorySnackbarMessage {
         val defaultMessageResId: Int,
     ) : NotificationHistorySnackbarMessage
 
+    data class Cautionary(
+        val value: String,
+        val defaultMessageResId: Int,
+    ) : NotificationHistorySnackbarMessage
+
     data class Error(
         val error: AppError,
         val defaultMessageResId: Int,

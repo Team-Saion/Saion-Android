@@ -14,6 +14,11 @@ internal sealed interface HomeSnackbarMessage {
         @param:StringRes val defaultMessageResId: Int,
     ) : HomeSnackbarMessage
 
+    data class Success(
+        val value: String,
+        @param:StringRes val defaultMessageResId: Int,
+    ) : HomeSnackbarMessage
+
     data class Error(
         val error: AppError,
         @param:StringRes val defaultMessageResId: Int,

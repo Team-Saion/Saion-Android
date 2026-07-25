@@ -60,10 +60,11 @@ suspend fun SnackbarHostState.showSaionSnackbar(
     onDismiss: (() -> Unit)? = null,
     onActionPerform: (() -> Unit)? = null,
 ) {
+    val normalizedMessage = message.normalizeSaionSnackbarMessage()
     when (
         showSnackbar(
             visuals = SaionSnackbarVisuals(
-                message = message,
+                message = normalizedMessage,
                 variant = variant,
                 actionLabel = actionLabel,
                 withDismissAction = withDismissAction,
@@ -75,6 +76,8 @@ suspend fun SnackbarHostState.showSaionSnackbar(
         Dismissed -> onDismiss?.invoke()
     }
 }
+
+private fun String.normalizeSaionSnackbarMessage(): String = trimEnd().removeSuffix(".")
 
 @Composable
 fun SaionSnackbarHost(
