@@ -441,6 +441,13 @@ private class FakeScheduleRepository(private val results: List<AppResult<Schedul
     ): AppResult<Unit> {
         throw UnsupportedOperationException()
     }
+
+    override suspend fun requestFamilyNotification(
+        circleId: String,
+        scheduleId: String,
+    ): AppResult<Unit> {
+        throw UnsupportedOperationException()
+    }
 }
 
 private fun schedulePage(

@@ -23,11 +23,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 @Stable
 internal class ScheduleDetailViewModel @Inject constructor(
@@ -43,11 +49,19 @@ internal class ScheduleDetailViewModel @Inject constructor(
     private var scheduleId: String? = null
     private var currentCircleId: String? = null
     private var latestDetail: ScheduleDetail? = null
+    private var optimisticConfirmation: ConfirmationSelection? = null
+    private var latestDebouncedConfirmation: ConfirmationSelection? = null
     private var myMemberId: String? = null
     private var confirmationOptions: List<ConfirmationOption> = emptyList()
     private var scheduleDetailJob: Job? = null
+    private var confirmationUpdateJob: Job? = null
+    private val pendingConfirmationUpdates = MutableSharedFlow<ConfirmationSelection>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     init {
+        observeConfirmationUpdates()
         viewModelScope.launch {
             observeResolvedCurrentCircleUseCase().collect { resolved ->
                 currentCircleId = (resolved as? ResolvedCurrentCircle.Available)?.circleId
@@ -56,6 +70,8 @@ internal class ScheduleDetailViewModel @Inject constructor(
                     load()
                 } else if (resolved is ResolvedCurrentCircle.Missing) {
                     latestDetail = null
+                    optimisticConfirmation = null
+                    latestDebouncedConfirmation = null
                     rebuildUiState()
                 }
             }
@@ -69,11 +85,33 @@ internal class ScheduleDetailViewModel @Inject constructor(
                 currentCircleId?.let { observeScheduleDetail(circleId = it, scheduleId = intent.scheduleId) }
                 load()
             }
-            is ScheduleDetailIntent.ConfirmationClicked -> updateConfirmation(intent.type)
+            is ScheduleDetailIntent.ConfirmationClicked -> handleConfirmationClick(intent.type)
             ScheduleDetailIntent.DeleteClicked -> update { copy(isDeleteDialogVisible = true) }
             ScheduleDetailIntent.DeleteDismissed -> update { copy(isDeleteDialogVisible = false) }
             ScheduleDetailIntent.DeleteConfirmed -> delete()
         }
+    }
+
+    private fun observeConfirmationUpdates() {
+        viewModelScope.launch {
+            pendingConfirmationUpdates
+                .debounce(CONFIRMATION_DEBOUNCE_MILLIS)
+                .collect { confirmation ->
+                    latestDebouncedConfirmation = confirmation
+                    syncConfirmationUpdate()
+                }
+        }
+    }
+
+    private fun handleConfirmationClick(type: ConfirmationType) {
+        if (currentState.isSubmitting) return
+        val currentSelectedType = currentState.confirmationOptions.firstOrNull { it.isSelected }?.type
+        val nextSelection = ConfirmationSelection(
+            type = if (currentSelectedType == type) null else type,
+        )
+        optimisticConfirmation = nextSelection
+        rebuildUiState()
+        pendingConfirmationUpdates.tryEmit(nextSelection)
     }
 
     private fun observeScheduleDetail(
@@ -86,7 +124,11 @@ internal class ScheduleDetailViewModel @Inject constructor(
                 .filterNotNull()
                 .collect { detail ->
                     latestDetail = detail
+                    if (optimisticConfirmation?.type == detail.myConfirmation?.confirmationType) {
+                        optimisticConfirmation = null
+                    }
                     rebuildUiState()
+                    syncConfirmationUpdate()
                 }
         }
     }
@@ -131,27 +173,39 @@ internal class ScheduleDetailViewModel @Inject constructor(
         }
     }
 
-    private fun updateConfirmation(type: ConfirmationType) {
+    private fun syncConfirmationUpdate() {
         val circleId = currentCircleId ?: return
         val scheduleId = scheduleId ?: return
-        val state = currentState
-        val detail = state.detail ?: return
-        if (state.isSubmitting) return
+        val detail = latestDetail ?: return
+        val desiredConfirmation = latestDebouncedConfirmation ?: return
+        if (currentState.isSubmitting || confirmationUpdateJob?.isActive == true) return
 
-        val currentConfirmation = detail.myConfirmation
-        val request = if (currentConfirmation?.confirmationType == type) {
-            suspend { cancelConfirmationUseCase(circleId = circleId, scheduleId = scheduleId, confirmationId = currentConfirmation.confirmationId) }
-        } else {
-            suspend { registerConfirmationUseCase(circleId = circleId, scheduleId = scheduleId, confirmationType = type).toUnitResult() }
+        val serverConfirmation = detail.myConfirmation
+        if (serverConfirmation?.confirmationType == desiredConfirmation.type) {
+            latestDebouncedConfirmation = null
+            if (optimisticConfirmation == desiredConfirmation) {
+                optimisticConfirmation = null
+                rebuildUiState()
+            }
+            return
         }
 
-        launchSafely(
-            onStart = { update { copy(isSubmitting = true) } },
+        val request = if (desiredConfirmation.type == null) {
+            val confirmationId = serverConfirmation?.confirmationId ?: return
+            suspend { cancelConfirmationUseCase(circleId = circleId, scheduleId = scheduleId, confirmationId = confirmationId) }
+        } else {
+            suspend { registerConfirmationUseCase(circleId = circleId, scheduleId = scheduleId, confirmationType = desiredConfirmation.type).toUnitResult() }
+        }
+
+        confirmationUpdateJob = launchSafely(
             onSuccess = {
-                update { copy(isSubmitting = false) }
+                confirmationUpdateJob = null
             },
             onFailure = { error ->
-                update { copy(isSubmitting = false) }
+                confirmationUpdateJob = null
+                latestDebouncedConfirmation = null
+                optimisticConfirmation = null
+                rebuildUiState()
                 emitEffect(
                     ScheduleDetailEffect.ShowSnackbar(
                         error.toSnackbarMessage(
@@ -169,7 +223,11 @@ internal class ScheduleDetailViewModel @Inject constructor(
         val circleId = currentCircleId ?: return
         val scheduleId = scheduleId ?: return
         launchSafely(
-            onStart = { update { copy(isSubmitting = true, isDeleteDialogVisible = false) } },
+            onStart = {
+                optimisticConfirmation = null
+                latestDebouncedConfirmation = null
+                update { copy(isSubmitting = true, isDeleteDialogVisible = false) }
+            },
             onSuccess = {
                 update { copy(isSubmitting = false) }
                 emitEffect(ScheduleDetailEffect.Deleted)
@@ -216,6 +274,7 @@ internal class ScheduleDetailViewModel @Inject constructor(
                 detail.toUiState(
                     options = this@ScheduleDetailViewModel.confirmationOptions,
                     myMemberId = myMemberId,
+                    optimisticConfirmation = optimisticConfirmation,
                     isLoading = isLoading,
                     isSubmitting = isSubmitting,
                     isDeleteDialogVisible = deleteDialogVisible,
@@ -228,6 +287,7 @@ internal class ScheduleDetailViewModel @Inject constructor(
 private fun ScheduleDetail.toUiState(
     options: List<ConfirmationOption>,
     myMemberId: String?,
+    optimisticConfirmation: ConfirmationSelection? = null,
     isLoading: Boolean = false,
     isSubmitting: Boolean = false,
     isDeleteDialogVisible: Boolean = false,
@@ -236,11 +296,22 @@ private fun ScheduleDetail.toUiState(
     isSubmitting = isSubmitting,
     detail = this,
     confirmationOptions = options.map { option ->
+        val serverConfirmation = myConfirmation?.confirmationType
+        val effectiveConfirmation = if (optimisticConfirmation != null) {
+            optimisticConfirmation.type
+        } else {
+            serverConfirmation
+        }
+        val countAdjustment = when {
+            serverConfirmation == option.value && effectiveConfirmation != option.value -> -1
+            serverConfirmation != option.value && effectiveConfirmation == option.value -> 1
+            else -> 0
+        }
         ScheduleConfirmationUiModel(
             type = option.value,
             label = option.label,
-            count = confirmations.firstOrNull { it.type == option.value }?.count ?: 0,
-            isSelected = myConfirmation?.confirmationType == option.value,
+            count = (confirmations.firstOrNull { it.type == option.value }?.count ?: 0) + countAdjustment,
+            isSelected = effectiveConfirmation == option.value,
         )
     }.toImmutableList(),
     canDelete = myMemberId != null && createdBy == myMemberId,
@@ -251,3 +322,9 @@ private fun AppResult<*>.toUnitResult(): AppResult<Unit> = when (this) {
     is AppResult.Success -> AppResult.Success(Unit)
     is AppResult.Failure -> AppResult.Failure(error)
 }
+
+private data class ConfirmationSelection(
+    val type: ConfirmationType?,
+)
+
+private const val CONFIRMATION_DEBOUNCE_MILLIS = 300L
