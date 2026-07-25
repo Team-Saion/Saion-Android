@@ -88,12 +88,24 @@ fun ScheduleSummaryCard(
 @Composable
 private fun ScheduleSummary.formatScheduleDate(): String {
     val locale = Locale.KOREAN
-    val date = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return startDate
+    val start = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return startDate
+    val end = runCatching { LocalDate.parse(endDate) }.getOrNull() ?: return if (startDate == endDate) startDate else "$startDate ~ $endDate"
+    if (start == end) {
+        return stringResource(
+            R.string.schedule_summary_date,
+            start.monthValue,
+            start.dayOfMonth,
+            start.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+        )
+    }
     return stringResource(
-        R.string.schedule_summary_date,
-        date.monthValue,
-        date.dayOfMonth,
-        date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+        R.string.schedule_summary_date_range,
+        start.monthValue,
+        start.dayOfMonth,
+        start.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+        end.monthValue,
+        end.dayOfMonth,
+        end.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
     )
 }
 

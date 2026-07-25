@@ -10,16 +10,45 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-internal fun formatScheduleDateText(startDate: String): String {
-    val date = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return startDate
+internal fun formatScheduleDateText(startDate: String, endDate: String): String {
+    val start = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return startDate
+    val end = runCatching { LocalDate.parse(endDate) }.getOrNull() ?: return if (startDate == endDate) startDate else "$startDate ~ $endDate"
     val locale = Locale.KOREAN
-    return stringResource(
-        R.string.schedule_detail_date,
-        date.year,
-        date.monthValue,
-        date.dayOfMonth,
-        date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
-    )
+    if (start == end) {
+        return stringResource(
+            R.string.schedule_detail_date,
+            start.year,
+            start.monthValue,
+            start.dayOfMonth,
+            start.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+        )
+    }
+    val startDayOfWeek = start.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+    val endDayOfWeek = end.dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+    return if (start.year == end.year) {
+        stringResource(
+            R.string.schedule_detail_date_range_same_year,
+            start.year,
+            start.monthValue,
+            start.dayOfMonth,
+            startDayOfWeek,
+            end.monthValue,
+            end.dayOfMonth,
+            endDayOfWeek,
+        )
+    } else {
+        stringResource(
+            R.string.schedule_detail_date_range_different_year,
+            start.year,
+            start.monthValue,
+            start.dayOfMonth,
+            startDayOfWeek,
+            end.year,
+            end.monthValue,
+            end.dayOfMonth,
+            endDayOfWeek,
+        )
+    }
 }
 
 internal fun formatScheduleTimeRange(

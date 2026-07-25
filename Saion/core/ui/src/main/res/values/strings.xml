@@ -7,6 +7,7 @@
     <string name="schedule_add">일정 추가하기</string>
     <string name="schedule_summary_detail">일정 상세 보기</string>
     <string name="schedule_summary_date">%1$d월 %2$d일 (%3$s)</string>
+    <string name="schedule_summary_date_range">%1$d월 %2$d일 (%3$s) ~ %4$d월 %5$d일 (%6$s)</string>
     <string name="dday_badge_default">일정</string>
     <string name="dday_badge_offset">%1$d일 전</string>
     <string name="dday_badge_today">오늘</string>

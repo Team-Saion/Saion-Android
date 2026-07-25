@@ -97,18 +97,31 @@ internal fun HomeScheduleHeroCard(
 
 @Composable
 private fun ScheduleSummary.heroDateTimeText(): String {
-    val date = runCatching { LocalDate.parse(startDate) }.getOrNull()
+    val start = runCatching { LocalDate.parse(startDate) }.getOrNull()
+    val end = runCatching { LocalDate.parse(endDate) }.getOrNull()
     val locale = Locale.KOREAN
     val startTimeValue = startTime
     val endTimeValue = endTime
-    val dateText = if (date == null) {
+    val dateText = if (start == null) {
         startDate
-    } else {
+    } else if (end == null) {
+        if (startDate == endDate) startDate else "$startDate ~ $endDate"
+    } else if (start == end) {
         stringResource(
             R.string.home_hero_schedule_date,
-            date.monthValue,
-            date.dayOfMonth,
-            date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+            start.monthValue,
+            start.dayOfMonth,
+            start.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+        )
+    } else {
+        stringResource(
+            R.string.home_hero_schedule_date_range,
+            start.monthValue,
+            start.dayOfMonth,
+            start.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+            end.monthValue,
+            end.dayOfMonth,
+            end.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
         )
     }
 

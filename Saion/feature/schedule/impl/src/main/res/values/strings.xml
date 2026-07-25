@@ -17,6 +17,8 @@
     <string name="schedule_picker_confirm">확인</string>
     <string name="schedule_picker_cancel">취소</string>
     <string name="schedule_detail_date">%1$d년 %2$d월 %3$d일 %4$s</string>
+    <string name="schedule_detail_date_range_same_year">%1$d년 %2$d월 %3$d일 (%4$s) ~ %5$d월 %6$d일 (%7$s)</string>
+    <string name="schedule_detail_date_range_different_year">%1$d년 %2$d월 %3$d일 (%4$s) ~ %5$d년 %6$d월 %7$d일 (%8$s)</string>
     <string name="schedule_detail_delete">일정 삭제</string>
     <string name="schedule_detail_delete_confirm_title">삭제하면 구성원에게도 사라져요</string>
     <string name="schedule_detail_delete_confirm">삭제</string>

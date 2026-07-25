@@ -213,7 +213,10 @@ private fun ScheduleDetailContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = formatScheduleDateText(detail.startDate),
+            text = formatScheduleDateText(
+                startDate = detail.startDate,
+                endDate = detail.endDate,
+            ),
             style = SaionTheme.typography.body1,
             color = SaionTheme.colors.label.strong,
         )
