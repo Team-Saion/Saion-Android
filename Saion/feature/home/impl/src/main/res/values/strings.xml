@@ -16,7 +16,7 @@
     <string name="home_hero_schedule_title">가장 가까운 일정이에요</string>
     <string name="home_hero_schedule_date">%1$d월 %2$d일 (%3$s)</string>
     <string name="home_hero_schedule_all_day">종일</string>
-    <string name="home_hero_schedule_cta">가족에게 전하기</string>
+    <string name="home_hero_schedule_cta">모두에게 전하기</string>
     <string name="home_schedule_title">일정</string>
     <string name="home_fab_add_schedule">일정 추가</string>
     <string name="home_schedule_detail">일정 상세 보기</string>
@@ -27,7 +27,7 @@
     <string name="home_error_share_invitation">카카오 공유를 열지 못했습니다.</string>
     <string name="home_error_request_family_notification">알림을 전송하지 못했습니다.</string>
     <string name="home_success_request_family_notification">알림을 전송했어요.</string>
-    <string name="home_family_notification_dialog_title">가족에게 이 일정을 전할까요?</string>
+    <string name="home_family_notification_dialog_title">모두에게 이 일정을 전할까요?</string>
     <string name="home_family_notification_dialog_confirm">전하기</string>
     <string name="home_family_notification_dialog_cancel">취소</string>
     <string name="notification_history_title">알림</string>
